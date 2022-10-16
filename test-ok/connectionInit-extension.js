@@ -4,6 +4,7 @@ const { test } = require('tap')
 const Fastify = require('fastify')
 const WebSocket = require('ws')
 const GQL = require('mercurius')
+
 const { createGateway } = require('../index')
 
 test('connectionInit extension e2e testing', t => {
@@ -211,7 +212,6 @@ test('connectionInit extension e2e testing', t => {
 
       gateway.listen({ port: 0 }, err => {
         t.error(err)
-
         async function addUser() {
           await gateway.inject({
             method: 'POST',
@@ -271,7 +271,6 @@ test('connectionInit extension e2e testing', t => {
         let ready2 = false
         let done1 = false
         let done2 = false
-
         async function connectionAckCallback(clientNb) {
           if (clientNb === 1) {
             ready1 = true
@@ -283,7 +282,6 @@ test('connectionInit extension e2e testing', t => {
             await Promise.all([addUser(), addNotification()])
           }
         }
-
         function terminateCallback(clientNb) {
           if (clientNb === 1) {
             done1 = true

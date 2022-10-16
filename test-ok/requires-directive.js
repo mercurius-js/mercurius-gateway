@@ -3,6 +3,7 @@
 const { test } = require('tap')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
+const { createGateway } = require('../index')
 
 async function createService(schema, resolvers = {}) {
   const service = Fastify()
@@ -16,7 +17,7 @@ async function createService(schema, resolvers = {}) {
   return service
 }
 
-async function createGateway(...services) {
+async function createGatewayService(...services) {
   const gateway = Fastify()
   const teardown = async () => {
     await gateway.close()
@@ -112,12 +113,12 @@ test('gateway handles @requires directive correctly', async t => {
   `,
     {
       Query: {
-        me: (root, args, context, info) => {
+        me: () => {
           return users.u1
         }
       },
       User: {
-        __resolveReference: (user, args, context, info) => {
+        __resolveReference: user => {
           return users[user.id]
         },
         avatar: (user, { size }) => `avatar-${size}.jpg`,
@@ -149,7 +150,7 @@ test('gateway handles @requires directive correctly', async t => {
     }
   )
 
-  const { gateway, teardown } = await createGateway(
+  const { gateway, teardown } = await createGatewayService(
     biographyService,
     userService
   )
@@ -272,14 +273,17 @@ test('gateway handles @requires directive correctly from different services', as
     }`,
     {
       Query: {
-        hosts(parent, args, context, info) {
+        hosts() {
           return hosts
         }
       }
     }
   )
 
-  const { gateway, teardown } = await createGateway(hostService, dictService)
+  const { gateway, teardown } = await createGatewayService(
+    hostService,
+    dictService
+  )
   t.teardown(teardown)
 
   t.plan(2)
@@ -461,14 +465,17 @@ test('gateway handles @requires directive correctly apart of other directives', 
     }`,
     {
       Query: {
-        hosts(parent, args, context, info) {
+        hosts() {
           return hosts
         }
       }
     }
   )
 
-  const { gateway, teardown } = await createGateway(hostService, dictService)
+  const { gateway, teardown } = await createGatewayService(
+    hostService,
+    dictService
+  )
   t.teardown(teardown)
 
   const query = `
@@ -531,12 +538,12 @@ test('gateway exposes @requires directive in list of directives', async t => {
   `,
     {
       Query: {
-        me: (root, args, context, info) => {
+        me: () => {
           return users.u1
         }
       },
       User: {
-        __resolveReference: (user, args, context, info) => {
+        __resolveReference: user => {
           return users[user.id]
         }
       }
@@ -560,7 +567,7 @@ test('gateway exposes @requires directive in list of directives', async t => {
     }
   )
 
-  const { gateway, teardown } = await createGateway(
+  const { gateway, teardown } = await createGatewayService(
     biographyService,
     userService
   )

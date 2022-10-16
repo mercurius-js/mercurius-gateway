@@ -77,8 +77,8 @@ test('Returns schema related errors for mandatory services', async t => {
     await Promise.all([gateway.close(), service.close()])
   })
 
-  gateway.register(GQL, {
-    gateway: {
+  const { schema } = await createGateway(
+    {
       services: [
         {
           name: 'not-working',
@@ -88,7 +88,12 @@ test('Returns schema related errors for mandatory services', async t => {
           keepAliveMaxTimeout: 10 // milliseconds
         }
       ]
-    }
+    },
+    gateway
+  )
+
+  gateway.register(GQL, {
+    schema
   })
 
   try {
@@ -122,8 +127,8 @@ test('Does not error if at least one service schema is valid', async t => {
     ])
   })
 
-  gateway.register(GQL, {
-    gateway: {
+  const { schema } = await createGateway(
+    {
       services: [
         {
           name: 'working',
@@ -134,7 +139,12 @@ test('Does not error if at least one service schema is valid', async t => {
           url: `http://localhost:${invalidServicePort}/graphql`
         }
       ]
-    }
+    },
+    gateway
+  )
+
+  gateway.register(GQL, {
+    schema
   })
 
   try {

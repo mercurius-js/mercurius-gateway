@@ -89,12 +89,12 @@ async function createTestGatewayServer(t, opts = {}) {
   }`
   const userServiceResolvers = {
     Query: {
-      me: (root, args, context, info) => {
+      me: () => {
         return users.u1
       }
     },
     User: {
-      __resolveReference: (user, args, context, info) => {
+      __resolveReference: user => {
         return users[user.id]
       }
     }
@@ -122,10 +122,10 @@ async function createTestGatewayServer(t, opts = {}) {
   }`
   const postServiceResolvers = {
     Post: {
-      __resolveReference: (post, args, context, info) => {
+      __resolveReference: post => {
         return posts[post.pid]
       },
-      author: (post, args, context, info) => {
+      author: post => {
         return {
           __typename: 'User',
           id: post.authorId
@@ -133,7 +133,7 @@ async function createTestGatewayServer(t, opts = {}) {
       }
     },
     User: {
-      topPosts: (user, { count }, context, info) => {
+      topPosts: (user, { count }) => {
         return Object.values(posts)
           .filter(p => p.authorId === user.id)
           .slice(0, count)
@@ -466,19 +466,19 @@ test('gateway - preParsing hooks should handle errors', async t => {
     throw new Error('a preParsing error occured')
   })
 
-  app.graphql.addHook('preParsing', async (schema, source, context) => {
+  app.graphql.addHook('preParsing', async () => {
     t.fail('this should not be called')
   })
 
-  app.graphql.addHook('preValidation', async (schema, document, context) => {
+  app.graphql.addHook('preValidation', async () => {
     t.fail('this should not be called')
   })
 
-  app.graphql.addHook('preExecution', async (schema, operation, context) => {
+  app.graphql.addHook('preExecution', async () => {
     t.fail('this should not be called')
   })
 
-  app.graphql.addHook('onResolution', async (execution, context) => {
+  app.graphql.addHook('onResolution', async () => {
     t.fail('this should not be called')
   })
 
@@ -570,15 +570,15 @@ test('gateway - preValidation hooks should handle errors', async t => {
     throw new Error('a preValidation error occured')
   })
 
-  app.graphql.addHook('preValidation', async (schema, document, context) => {
+  app.graphql.addHook('preValidation', async () => {
     t.fail('this should not be called')
   })
 
-  app.graphql.addHook('preExecution', async (schema, document, context) => {
+  app.graphql.addHook('preExecution', async () => {
     t.fail('this should not be called')
   })
 
-  app.graphql.addHook('onResolution', async (execution, context) => {
+  app.graphql.addHook('onResolution', async () => {
     t.fail('this should not be called')
   })
 
@@ -670,11 +670,11 @@ test('gateway - preExecution hooks should handle errors', async t => {
     throw new Error('a preExecution error occured')
   })
 
-  app.graphql.addHook('preExecution', async (schema, document, context) => {
+  app.graphql.addHook('preExecution', async () => {
     t.fail('this should not be called')
   })
 
-  app.graphql.addHook('onResolution', async (execution, context) => {
+  app.graphql.addHook('onResolution', async () => {
     t.fail('this should not be called')
   })
 
@@ -889,12 +889,9 @@ test('gateway - preGatewayExecution hooks should handle errors', async t => {
     }
   )
 
-  app.graphql.addHook(
-    'preGatewayExecution',
-    async (schema, document, context) => {
-      t.fail('this should not be called')
-    }
-  )
+  app.graphql.addHook('preGatewayExecution', async () => {
+    t.fail('this should not be called')
+  })
 
   // This should still be called in the gateway
   app.graphql.addHook('onResolution', async (execution, context) => {
@@ -1227,7 +1224,7 @@ test('gateway - onResolution hooks should handle errors', async t => {
     throw new Error('a onResolution error occured')
   })
 
-  app.graphql.addHook('onResolution', async (execution, context) => {
+  app.graphql.addHook('onResolution', async () => {
     t.fail('this should not be called')
   })
 

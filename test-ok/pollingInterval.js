@@ -29,10 +29,10 @@ t.afterEach(({ context }) => {
 test('Polling schemas with disable cache', async t => {
   const resolvers = {
     Query: {
-      me: (root, args, context, info) => user
+      me: () => user
     },
     User: {
-      __resolveReference: (user, args, context, info) => user
+      __resolveReference: user => user
     }
   }
 
@@ -117,10 +117,10 @@ test('Polling schemas with disable cache', async t => {
 test('Polling schemas', async t => {
   const resolvers = {
     Query: {
-      me: (root, args, context, info) => user
+      me: () => user
     },
     User: {
-      __resolveReference: (user, args, context, info) => user
+      __resolveReference: user => user
     }
   }
 
@@ -287,10 +287,10 @@ test('Polling schemas', async t => {
 test('Polling schemas (gateway.polling interval is not a number)', async t => {
   const resolvers = {
     Query: {
-      me: (root, args, context, info) => user
+      me: () => user
     },
     User: {
-      __resolveReference: (user, args, context, info) => user
+      __resolveReference: user => user
     }
   }
 
@@ -356,10 +356,10 @@ test('Polling schemas (gateway.polling interval is not a number)', async t => {
 test("Polling schemas (if service is down, schema shouldn't be changed)", async t => {
   const resolvers = {
     Query: {
-      me: (root, args, context, info) => user
+      me: () => user
     },
     User: {
-      __resolveReference: (user, args, context, info) => user
+      __resolveReference: user => user
     }
   }
 
@@ -518,10 +518,10 @@ test("Polling schemas (if service is down, schema shouldn't be changed)", async 
 test('Polling schemas (if service is mandatory, exception should be thrown)', async t => {
   const resolvers = {
     Query: {
-      me: (root, args, context, info) => user
+      me: () => user
     },
     User: {
-      __resolveReference: (user, args, context, info) => user
+      __resolveReference: user => user
     }
   }
 
@@ -670,10 +670,10 @@ test('Polling schemas (cache should be cleared)', async t => {
     `,
     resolvers: {
       Query: {
-        me: (root, args, context, info) => user
+        me: () => user
       },
       User: {
-        __resolveReference: (user, args, context, info) => user
+        __resolveReference: user => user
       }
     },
     federationMetadata: true
@@ -743,10 +743,10 @@ test('Polling schemas (cache should be cleared)', async t => {
   )
   userService.graphql.defineResolvers({
     Query: {
-      me2: (root, args, context, info) => user
+      me2: () => user
     },
     User: {
-      __resolveReference: (user, args, context, info) => user
+      __resolveReference: user => user
     }
   })
 
@@ -839,10 +839,10 @@ test('Polling schemas (should properly regenerate the schema when a downstream s
     schema: oldSchema,
     resolvers: {
       Query: {
-        me: (root, args, context, info) => user
+        me: () => user
       },
       User: {
-        __resolveReference: (user, args, context, info) => user
+        __resolveReference: user => user
       }
     },
     federationMetadata: true
@@ -925,13 +925,13 @@ test('Polling schemas (should properly regenerate the schema when a downstream s
     schema: refreshedSchema,
     resolvers: {
       Query: {
-        me2: (root, args, context, info) => user
+        me2: () => user
       },
       Mutation: {
-        create: (root, args, context, info) => user
+        create: () => user
       },
       User: {
-        __resolveReference: (user, args, context, info) => user
+        __resolveReference: user => user
       }
     },
     federationMetadata: true
@@ -1015,7 +1015,7 @@ test('Polling schemas (subscriptions should be handled)', async t => {
 
   const resolvers = {
     Query: {
-      me: (root, args, context, info) => user
+      me: () => user
     },
     Mutation: {
       triggerUser: async (root, args, { pubsub }) => {
@@ -1036,7 +1036,7 @@ test('Polling schemas (subscriptions should be handled)', async t => {
       }
     },
     User: {
-      __resolveReference: (user, args, context, info) => user
+      __resolveReference: user => user
     }
   }
 

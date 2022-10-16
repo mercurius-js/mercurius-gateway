@@ -42,7 +42,7 @@ async function createTestGatewayServer(t, allowBatchedQueries = false) {
   }`
   const userServiceResolvers = {
     Query: {
-      me: (root, args, context, info) => {
+      me: () => {
         throw new ErrorWithProps('Invalid User ID', {
           id: 4,
           code: 'USER_ID_INVALID'
@@ -50,7 +50,7 @@ async function createTestGatewayServer(t, allowBatchedQueries = false) {
       }
     },
     User: {
-      quote: (user, args, context, info) => {
+      quote: () => {
         throw new ErrorWithProps('Invalid Quote', {
           id: 4,
           code: 'QUOTE_ID_INVALID'
@@ -77,7 +77,7 @@ async function createTestGatewayServer(t, allowBatchedQueries = false) {
   }`
   const postServiceResolvers = {
     User: {
-      topPosts: (user, { count }, context, info) => {
+      topPosts: () => {
         throw new ErrorWithProps('Invalid Quote', {
           id: 4,
           code: 'NO_TOP_POSTS'

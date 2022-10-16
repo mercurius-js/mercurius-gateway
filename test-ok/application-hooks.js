@@ -31,10 +31,10 @@ test('onGatewayReplaceSchema - polling interval with a new schema should trigger
 
   const resolvers = {
     Query: {
-      me: (root, args, context, info) => user
+      me: () => user
     },
     User: {
-      __resolveReference: (user, args, context, info) => user
+      __resolveReference: user => user
     }
   }
 
@@ -120,10 +120,10 @@ test('onGatewayReplaceSchema - should log an error should any errors occur in th
 
   const resolvers = {
     Query: {
-      me: (root, args, context, info) => user
+      me: () => user
     },
     User: {
-      __resolveReference: (user, args, context, info) => user
+      __resolveReference: user => user
     }
   }
 
@@ -176,20 +176,14 @@ test('onGatewayReplaceSchema - should log an error should any errors occur in th
     schema
   })
 
-  gateway.graphql.addHook(
-    'onGatewayReplaceSchema',
-    async (instance, schema) => {
-      t.ok('trigger error')
-      throw new Error('kaboom')
-    }
-  )
+  gateway.graphql.addHook('onGatewayReplaceSchema', async () => {
+    t.ok('trigger error')
+    throw new Error('kaboom')
+  })
 
-  gateway.graphql.addHook(
-    'onGatewayReplaceSchema',
-    async (instance, schema) => {
-      t.fail('should not be called')
-    }
-  )
+  gateway.graphql.addHook('onGatewayReplaceSchema', async () => {
+    t.fail('should not be called')
+  })
 
   // Override gateway error logger
   gateway.log.error = error => {

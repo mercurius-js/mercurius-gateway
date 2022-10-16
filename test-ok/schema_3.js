@@ -161,7 +161,7 @@ test('Gateway sends initHeaders with _service sdl query', async t => {
     },
     federationMetadata: true
   })
-  service.addHook('preHandler', async (req, reply) => {
+  service.addHook('preHandler', async req => {
     t.equal(req.headers.authorization, 'ok')
     if (!req.headers.authorization) throw new Error('Unauthorized')
   })
@@ -214,7 +214,7 @@ test('Gateway sends initHeaders function result with _service sdl query', async 
     },
     federationMetadata: true
   })
-  service.addHook('preHandler', async (req, reply) => {
+  service.addHook('preHandler', async req => {
     t.equal(req.headers.authorization, 'ok')
     if (!req.headers.authorization) throw new Error('Unauthorized')
   })

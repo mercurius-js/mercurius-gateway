@@ -88,12 +88,12 @@ async function createUserService(directiveDefinition) {
   }`
   const userServiceResolvers = {
     Query: {
-      me: (root, args, context, info) => {
+      me: () => {
         return users.u1
       }
     },
     User: {
-      __resolveReference: (user, args, context, info) => {
+      __resolveReference: user => {
         return users[user.id]
       }
     }
@@ -120,10 +120,10 @@ async function createPostService(directiveDefinition) {
   }`
   const postServiceResolvers = {
     Post: {
-      __resolveReference: (post, args, context, info) => {
+      __resolveReference: post => {
         return posts[post.pid]
       },
-      author: (post, args, context, info) => {
+      author: post => {
         return {
           __typename: 'User',
           id: post.authorId
@@ -131,7 +131,7 @@ async function createPostService(directiveDefinition) {
       }
     },
     User: {
-      topPosts: (user, { count }, context, info) => {
+      topPosts: (user, { count }) => {
         return Object.values(posts)
           .filter(p => p.authorId === user.id)
           .slice(0, count)

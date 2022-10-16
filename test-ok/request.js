@@ -29,7 +29,7 @@ test('sendRequest method rejects when request errs', t => {
 test('sendRequest method rejects when response is not valid json', async t => {
   t.plan(3)
   const app = fastify()
-  app.post('/', async (request, reply) => {
+  app.post('/', async () => {
     return 'response'
   })
 
@@ -70,7 +70,7 @@ test('sendRequest method rejects when response is not valid json', async t => {
 test('sendRequest method rejects when response contains errors', async t => {
   t.plan(2)
   const app = fastify()
-  app.post('/', async (request, reply) => {
+  app.post('/', async () => {
     return { errors: ['foo'] }
   })
 
@@ -108,7 +108,7 @@ test('sendRequest method rejects when response contains errors', async t => {
 
 test('sendRequest method should accept useSecureParse flag and parse the response securely', async t => {
   const app = fastify()
-  app.post('/', async (request, reply) => {
+  app.post('/', async () => {
     return '{" __proto__": { "foo": "bar" } }'
   })
 
@@ -149,7 +149,7 @@ test('sendRequest method should accept useSecureParse flag and parse the respons
 
 test('sendRequest method should run without useSecureParse flag', async t => {
   const app = fastify()
-  app.post('/', async (request, reply) => {
+  app.post('/', async () => {
     return '{ "foo": "bar" }'
   })
 

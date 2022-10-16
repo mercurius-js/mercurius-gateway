@@ -68,12 +68,12 @@ async function createTestGatewayServer(t) {
   }`
   const userServiceResolvers = {
     Query: {
-      me: (root, args, context, info) => {
+      me: () => {
         return users.u1
       }
     },
     User: {
-      __resolveReference: (user, args, context, info) => {
+      __resolveReference: user => {
         return users[user.id]
       }
     }
@@ -96,7 +96,7 @@ async function createTestGatewayServer(t) {
   }`
   const postServiceResolvers = {
     User: {
-      topPosts: (user, { count }, context, info) => {
+      topPosts: (user, { count }) => {
         return Object.values(posts)
           .filter(p => p.authorId === user.id)
           .slice(0, count)

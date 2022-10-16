@@ -85,13 +85,13 @@ test('Uses the supplied schema for federation rather than fetching it remotely',
   `,
     {
       Query: {
-        me: (root, args, context, info) => {
+        me: () => {
           return users.u1
         },
         hello: () => 'World'
       },
       User: {
-        __resolveReference: (user, args, context, info) => {
+        __resolveReference: user => {
           return users[user.id]
         },
         avatar: (user, { size }) => `avatar-${size}.jpg`,
@@ -126,10 +126,10 @@ test('Uses the supplied schema for federation rather than fetching it remotely',
     postServiceSdl,
     {
       Post: {
-        __resolveReference: (post, args, context, info) => {
+        __resolveReference: post => {
           return posts[post.pid]
         },
-        author: (post, args, context, info) => {
+        author: post => {
           return {
             __typename: 'User',
             id: post.authorId
@@ -137,7 +137,7 @@ test('Uses the supplied schema for federation rather than fetching it remotely',
         }
       },
       User: {
-        posts: (user, args, context, info) => {
+        posts: user => {
           return Object.values(posts).filter(p => p.authorId === user.id)
         },
         numberOfPosts: user => {
@@ -628,13 +628,13 @@ test('It builds the gateway schema correctly with two services query extension h
   `,
     {
       Query: {
-        me: (root, args, context, info) => {
+        me: () => {
           return users.u1
         },
         hello: () => 'World'
       },
       User: {
-        __resolveReference: (user, args, context, info) => {
+        __resolveReference: user => {
           return users[user.id]
         },
         avatar: (user, { size }) => `avatar-${size}.jpg`,
@@ -671,10 +671,10 @@ test('It builds the gateway schema correctly with two services query extension h
   `,
     {
       Post: {
-        __resolveReference: (post, args, context, info) => {
+        __resolveReference: post => {
           return posts[post.pid]
         },
-        author: (post, args, context, info) => {
+        author: post => {
           return {
             __typename: 'User',
             id: post.authorId
@@ -682,7 +682,7 @@ test('It builds the gateway schema correctly with two services query extension h
         }
       },
       User: {
-        posts: (user, args, context, info) => {
+        posts: user => {
           return Object.values(posts).filter(p => p.authorId === user.id)
         },
         numberOfPosts: user => {

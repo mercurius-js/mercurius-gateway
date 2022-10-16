@@ -85,13 +85,13 @@ test('It builds the gateway schema correctly', async t => {
   `,
     {
       Query: {
-        me: (root, args, context, info) => {
+        me: () => {
           return users.u1
         },
         hello: () => 'World'
       },
       User: {
-        __resolveReference: (user, args, context, info) => {
+        __resolveReference: user => {
           return users[user.id]
         },
         avatar: (user, { size }) => `avatar-${size}.jpg`,
@@ -123,10 +123,10 @@ test('It builds the gateway schema correctly', async t => {
   `,
     {
       Post: {
-        __resolveReference: (post, args, context, info) => {
+        __resolveReference: post => {
           return posts[post.pid]
         },
-        author: (post, args, context, info) => {
+        author: post => {
           return {
             __typename: 'User',
             id: post.authorId
@@ -134,7 +134,7 @@ test('It builds the gateway schema correctly', async t => {
         }
       },
       User: {
-        posts: (user, args, context, info) => {
+        posts: user => {
           return Object.values(posts).filter(p => p.authorId === user.id)
         },
         numberOfPosts: user => {
@@ -374,7 +374,7 @@ test('It support variable inside nested arguments', async t => {
   `,
     {
       Query: {
-        me: (root, args, context, info) => {
+        me: (root, args) => {
           return args.user
         }
       }

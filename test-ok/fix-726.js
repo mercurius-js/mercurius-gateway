@@ -42,7 +42,7 @@ async function buildService() {
 
   const loaders = {
     User: {
-      async __resolveReference(queries, { reply }) {
+      async __resolveReference(queries) {
         return queries.map(({ obj }) => users[obj.id])
       }
     }

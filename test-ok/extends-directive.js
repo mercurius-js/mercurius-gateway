@@ -58,12 +58,12 @@ test('gateway handles @extends directive correctly', async t => {
   `,
     {
       Query: {
-        me: (root, args, context, info) => {
+        me: () => {
           return users.u1
         }
       },
       User: {
-        __resolveReference: (user, args, context, info) => {
+        __resolveReference: user => {
           return users[user.id]
         }
       }
@@ -92,10 +92,10 @@ test('gateway handles @extends directive correctly', async t => {
   `,
     {
       Post: {
-        __resolveReference: (post, args, context, info) => {
+        __resolveReference: post => {
           return posts[post.pid]
         },
-        author: (post, args, context, info) => {
+        author: post => {
           return {
             __typename: 'User',
             id: post.authorId
@@ -103,7 +103,7 @@ test('gateway handles @extends directive correctly', async t => {
         }
       },
       User: {
-        posts: (user, args, context, info) => {
+        posts: user => {
           return Object.values(posts).filter(p => p.authorId === user.id)
         },
         numberOfPosts: user => {
@@ -217,12 +217,12 @@ test('gateway passes field arguments through to types labeled by @extends direct
   `,
     {
       Query: {
-        me: (root, args, context, info) => {
+        me: () => {
           return users.u1
         }
       },
       User: {
-        __resolveReference: (user, args, context, info) => {
+        __resolveReference: user => {
           return users[user.id]
         }
       }
@@ -244,10 +244,10 @@ test('gateway passes field arguments through to types labeled by @extends direct
   `,
     {
       Post: {
-        __resolveReference: (post, args, context, info) => {
+        __resolveReference: post => {
           return userPosts[post.pid]
         },
-        author: (post, args, context, info) => {
+        author: post => {
           return {
             __typename: 'User',
             id: post.authorId
@@ -255,7 +255,7 @@ test('gateway passes field arguments through to types labeled by @extends direct
         }
       },
       User: {
-        topPosts: (user, { count }, context, info) => {
+        topPosts: (user, { count }) => {
           return Object.values(userPosts)
             .filter(p => p.authorId === user.id)
             .slice(0, count)
@@ -383,12 +383,12 @@ test('gateway distributes query correctly to services when querying with inline 
   `,
     {
       Query: {
-        me: (root, args, context, info) => {
+        me: () => {
           return users.u1
         }
       },
       User: {
-        __resolveReference: (user, args, context, info) => {
+        __resolveReference: user => {
           return users[user.id]
         }
       }
@@ -410,10 +410,10 @@ test('gateway distributes query correctly to services when querying with inline 
   `,
     {
       Post: {
-        __resolveReference: (post, args, context, info) => {
+        __resolveReference: post => {
           return userPosts[post.pid]
         },
-        author: (post, args, context, info) => {
+        author: post => {
           return {
             __typename: 'User',
             id: post.authorId
@@ -421,7 +421,7 @@ test('gateway distributes query correctly to services when querying with inline 
         }
       },
       User: {
-        topPosts: (user, { count }, context, info) => {
+        topPosts: (user, { count }) => {
           return Object.values(userPosts)
             .filter(p => p.authorId === user.id)
             .slice(0, count)
@@ -532,12 +532,12 @@ test('gateway handles missing @key', async t => {
   `,
     {
       Query: {
-        me: (root, args, context, info) => {
+        me: () => {
           return users.u1
         }
       },
       User: {
-        __resolveReference: (user, args, context, info) => {
+        __resolveReference: user => {
           return users[user.id]
         }
       }
@@ -566,10 +566,10 @@ test('gateway handles missing @key', async t => {
   `,
     {
       Post: {
-        __resolveReference: (post, args, context, info) => {
+        __resolveReference: post => {
           return posts[post.pid]
         },
-        author: (post, args, context, info) => {
+        author: post => {
           return {
             __typename: 'User',
             id: post.authorId
@@ -577,7 +577,7 @@ test('gateway handles missing @key', async t => {
         }
       },
       User: {
-        posts: (user, args, context, info) => {
+        posts: user => {
           return Object.values(posts).filter(p => p.authorId === user.id)
         },
         numberOfPosts: user => {

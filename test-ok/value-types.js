@@ -126,15 +126,15 @@ const userMutationData = {
 
 const userResolvers = {
   User: {
-    __resolveReference: (post, args, context, info) => {
+    __resolveReference: () => {
       return { id: '1' }
     }
   },
   Query: {
-    users: (root, args, context, info) => {
+    users: () => {
       return usersWithFilesData.data.users
     },
-    userServiceInfo: (root, args, context, info) => {
+    userServiceInfo: () => {
       return returnTypeValue
     }
   },
@@ -304,15 +304,15 @@ const postMutationData = {
 
 const postResolvers = {
   Post: {
-    __resolveReference: (post, args, context, info) => {
+    __resolveReference: () => {
       return { id: '1' }
     }
   },
   Query: {
-    posts: (root, args, context, info) => {
+    posts: () => {
       return postsWithFilesData.data.posts
     },
-    postServiceInfo: (root, args, context, info) => {
+    postServiceInfo: () => {
       return returnTypeValue
     }
   },
@@ -437,15 +437,15 @@ const commentMutationData = {
 
 const commentResolvers = {
   Comment: {
-    __resolveReference: (post, args, context, info) => {
+    __resolveReference: () => {
       return { id: '1' }
     }
   },
   Query: {
-    comments: (root, args, context, info) => {
+    comments: () => {
       return commentsData.data.comments
     },
-    commentServiceInfo: (root, args, context, info) => {
+    commentServiceInfo: () => {
       return returnTypeValue
     }
   },

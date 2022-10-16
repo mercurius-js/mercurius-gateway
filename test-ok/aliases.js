@@ -73,20 +73,20 @@ async function createTestGatewayServer(t) {
   }`
   const userServiceResolvers = {
     Query: {
-      me: (root, args, context, info) => {
+      me: () => {
         return users.u1
       }
     },
     User: {
-      quote: (user, args, context, info) => {
+      quote: (user, args) => {
         return args.input
       },
-      metadata: (user, args, context, info) => {
+      metadata: (user, args) => {
         return {
           info: args.input
         }
       },
-      __resolveReference: (user, args, context, info) => {
+      __resolveReference: user => {
         return users[user.id]
       }
     }
@@ -109,7 +109,7 @@ async function createTestGatewayServer(t) {
   }`
   const postServiceResolvers = {
     User: {
-      topPosts: (user, { count }, context, info) => {
+      topPosts: (user, { count }) => {
         return Object.values(posts)
           .filter(p => p.authorId === user.id)
           .slice(0, count)

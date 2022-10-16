@@ -156,8 +156,8 @@ test('Polling schemas', async t => {
 
   const userServicePort = userService.server.address().port
 
-  gateway.register(GQL, {
-    gateway: {
+  const { schema } = await createGateway(
+    {
       services: [
         {
           name: 'user',
@@ -165,7 +165,12 @@ test('Polling schemas', async t => {
         }
       ],
       pollingInterval: 2000
-    }
+    },
+    gateway
+  )
+
+  gateway.register(GQL, {
+    schema
   })
 
   const res = await gateway.inject({
@@ -328,8 +333,8 @@ test('Polling schemas (gateway.polling interval is not a number)', async t => {
 
   const userServicePort = userService.server.address().port
 
-  gateway.register(GQL, {
-    gateway: {
+  const { schema } = await createGateway(
+    {
       services: [
         {
           name: 'user',
@@ -337,7 +342,12 @@ test('Polling schemas (gateway.polling interval is not a number)', async t => {
         }
       ],
       pollingInterval: '2000'
-    }
+    },
+    gateway
+  )
+
+  gateway.register(GQL, {
+    schema
   })
 
   await gateway.listen({ port: 0 })
@@ -387,8 +397,8 @@ test("Polling schemas (if service is down, schema shouldn't be changed)", async 
 
   const userServicePort = userService.server.address().port
 
-  gateway.register(GQL, {
-    gateway: {
+  const { schema } = await createGateway(
+    {
       services: [
         {
           name: 'user',
@@ -396,7 +406,12 @@ test("Polling schemas (if service is down, schema shouldn't be changed)", async 
         }
       ],
       pollingInterval: 500
-    }
+    },
+    gateway
+  )
+
+  gateway.register(GQL, {
+    schema
   })
 
   await t.context.clock.tickAsync()
@@ -542,8 +557,8 @@ test('Polling schemas (if service is mandatory, exception should be thrown)', as
 
   const userServicePort = userService.server.address().port
 
-  gateway.register(GQL, {
-    gateway: {
+  const { schema } = await createGateway(
+    {
       services: [
         {
           name: 'user',
@@ -551,7 +566,12 @@ test('Polling schemas (if service is mandatory, exception should be thrown)', as
           mandatory: true
         }
       ]
-    }
+    },
+    gateway
+  )
+
+  gateway.register(GQL, {
+    schema
   })
 
   {
@@ -663,8 +683,8 @@ test('Polling schemas (cache should be cleared)', async t => {
 
   const userServicePort = userService.server.address().port
 
-  gateway.register(GQL, {
-    gateway: {
+  const { schema } = await createGateway(
+    {
       services: [
         {
           name: 'user',
@@ -672,7 +692,12 @@ test('Polling schemas (cache should be cleared)', async t => {
         }
       ],
       pollingInterval: 2000
-    }
+    },
+    gateway
+  )
+
+  gateway.register(GQL, {
+    schema
   })
 
   await gateway.listen({ port: 0 })
@@ -827,8 +852,8 @@ test('Polling schemas (should properly regenerate the schema when a downstream s
 
   const userServicePort = userService.server.address().port
 
-  gateway.register(GQL, {
-    gateway: {
+  const { schema } = await createGateway(
+    {
       services: [
         {
           name: 'user',
@@ -836,7 +861,12 @@ test('Polling schemas (should properly regenerate the schema when a downstream s
         }
       ],
       pollingInterval: 2000
-    }
+    },
+    gateway
+  )
+
+  gateway.register(GQL, {
+    schema
   })
 
   const res = await gateway.inject({
@@ -1046,9 +1076,8 @@ test('Polling schemas (subscriptions should be handled)', async t => {
 
   const userServicePort = userService.server.address().port
 
-  gateway.register(GQL, {
-    subscription: true,
-    gateway: {
+  const { schema } = await createGateway(
+    {
       services: [
         {
           name: 'user',
@@ -1057,7 +1086,13 @@ test('Polling schemas (subscriptions should be handled)', async t => {
         }
       ],
       pollingInterval: 2000
-    }
+    },
+    gateway
+  )
+
+  gateway.register(GQL, {
+    subscription: true,
+    schema
   })
 
   await gateway.listen({ port: 0 })

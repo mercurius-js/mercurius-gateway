@@ -218,7 +218,7 @@ test('Uses the supplied schema for federation rather than fetching it remotely',
     content
     ...AuthorFragment
   }
-  
+
   fragment AuthorFragment on Post {
     author {
       ...UserFragment
@@ -410,7 +410,7 @@ test('Non mandatory gateway failure wont stop gateway creation', async t => {
 })
 
 test('Update the schema', async t => {
-  const schemaNode = `
+  const partialSchema = `
     extend type Query {
       hello: String!
     }
@@ -442,7 +442,7 @@ test('Update the schema', async t => {
         {
           name: 'working',
           url: `http://localhost:${servicePort}/graphql`,
-          schemaNode
+          schema: partialSchema
         }
       ]
     },
@@ -768,7 +768,7 @@ test('It builds the gateway schema correctly with two services query extension h
     content
     ...AuthorFragment
   }
-  
+
   fragment AuthorFragment on Post {
     author {
       ...UserFragment

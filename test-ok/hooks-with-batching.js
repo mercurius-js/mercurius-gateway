@@ -4,7 +4,8 @@ const { test } = require('tap')
 const Fastify = require('fastify')
 const { GraphQLSchema, parse } = require('graphql')
 const { promisify } = require('util')
-const GQL = require('../..')
+const GQL = require('mercurius')
+const {createGateway} = require("../index")
 
 const immediate = promisify(setImmediate)
 
@@ -155,9 +156,9 @@ async function createTestGatewayServer(t, opts = {}) {
     await userService.close()
     await postService.close()
   })
-  gateway.register(GQL, {
-    ...opts,
-    gateway: {
+
+  const { schema } = await createGateway(
+    {
       services: [
         {
           name: 'user',
@@ -170,7 +171,13 @@ async function createTestGatewayServer(t, opts = {}) {
           allowBatchedQueries: true
         }
       ]
-    }
+    },
+    gateway
+  )
+
+  gateway.register(GQL, {
+    ...opts,
+    schema
   })
   return gateway
 }

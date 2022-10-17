@@ -3,7 +3,7 @@
 const { test } = require('tap')
 const Fastify = require('fastify')
 const WebSocket = require('ws')
-const GQL = require('../..')
+const GQL = require('mercurius')
 
 const users = {
   u1: {
@@ -151,6 +151,7 @@ test('gateway subscription handling works correctly', t => {
     const messageServicePort = messageService.server.address().port
 
     gateway = Fastify()
+    
     gateway.register(GQL, {
       subscription: true,
       jit: 1,

@@ -2,10 +2,11 @@
 
 const { test } = require('tap')
 const Fastify = require('fastify')
-const GQL = require('../..')
+const GQL = require('mercurius')
 const { createClient } = require('graphql-ws')
 const ws = require('ws')
 const { promisify } = require('util')
+const { createGateway } = require('../index')
 const sleep = promisify(setTimeout)
 
 async function createTestService(port, schema, resolvers = {}) {
@@ -23,7 +24,7 @@ async function createTestService(port, schema, resolvers = {}) {
   return service
 }
 
-const schema = `
+const schemaBody = `
   type User {
     name: String
   }
@@ -53,7 +54,7 @@ const resolvers = {
 test('gateway - send query using graphql-ws protocol', async t => {
   t.plan(1)
 
-  const service1 = await createTestService(0, schema, resolvers)
+  const service1 = await createTestService(0, schemaBody, resolvers)
   const app = Fastify()
 
   t.teardown(async () => {
@@ -61,13 +62,8 @@ test('gateway - send query using graphql-ws protocol', async t => {
     await service1.close()
   })
 
-  await app.register(GQL, {
-    routes: true,
-    subscription: {
-      fullWsTransport: true
-    },
-    jit: 1,
-    gateway: {
+  const gateway = await createGateway(
+    {
       services: [
         {
           name: 'test',
@@ -79,7 +75,17 @@ test('gateway - send query using graphql-ws protocol', async t => {
           keepAlive: 3000
         }
       ]
-    }
+    },
+    app
+  )
+
+  await app.register(GQL, {
+    routes: true,
+    subscription: {
+      fullWsTransport: true
+    },
+    jit: 1,
+    schema: gateway.schema
   })
 
   await app.listen({ port: 0 })
@@ -109,7 +115,7 @@ test('gateway - send query using graphql-ws protocol', async t => {
 
 test('gateway - send mutations using graphql-ws protocol', async t => {
   t.plan(1)
-  const service1 = await createTestService(0, schema, resolvers)
+  const service1 = await createTestService(0, schemaBody, resolvers)
 
   const app = Fastify()
   t.teardown(async () => {
@@ -117,13 +123,8 @@ test('gateway - send mutations using graphql-ws protocol', async t => {
     await service1.close()
   })
 
-  await app.register(GQL, {
-    routes: true,
-    subscription: {
-      fullWsTransport: true
-    },
-    jit: 1,
-    gateway: {
+  const { schema } = await createGateway(
+    {
       services: [
         {
           name: 'test',
@@ -135,7 +136,17 @@ test('gateway - send mutations using graphql-ws protocol', async t => {
           keepAlive: 3000
         }
       ]
-    }
+    },
+    app
+  )
+
+  await app.register(GQL, {
+    routes: true,
+    subscription: {
+      fullWsTransport: true
+    },
+    jit: 1,
+    schema
   })
 
   await app.listen({ port: 0 })

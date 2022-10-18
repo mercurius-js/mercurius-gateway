@@ -1,5 +1,5 @@
-const { newInitGateway } = require('./lib/gateway')
+const { createGateway } = require('./lib/gateway')
 
 module.exports = {
-  createGateway: newInitGateway
+  createGateway
 }

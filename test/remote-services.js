@@ -2,7 +2,6 @@
 
 const { test } = require('tap')
 const Fastify = require('fastify')
-const GQL = require('mercurius')
 const { createGateway } = require('../index')
 
 const invalidSchema = `
@@ -41,24 +40,18 @@ test(
       await service.close()
     })
 
-    const { schema } = await createGateway(
-      {
-        services: [
-          {
-            name: 'not-working',
-            url: `http://localhost:${servicePort}/graphql`
-          }
-        ]
-      },
-      gateway
-    )
-
-    gateway.register(GQL, {
-      schema
-    })
-
     try {
-      await gateway.ready()
+      await createGateway(
+        {
+          services: [
+            {
+              name: 'not-working',
+              url: `http://localhost:${servicePort}/graphql`
+            }
+          ]
+        },
+        gateway
+      )
     } catch (err) {
       t.equal(
         err.message,
@@ -77,27 +70,21 @@ test('Returns schema related errors for mandatory services', async t => {
     await Promise.all([gateway.close(), service.close()])
   })
 
-  const { schema } = await createGateway(
-    {
-      services: [
-        {
-          name: 'not-working',
-          url: `http://localhost:${servicePort}/graphql`,
-          mandatory: true,
-          keepAliveTimeout: 10, // milliseconds
-          keepAliveMaxTimeout: 10 // milliseconds
-        }
-      ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
-  })
-
   try {
-    await gateway.ready()
+    await createGateway(
+      {
+        services: [
+          {
+            name: 'not-working',
+            url: `http://localhost:${servicePort}/graphql`,
+            mandatory: true,
+            keepAliveTimeout: 10, // milliseconds
+            keepAliveMaxTimeout: 10 // milliseconds
+          }
+        ]
+      },
+      gateway
+    )
   } catch (err) {
     t.equal(err.message, 'Unknown type "World".')
   }
@@ -127,28 +114,22 @@ test('Does not error if at least one service schema is valid', async t => {
     ])
   })
 
-  const { schema } = await createGateway(
-    {
-      services: [
-        {
-          name: 'working',
-          url: `http://localhost:${servicePort}/graphql`
-        },
-        {
-          name: 'not-working',
-          url: `http://localhost:${invalidServicePort}/graphql`
-        }
-      ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
-  })
-
   try {
-    await gateway.ready()
+    await createGateway(
+      {
+        services: [
+          {
+            name: 'working',
+            url: `http://localhost:${servicePort}/graphql`
+          },
+          {
+            name: 'not-working',
+            url: `http://localhost:${invalidServicePort}/graphql`
+          }
+        ]
+      },
+      gateway
+    )
   } catch (err) {
     t.error(err)
   }

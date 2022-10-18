@@ -4,6 +4,7 @@ const { test } = require('tap')
 const Fastify = require('fastify')
 const WebSocket = require('ws')
 const GQL = require('mercurius')
+const { createGateway } = require('../index')
 
 const users = {
   u1: {
@@ -59,12 +60,12 @@ input MessageInput {
 
 const userResolvers = {
   Query: {
-    me: (root, args, context, info) => {
+    me: () => {
       return users.u2
     }
   },
   User: {
-    __resolveReference: (user, args, context, info) => {
+    __resolveReference: user => {
       return users[user.id]
     }
   }
@@ -146,16 +147,14 @@ test('gateway subscription handling works correctly', t => {
     messageService.listen({ port: 0 }, callback)
   }
 
-  function createGateway(callback) {
+  async function createGatewayApp(callback) {
     const userServicePort = userService.server.address().port
     const messageServicePort = messageService.server.address().port
 
     gateway = Fastify()
-    
-    gateway.register(GQL, {
-      subscription: true,
-      jit: 1,
-      gateway: {
+
+    const { schema } = await createGateway(
+      {
         services: [
           {
             name: 'user',
@@ -168,7 +167,14 @@ test('gateway subscription handling works correctly', t => {
             wsUrl: `ws://localhost:${messageServicePort}/graphql`
           }
         ]
-      }
+      },
+      gateway
+    )
+
+    gateway.register(GQL, {
+      subscription: true,
+      jit: 1,
+      schema
     })
 
     gateway.listen({ port: 0 }, callback)
@@ -248,6 +254,7 @@ test('gateway subscription handling works correctly', t => {
     client.on('data', chunk => {
       const data = JSON.parse(chunk)
 
+      // console.log(JSON.stringify(data, null, 2))
       if (data.id === 1 && data.type === 'data') {
         t.equal(
           chunk,
@@ -297,7 +304,7 @@ test('gateway subscription handling works correctly', t => {
     })
   }
 
-  const startGateway = createGateway.bind(null, runSubscription)
+  const startGateway = createGatewayApp.bind(null, runSubscription)
   const startMessageService = createMessageService.bind(null, startGateway)
 
   createUserService(startMessageService)
@@ -333,9 +340,9 @@ test('gateway wsConnectionParams object is passed to SubscriptionClient', t => {
       await gateway.close()
       await testService.close()
     })
-    gateway.register(GQL, {
-      subscription: true,
-      gateway: {
+
+    const { schema } = await createGateway(
+      {
         services: [
           {
             name: 'test',
@@ -346,7 +353,13 @@ test('gateway wsConnectionParams object is passed to SubscriptionClient', t => {
             }
           }
         ]
-      }
+      },
+      gateway
+    )
+
+    gateway.register(GQL, {
+      subscription: true,
+      schema
     })
     await gateway.ready()
   })
@@ -382,9 +395,9 @@ test('gateway wsConnectionParams function is passed to SubscriptionClient', t =>
       await gateway.close()
       await testService.close()
     })
-    gateway.register(GQL, {
-      subscription: true,
-      gateway: {
+
+    const { schema } = await createGateway(
+      {
         services: [
           {
             name: 'test',
@@ -397,7 +410,13 @@ test('gateway wsConnectionParams function is passed to SubscriptionClient', t =>
             }
           }
         ]
-      }
+      },
+      gateway
+    )
+
+    gateway.register(GQL, {
+      subscription: true,
+      schema
     })
     await gateway.ready()
   })
@@ -439,7 +458,7 @@ test('gateway forwards the connection_init payload to the federated service on g
       },
       Subscription: {
         notificationAdded: {
-          subscribe: (root, args, { pubsub, topic, hello }) => {
+          subscribe: () => {
             t.end()
           }
         }
@@ -459,9 +478,9 @@ test('gateway forwards the connection_init payload to the federated service on g
       await gateway.close()
       await testService.close()
     })
-    gateway.register(GQL, {
-      subscription: true,
-      gateway: {
+
+    const { schema } = await createGateway(
+      {
         services: [
           {
             name: 'test',
@@ -469,7 +488,13 @@ test('gateway forwards the connection_init payload to the federated service on g
             wsUrl: `ws://localhost:${testServicePort}/graphql`
           }
         ]
-      }
+      },
+      gateway
+    )
+
+    gateway.register(GQL, {
+      subscription: true,
+      schema
     })
 
     gateway.listen({ port: 0 }, async err => {
@@ -568,7 +593,7 @@ test('connection_init payload is overwritten at gateway and forwarded to the fed
       },
       Subscription: {
         notificationAdded: {
-          subscribe: (root, args, { pubsub, topic, hello }) => {
+          subscribe: () => {
             t.end()
           }
         }
@@ -588,11 +613,9 @@ test('connection_init payload is overwritten at gateway and forwarded to the fed
       await gateway.close()
       await testService.close()
     })
-    gateway.register(GQL, {
-      subscription: {
-        onConnect: onConnectGateway
-      },
-      gateway: {
+
+    const { schema } = await createGateway(
+      {
         services: [
           {
             name: 'test',
@@ -603,7 +626,15 @@ test('connection_init payload is overwritten at gateway and forwarded to the fed
             }
           }
         ]
-      }
+      },
+      gateway
+    )
+
+    gateway.register(GQL, {
+      subscription: {
+        onConnect: onConnectGateway
+      },
+      schema
     })
 
     gateway.listen({ port: 0 }, async err => {
@@ -704,13 +735,13 @@ test('subscriptions work with scalars', async t => {
     return testService.listen({ port: 0 })
   }
 
-  function createGateway() {
+  async function createGatewayApp() {
     const testServicePort = testService.server.address().port
 
     gateway = Fastify()
-    gateway.register(GQL, {
-      subscription: true,
-      gateway: {
+
+    const { schema } = await createGateway(
+      {
         services: [
           {
             name: 'testService',
@@ -718,7 +749,13 @@ test('subscriptions work with scalars', async t => {
             wsUrl: `ws://localhost:${testServicePort}/graphql`
           }
         ]
-      }
+      },
+      gateway
+    )
+
+    gateway.register(GQL, {
+      subscription: true,
+      schema
     })
 
     return gateway.listen({ port: 0 })
@@ -767,7 +804,7 @@ test('subscriptions work with scalars', async t => {
         payload: {
           query: `
           subscription {
-            testEvent 
+            testEvent
           }
         `
         }
@@ -825,7 +862,7 @@ test('subscriptions work with scalars', async t => {
   }
 
   await createTestService()
-  await createGateway()
+  await createGatewayApp()
   await runSubscription()
 })
 
@@ -890,13 +927,13 @@ test('subscriptions work with different contexts', async t => {
     return testService.listen({ port: 0 })
   }
 
-  function createGateway() {
+  async function createGatewayApp() {
     const testServicePort = testService.server.address().port
 
     gateway = Fastify()
-    gateway.register(GQL, {
-      subscription: true,
-      gateway: {
+
+    const { schema } = await createGateway(
+      {
         services: [
           {
             name: 'testService',
@@ -904,7 +941,13 @@ test('subscriptions work with different contexts', async t => {
             wsUrl: `ws://localhost:${testServicePort}/graphql`
           }
         ]
-      }
+      },
+      gateway
+    )
+
+    gateway.register(GQL, {
+      subscription: true,
+      schema
     })
 
     return gateway.listen({ port: 0 })
@@ -1012,7 +1055,7 @@ test('subscriptions work with different contexts', async t => {
   }
 
   await createTestService()
-  await createGateway()
+  await createGatewayApp()
   const subscriptions = new Array(10)
     .fill(null)
     .map((_, i) => runSubscription(i))
@@ -1052,11 +1095,11 @@ test('connection_init headers available in federation event resolver', async t =
       extend type Query {
         ignoredResolver: Boolean!
       }
-    
+
       extend type Event @key(fields: "value") {
         id: ID! @external
         userId: Int!
-      }  
+      }
     `
 
     const resolvers = {
@@ -1064,7 +1107,7 @@ test('connection_init headers available in federation event resolver', async t =
         ignoredResolver: () => true
       },
       Event: {
-        userId: (root, args, ctx) => {
+        userId: root => {
           return parseInt(root.id)
         }
       }
@@ -1086,7 +1129,7 @@ test('connection_init headers available in federation event resolver', async t =
       extend type Query {
         ignored: Boolean!
       }
-    
+
       type Event @key(fields: "id") {
         id: ID!
       }
@@ -1094,7 +1137,7 @@ test('connection_init headers available in federation event resolver', async t =
       extend type Mutation {
         addTestEvent(value: Int!): Int!
       }
-      
+
       extend type Subscription {
         testEvent(value: Int!): Event!
       }
@@ -1139,14 +1182,14 @@ test('connection_init headers available in federation event resolver', async t =
     return subscriptionService.listen({ port: 0 })
   }
 
-  function createGateway() {
+  async function createGatewayApp() {
     const subscriptionServicePort = subscriptionService.server.address().port
     const resolverServicePort = resolverService.server.address().port
 
     gateway = Fastify()
-    gateway.register(GQL, {
-      subscription: true,
-      gateway: {
+
+    const { schema } = await createGateway(
+      {
         services: [
           {
             name: 'subscriptionService',
@@ -1161,7 +1204,12 @@ test('connection_init headers available in federation event resolver', async t =
             wsConnectionParams
           }
         ]
-      }
+      },
+      gateway
+    )
+    gateway.register(GQL, {
+      subscription: true,
+      schema
     })
 
     return gateway.listen({ port: 0 })
@@ -1280,7 +1328,7 @@ test('connection_init headers available in federation event resolver', async t =
 
   await createSubscriptionService()
   await createResolverService()
-  await createGateway()
+  await createGatewayApp()
   const subscriptions = new Array(10)
     .fill(null)
     .map((_, i) => runSubscription(i))

@@ -13,7 +13,7 @@
     "lint": "eslint .",
     "example": "node example/index.js",
     "test": "npm run test:unit",
-    "test:unit": "tap --jobs=2 test/gateway/*.js",
+    "test:unit": "tap --jobs=1 --coverage-report=html test/*.js test/gateway/*.js",
     "test:types": "tsd",
     "prepare": "husky install"
   },
@@ -44,7 +44,7 @@
     "fastify": "^4.8.1",
     "husky": "^8.0.1",
     "lint-staged": "^13.0.3",
-    "mercurius": "11.0.1",
+    "mercurius": "11.1.0",
     "prettier": "^2.7.1",
     "sinon": "^14.0.0",
     "tap": "^16.0.0",
@@ -66,6 +66,7 @@
     "graphql-ws": "5.11.2",
     "p-map": "4.0.0",
     "single-user-cache": "0.6.0",
+    "tiny-lru": "^8.0.1",
     "ws": "8.9.0"
   }
 }

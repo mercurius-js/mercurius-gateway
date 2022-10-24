@@ -8,6 +8,7 @@ const { GraphQLSchema, parse } = require('graphql')
 const GQL = require('mercurius')
 const { createGateway } = require('../../index')
 
+let assignedPort = 3700
 const users = {
   u1: {
     id: 'u1',
@@ -148,7 +149,7 @@ async function createTestService(t, schema, resolvers) {
     federationMetadata: true,
     subscription: true
   })
-  await service.listen({ port: 0 })
+  await service.listen({ port: assignedPort++ })
   return [service, service.server.address().port]
 }
 
@@ -270,7 +271,7 @@ test('gateway subscription - hooks basic', async t => {
     }
   )
 
-  await gateway.listen({ port: 0 })
+  await gateway.listen({ port: assignedPort++ })
 
   const { client } = createWebSocketClient(t, gateway)
 
@@ -366,7 +367,7 @@ test('gateway - preSubscriptionParsing hooks should handle errors', async t => {
     t.fail('onSubscriptionResolution should not be called')
   })
 
-  await gateway.listen({ port: 0 })
+  await gateway.listen({ port: assignedPort++ })
 
   const { client } = createWebSocketClient(t, gateway)
 
@@ -426,7 +427,7 @@ test('gateway - preSubscriptionExecution hooks should handle errors', async t =>
     t.fail('onSubscriptionResolution should not be called')
   })
 
-  await gateway.listen({ port: 0 })
+  await gateway.listen({ port: assignedPort++ })
 
   const { client } = createWebSocketClient(t, gateway)
 
@@ -481,7 +482,7 @@ test('gateway - preGatewaySubscriptionExecution hooks should handle errors', asy
     t.fail('onSubscriptionResolution should not be called')
   })
 
-  await gateway.listen({ port: 0 })
+  await gateway.listen({ port: assignedPort++ })
 
   const { client } = createWebSocketClient(t, gateway)
 
@@ -536,7 +537,7 @@ test('gateway subscription - preGatewaySubscriptionExecution hooks should contai
     }
   )
 
-  await gateway.listen({ port: 0 })
+  await gateway.listen({ port: assignedPort++ })
 
   const { client } = createWebSocketClient(t, gateway)
 
@@ -620,7 +621,7 @@ test('gateway - onSubscriptionResolution hooks should handle errors', async t =>
     t.fail('onSubscriptionResolution should not be called again')
   })
 
-  await gateway.listen({ port: 0 })
+  await gateway.listen({ port: assignedPort++ })
 
   const { client, ws } = createWebSocketClient(t, gateway)
 
@@ -679,7 +680,7 @@ test('gateway - should call onSubscriptionEnd when subscription ends', async t =
     t.ok('onSubscriptionEnd called')
   })
 
-  await gateway.listen({ port: 0 })
+  await gateway.listen({ port: assignedPort++ })
 
   const { client } = createWebSocketClient(t, gateway)
 
@@ -729,7 +730,7 @@ test('gateway - should handle onSubscriptionEnd hook errors', async t => {
     throw new Error('kaboom')
   })
 
-  await gateway.listen({ port: 0 })
+  await gateway.listen({ port: assignedPort++ })
 
   const { client, ws } = createWebSocketClient(t, gateway)
 

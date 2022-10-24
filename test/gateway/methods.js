@@ -65,7 +65,7 @@ test('calling defineLoaders throws an error in gateway mode', async t => {
   } catch (err) {
     t.equal(
       err.message,
-      'Gateway issues: Calling defineLoaders method when plugin is running in gateway mode is not allowed'
+      'Gateway issues: Calling defineLoaders method when gateway plugin is running is not allowed'
     )
   }
 })
@@ -91,15 +91,20 @@ test('calling defineResolvers throws an error in gateway mode', async t => {
     await service.close()
   })
 
-  app.register(GQL, {
-    gateway: {
+  const { schema } = await createGateway(
+    {
       services: [
         {
           name: 'service-1',
           url: `http://localhost:${port}/graphql`
         }
       ]
-    }
+    },
+    app
+  )
+
+  app.register(GQL, {
+    schema
   })
 
   await app.ready()
@@ -113,7 +118,7 @@ test('calling defineResolvers throws an error in gateway mode', async t => {
   } catch (err) {
     t.equal(
       err.message,
-      'Gateway issues: Calling defineResolvers method when plugin is running in gateway mode is not allowed'
+      'Gateway issues: Calling defineResolvers method when gateway plugin is running is not allowed'
     )
   }
 })
@@ -139,15 +144,20 @@ test('calling extendSchema throws an error in gateway mode', async t => {
     await service.close()
   })
 
-  app.register(GQL, {
-    gateway: {
+  const { schema } = await createGateway(
+    {
       services: [
         {
           name: 'service-1',
           url: `http://localhost:${port}/graphql`
         }
       ]
-    }
+    },
+    app
+  )
+
+  app.register(GQL, {
+    schema
   })
 
   await app.ready()
@@ -161,7 +171,7 @@ test('calling extendSchema throws an error in gateway mode', async t => {
   } catch (err) {
     t.equal(
       err.message,
-      'Gateway issues: Calling extendSchema method when plugin is running in gateway mode is not allowed'
+      'Gateway issues: Calling extendSchema method when gateway plugin is running is not allowed'
     )
     t.end()
   }

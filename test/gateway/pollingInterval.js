@@ -76,13 +76,13 @@ test('Polling schemas with disable cache', async t => {
           url: `http://localhost:${userServicePort}/graphql`
         }
       ],
-      pollingInterval: 2000
+      pollingInterval: 2000,
+      cache: false
     },
     gateway
   )
 
   gateway.register(GQL, {
-    cache: false,
     schema
   })
 

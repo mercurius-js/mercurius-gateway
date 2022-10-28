@@ -3,7 +3,7 @@
 const { test } = require('tap')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
-const { createGateway } = require('../../index')
+const { createGateway, buildFederationSchema } = require('../../index')
 
 const users = {
   1: {
@@ -49,10 +49,9 @@ async function buildService() {
   }
 
   app.register(GQL, {
-    schema,
+    schema: buildFederationSchema(schema),
     resolvers,
     loaders,
-    federationMetadata: true,
     allowBatchedQueries: true
   })
 
@@ -113,9 +112,8 @@ async function buildServiceExternal() {
   }
 
   app.register(GQL, {
-    schema,
+    schema: buildFederationSchema(schema),
     resolvers,
-    federationMetadata: true,
     allowBatchedQueries: true
   })
 

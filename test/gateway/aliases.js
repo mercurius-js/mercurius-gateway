@@ -3,14 +3,14 @@
 const { test } = require('tap')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
-const { createGateway } = require('../../index')
+const { createGateway, buildFederationSchema } = require('../../index')
 
 async function createTestService(t, schema, resolvers = {}) {
   const service = Fastify()
+
   service.register(GQL, {
-    schema,
-    resolvers,
-    federationMetadata: true
+    schema: buildFederationSchema(schema),
+    resolvers
   })
   await service.listen({ port: 0 })
   return [service, service.server.address().port]

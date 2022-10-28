@@ -6,7 +6,7 @@ const WebSocket = require('ws')
 const { once } = require('events')
 const { GraphQLSchema, parse } = require('graphql')
 const GQL = require('mercurius')
-const { createGateway } = require('../../index')
+const { createGateway, buildFederationSchema } = require('../../index')
 
 let assignedPort = 3700
 const users = {
@@ -144,9 +144,8 @@ const messageResolvers = {
 async function createTestService(t, schema, resolvers) {
   const service = Fastify()
   service.register(GQL, {
-    schema,
+    schema: buildFederationSchema(schema),
     resolvers,
-    federationMetadata: true,
     subscription: true
   })
   await service.listen({ port: assignedPort++ })

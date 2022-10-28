@@ -12,9 +12,8 @@ const { createGateway } = require('../../index')
 async function createService(t, schema, resolvers = {}) {
   const service = Fastify()
   service.register(GQL, {
-    schema,
-    resolvers,
-    federationMetadata: true
+    schema: buildFederationSchema(schema),
+    resolvers
   })
   await service.listen({ port: 0 })
   return [service, service.server.address().port]

@@ -4,7 +4,7 @@ const { test } = require('tap')
 const Fastify = require('fastify')
 const WebSocket = require('ws')
 const GQL = require('mercurius')
-const { createGateway } = require('../../index')
+const { createGateway, buildFederationSchema } = require('../../index')
 
 const users = {
   u1: {
@@ -129,9 +129,8 @@ test('gateway subscription handling works correctly', t => {
   async function createUserService() {
     userService = Fastify()
     await userService.register(GQL, {
-      schema: userSchema,
+      schema: buildFederationSchema(userSchema),
       resolvers: userResolvers,
-      federationMetadata: true,
       subscription: true
     })
     await userService.listen({ port: 3600 })
@@ -140,9 +139,8 @@ test('gateway subscription handling works correctly', t => {
   async function createMessageService() {
     messageService = Fastify()
     await messageService.register(GQL, {
-      schema: messageSchema,
+      schema: buildFederationSchema(messageSchema),
       resolvers: messageResolvers,
-      federationMetadata: true,
       subscription: true
     })
     await messageService.listen({ port: 3601 })
@@ -338,12 +336,11 @@ test('gateway wsConnectionParams object is passed to SubscriptionClient', t => {
   async function createTestService() {
     testService = Fastify()
     testService.register(GQL, {
-      schema: `
+      schema: buildFederationSchema(`
       type Query {
         test: String
       }
-    `,
-      federationMetadata: true,
+    `),
       subscription: { onConnect }
     })
 
@@ -391,12 +388,11 @@ test('gateway wsConnectionParams function is passed to SubscriptionClient', t =>
   const testService = Fastify()
 
   testService.register(GQL, {
-    schema: `
+    schema: buildFederationSchema(`
       type Query {
         test: String
       }
-    `,
-    federationMetadata: true,
+    `),
     subscription: { onConnect }
   })
 
@@ -452,7 +448,7 @@ test('gateway forwards the connection_init payload to the federated service on g
   const testService = Fastify()
 
   testService.register(GQL, {
-    schema: `
+    schema: buildFederationSchema(`
       type Notification {
         id: ID!
         message: String
@@ -465,7 +461,7 @@ test('gateway forwards the connection_init payload to the federated service on g
       type Subscription {
         notificationAdded: Notification
       }
-    `,
+    `),
     resolvers: {
       Query: {
         notifications: () => []
@@ -478,7 +474,6 @@ test('gateway forwards the connection_init payload to the federated service on g
         }
       }
     },
-    federationMetadata: true,
     subscription: { onConnect }
   })
 
@@ -587,7 +582,7 @@ test('connection_init payload is overwritten at gateway and forwarded to the fed
   const testService = Fastify()
 
   testService.register(GQL, {
-    schema: `
+    schema: buildFederationSchema(`
       type Notification {
         id: ID!
         message: String
@@ -600,7 +595,7 @@ test('connection_init payload is overwritten at gateway and forwarded to the fed
       type Subscription {
         notificationAdded: Notification
       }
-    `,
+    `),
     resolvers: {
       Query: {
         notifications: () => []
@@ -613,7 +608,6 @@ test('connection_init payload is overwritten at gateway and forwarded to the fed
         }
       }
     },
-    federationMetadata: true,
     subscription: { onConnect: onConnectService }
   })
 
@@ -740,9 +734,8 @@ test('subscriptions work with scalars', async t => {
   function createTestService() {
     testService = Fastify()
     testService.register(GQL, {
-      schema,
+      schema: buildFederationSchema(schema),
       resolvers,
-      federationMetadata: true,
       subscription: true
     })
 
@@ -932,9 +925,8 @@ test('subscriptions work with different contexts', async t => {
   function createTestService() {
     testService = Fastify()
     testService.register(GQL, {
-      schema,
+      schema: buildFederationSchema(schema),
       resolvers,
-      federationMetadata: true,
       subscription: true
     })
 
@@ -1129,9 +1121,8 @@ test('connection_init headers available in federation event resolver', async t =
 
     resolverService = Fastify()
     resolverService.register(GQL, {
-      schema,
+      schema: buildFederationSchema(schema),
       resolvers,
-      federationMetadata: true,
       subscription: { onConnect }
     })
 
@@ -1187,9 +1178,8 @@ test('connection_init headers available in federation event resolver', async t =
 
     subscriptionService = Fastify()
     subscriptionService.register(GQL, {
-      schema,
+      schema: buildFederationSchema(schema),
       resolvers,
-      federationMetadata: true,
       subscription: { onConnect }
     })
 

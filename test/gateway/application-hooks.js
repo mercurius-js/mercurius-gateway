@@ -52,7 +52,7 @@ test('onGatewayReplaceSchema - polling interval with a new schema should trigger
   })
 
   userService.register(GQL, {
-    schema: `
+    schema: buildFederationSchema(`
       extend type Query {
         me: User
       }
@@ -61,17 +61,16 @@ test('onGatewayReplaceSchema - polling interval with a new schema should trigger
         id: ID!
         name: String!
       }
-    `,
-    resolvers,
-    federationMetadata: true
+    `),
+    resolvers
   })
 
   await userService.listen({ port: 0 })
 
   const userServicePort = userService.server.address().port
 
-  await gateway.register(GQL, {
-    gateway: {
+  const { schema } = await createGateway(
+    {
       services: [
         {
           name: 'user',
@@ -79,7 +78,12 @@ test('onGatewayReplaceSchema - polling interval with a new schema should trigger
         }
       ],
       pollingInterval: 2000
-    }
+    },
+    gateway
+  )
+
+  await gateway.register(GQL, {
+    schema
   })
 
   gateway.graphql.addHook(
@@ -141,7 +145,7 @@ test('onGatewayReplaceSchema - should log an error should any errors occur in th
   })
 
   userService.register(GQL, {
-    schema: `
+    schema: buildFederationSchema(`
       extend type Query {
         me: User
       }
@@ -150,9 +154,8 @@ test('onGatewayReplaceSchema - should log an error should any errors occur in th
         id: ID!
         name: String!
       }
-    `,
-    resolvers,
-    federationMetadata: true
+    `),
+    resolvers
   })
 
   await userService.listen({ port: 0 })

@@ -3,11 +3,11 @@
 const { test } = require('tap')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
-const { createGateway } = require('../../index')
+const { createGateway, buildFederationSchema } = require('../../index')
 
 async function createTestService(schema, resolvers = {}, hooks = {}) {
   const service = Fastify()
-  service.register(GQL, { schema, resolvers, federationMetadata: true })
+  service.register(GQL, { schema: buildFederationSchema(schema), resolvers })
 
   Object.entries(hooks).forEach(([hookName, handler]) => {
     service.addHook(hookName, handler)

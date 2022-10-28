@@ -3,15 +3,13 @@
 const t = require('tap')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
-const { MER_ERR_GQL_GATEWAY_DUPLICATE_DIRECTIVE } = require('../../lib/errors')
-const { createGateway } = require('../../index')
+const { createGateway, buildFederationSchema } = require('../../index')
 
 async function createTestService(t, schema, resolvers = {}) {
   const service = Fastify()
   service.register(GQL, {
-    schema,
+    schema: buildFederationSchema(schema),
     resolvers,
-    federationMetadata: true,
     allowBatchedQueries: true
   })
   await service.listen({ port: 0 })
@@ -292,29 +290,33 @@ t.test('gateway with batching', t => {
         await userService.close()
         await postService.close()
       })
-      gateway.register(GQL, {
-        gateway: {
-          services: [
-            {
-              ...serviceOpts,
-              name: 'user',
-              url: `http://localhost:${userServicePort}/graphql`,
-              allowBatchedQueries: true
-            },
-            {
-              ...serviceOpts,
-              name: 'post',
-              url: `http://localhost:${postServicePort}/graphql`,
-              allowBatchedQueries: true
-            }
-          ]
-        }
-      })
 
-      await t.rejects(
-        gateway.ready(),
-        new MER_ERR_GQL_GATEWAY_DUPLICATE_DIRECTIVE('custom')
-      )
+      try {
+        await createGateway(
+          {
+            services: [
+              {
+                ...serviceOpts,
+                name: 'user',
+                url: `http://localhost:${userServicePort}/graphql`,
+                allowBatchedQueries: true
+              },
+              {
+                ...serviceOpts,
+                name: 'post',
+                url: `http://localhost:${postServicePort}/graphql`,
+                allowBatchedQueries: true
+              }
+            ]
+          },
+          gateway
+        )
+      } catch (error) {
+        t.same(
+          error.message,
+          'Directive with a different definition but the same name "custom" already exists in the gateway schema'
+        )
+      }
     }
   )
 })

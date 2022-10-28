@@ -3,14 +3,13 @@
 const { test } = require('tap')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
-const { createGateway } = require('../../index')
+const { createGateway, buildFederationSchema } = require('../../index')
 
 async function createService(t, schema, resolvers = {}) {
   const service = Fastify()
   service.register(GQL, {
-    schema,
-    resolvers,
-    federationMetadata: true
+    schema: buildFederationSchema(schema),
+    resolvers
   })
   await service.listen({ port: 0 })
 
@@ -147,19 +146,18 @@ test('Gateway sends initHeaders with _service sdl query', async t => {
   t.plan(1)
   const service = Fastify()
   service.register(GQL, {
-    schema: `
+    schema: buildFederationSchema(`
       extend type Query {
         hello: String
       }
-    `,
+    `),
     resolvers: {
       Query: {
         hello: async () => {
           return 'world'
         }
       }
-    },
-    federationMetadata: true
+    }
   })
   service.addHook('preHandler', async req => {
     t.equal(req.headers.authorization, 'ok')
@@ -200,19 +198,18 @@ test('Gateway sends initHeaders function result with _service sdl query', async 
   t.plan(1)
   const service = Fastify()
   service.register(GQL, {
-    schema: `
+    schema: buildFederationSchema(`
       extend type Query {
         hello: String
       }
-    `,
+    `),
     resolvers: {
       Query: {
         hello: async () => {
           return 'world'
         }
       }
-    },
-    federationMetadata: true
+    }
   })
   service.addHook('preHandler', async req => {
     t.equal(req.headers.authorization, 'ok')

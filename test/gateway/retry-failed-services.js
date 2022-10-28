@@ -5,14 +5,13 @@ const Fastify = require('fastify')
 const { GraphQLSchema } = require('graphql')
 const GQL = require('mercurius')
 const FakeTimers = require('@sinonjs/fake-timers')
-const { createGateway } = require('../../index')
+const { createGateway, buildFederationSchema } = require('../../index')
 
 async function createTestService(port, schema, resolvers = {}) {
   const service = Fastify()
   service.register(GQL, {
-    schema,
-    resolvers,
-    federationMetadata: true
+    schema: buildFederationSchema(schema),
+    resolvers
   })
   await service.listen({ port })
   return service

@@ -4,7 +4,7 @@ const { test } = require('tap')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
 const { ErrorWithProps } = require('../../lib/errors')
-const { createGateway } = require('../../index')
+const { createGateway, buildFederationSchema } = require('../../index')
 
 async function createTestService(
   t,
@@ -14,9 +14,8 @@ async function createTestService(
 ) {
   const service = Fastify()
   service.register(GQL, {
-    schema,
+    schema: buildFederationSchema(schema),
     resolvers,
-    federationMetadata: true,
     allowBatchedQueries
   })
   await service.listen({ port: 0 })

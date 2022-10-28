@@ -27,6 +27,53 @@ async function createRemoteService(schema) {
   return [service, service.server.address().port]
 }
 
+async function createNonWorkingRemoteService() {
+  const service = Fastify()
+  service.post('/graphql', async (request, reply) => {
+    reply.send({ data: undefined })
+  })
+
+  await service.listen({ port: 0 })
+
+  return [service, service.server.address().port]
+}
+
+test(
+  'Throws an Error and cleans up service connections correctly if the service do not return the SDL',
+  { timeout: 4000 },
+  async t => {
+    const [service, servicePort] = await createNonWorkingRemoteService(
+      invalidSchema
+    )
+
+    const gateway = Fastify()
+
+    t.teardown(async () => {
+      await gateway.close()
+      await service.close()
+    })
+
+    try {
+      await createGateway(
+        {
+          services: [
+            {
+              name: 'not-working',
+              url: `http://localhost:${servicePort}/graphql`
+            }
+          ]
+        },
+        gateway
+      )
+    } catch (err) {
+      t.equal(
+        err.message,
+        'Gateway schema init issues No valid service SDLs were provided'
+      )
+    }
+  }
+)
+
 test(
   'Throws an Error and cleans up service connections correctly if there are no valid services',
   { timeout: 4000 },

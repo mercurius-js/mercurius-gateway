@@ -50,7 +50,7 @@ test('Polling schemas with disable cache', async t => {
   })
 
   userService.register(GQL, {
-    schema: `
+    schema: buildFederationSchema(`
       extend type Query {
         me: User
       }
@@ -59,9 +59,8 @@ test('Polling schemas with disable cache', async t => {
         id: ID!
         name: String!
       }
-    `,
-    resolvers,
-    federationMetadata: true
+    `),
+    resolvers
   })
 
   await userService.listen({ port: 0 })
@@ -138,7 +137,7 @@ test('Polling schemas', async t => {
   })
 
   userService.register(GQL, {
-    schema: `
+    schema: buildFederationSchema(`
       extend type Query {
         me: User
       }
@@ -147,9 +146,8 @@ test('Polling schemas', async t => {
         id: ID!
         name: String!
       }
-    `,
-    resolvers,
-    federationMetadata: true
+    `),
+    resolvers
   })
 
   await userService.listen({ port: 0 })
@@ -315,7 +313,7 @@ test('Polling schemas (gateway.polling interval is not a number)', async t => {
   })
 
   userService.register(GQL, {
-    schema: `
+    schema: buildFederationSchema(`
       extend type Query {
         me: User
       }
@@ -324,9 +322,8 @@ test('Polling schemas (gateway.polling interval is not a number)', async t => {
         id: ID!
         name: String!
       }
-    `,
-    resolvers,
-    federationMetadata: true
+    `),
+    resolvers
   })
 
   await userService.listen({ port: 0 })
@@ -378,7 +375,7 @@ test("Polling schemas (if service is down, schema shouldn't be changed)", async 
   })
 
   userService.register(GQL, {
-    schema: `
+    schema: buildFederationSchema(`
       extend type Query {
         me: User
       }
@@ -387,9 +384,8 @@ test("Polling schemas (if service is down, schema shouldn't be changed)", async 
         id: ID!
         name: String!
       }
-    `,
-    resolvers,
-    federationMetadata: true
+    `),
+    resolvers
   })
 
   await userService.listen({ port: 0 })
@@ -539,7 +535,7 @@ test('Polling schemas (if service is mandatory, exception should be thrown)', as
   })
 
   userService.register(GQL, {
-    schema: `
+    schema: buildFederationSchema(`
       extend type Query {
         me: User
       }
@@ -548,9 +544,8 @@ test('Polling schemas (if service is mandatory, exception should be thrown)', as
         id: ID!
         name: String!
       }
-    `,
-    resolvers,
-    federationMetadata: true
+    `),
+    resolvers
   })
 
   await userService.listen({ port: 0 })
@@ -658,7 +653,7 @@ test('Polling schemas (cache should be cleared)', async t => {
   })
 
   userService.register(GQL, {
-    schema: `
+    schema: buildFederationSchema(`
       extend type Query {
         me: User
       }
@@ -667,7 +662,7 @@ test('Polling schemas (cache should be cleared)', async t => {
         id: ID!
         name: String!
       }
-    `,
+    `),
     resolvers: {
       Query: {
         me: () => user
@@ -675,8 +670,7 @@ test('Polling schemas (cache should be cleared)', async t => {
       User: {
         __resolveReference: user => user
       }
-    },
-    federationMetadata: true
+    }
   })
 
   await userService.listen({ port: 0 })
@@ -836,7 +830,7 @@ test('Polling schemas (should properly regenerate the schema when a downstream s
   const gateway = Fastify()
 
   userService.register(GQL, {
-    schema: oldSchema,
+    schema: buildFederationSchema(oldSchema),
     resolvers: {
       Query: {
         me: () => user
@@ -844,8 +838,7 @@ test('Polling schemas (should properly regenerate the schema when a downstream s
       User: {
         __resolveReference: user => user
       }
-    },
-    federationMetadata: true
+    }
   })
 
   await userService.listen({ port: 0 })
@@ -922,7 +915,7 @@ test('Polling schemas (should properly regenerate the schema when a downstream s
   `
 
   restartedUserService.register(GQL, {
-    schema: refreshedSchema,
+    schema: buildFederationSchema(refreshedSchema),
     resolvers: {
       Query: {
         me2: () => user
@@ -933,8 +926,7 @@ test('Polling schemas (should properly regenerate the schema when a downstream s
       User: {
         __resolveReference: user => user
       }
-    },
-    federationMetadata: true
+    }
   })
 
   await restartedUserService.listen({ port: userServicePort })
@@ -1049,7 +1041,7 @@ test('Polling schemas (subscriptions should be handled)', async t => {
   })
 
   userService.register(GQL, {
-    schema: `
+    schema: buildFederationSchema(`
       extend type Query {
         me: User
       }
@@ -1066,9 +1058,8 @@ test('Polling schemas (subscriptions should be handled)', async t => {
         id: ID!
         name: String!
       }
-    `,
+    `),
     resolvers,
-    federationMetadata: true,
     subscription: true
   })
 

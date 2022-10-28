@@ -3,15 +3,13 @@
 const t = require('tap')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
-const { MER_ERR_GQL_GATEWAY_DUPLICATE_DIRECTIVE } = require('../../lib/errors')
-const { createGateway } = require('../../index')
+const { createGateway, buildFederationSchema } = require('../../index')
 
 async function createTestService(t, schema, resolvers = {}) {
   const service = Fastify()
   service.register(GQL, {
-    schema,
-    resolvers,
-    federationMetadata: true
+    schema: buildFederationSchema(schema),
+    resolvers
   })
   await service.listen({ port: 0 })
   return [service, service.server.address().port]
@@ -287,31 +285,34 @@ t.test('gateway', t => {
 
       const gateway = Fastify()
       t.teardown(async () => {
-        await gateway.close()
         await userService.close()
         await postService.close()
       })
-      gateway.register(GQL, {
-        gateway: {
-          services: [
-            {
-              ...serviceOpts,
-              name: 'user',
-              url: `http://localhost:${userServicePort}/graphql`
-            },
-            {
-              ...serviceOpts,
-              name: 'post',
-              url: `http://localhost:${postServicePort}/graphql`
-            }
-          ]
-        }
-      })
 
-      await t.rejects(
-        gateway.ready(),
-        new MER_ERR_GQL_GATEWAY_DUPLICATE_DIRECTIVE('custom')
-      )
+      try {
+        await createGateway(
+          {
+            services: [
+              {
+                ...serviceOpts,
+                name: 'user',
+                url: `http://localhost:${userServicePort}/graphql`
+              },
+              {
+                ...serviceOpts,
+                name: 'post',
+                url: `http://localhost:${postServicePort}/graphql`
+              }
+            ]
+          },
+          gateway
+        )
+      } catch (error) {
+        t.same(
+          error.message,
+          'Directive with a different definition but the same name "custom" already exists in the gateway schema'
+        )
+      }
     }
   )
 })

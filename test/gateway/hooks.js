@@ -5,16 +5,15 @@ const Fastify = require('fastify')
 const { GraphQLSchema, parse } = require('graphql')
 const { promisify } = require('util')
 const GQL = require('mercurius')
-const { createGateway } = require('../../index')
+const { createGateway, buildFederationSchema } = require('../../index')
 
 const immediate = promisify(setImmediate)
 
 async function createTestService(t, schema, resolvers = {}) {
   const service = Fastify()
   service.register(GQL, {
-    schema,
-    resolvers,
-    federationMetadata: true
+    schema: buildFederationSchema(schema),
+    resolvers
   })
   await service.listen({ port: 0 })
   return [service, service.server.address().port]

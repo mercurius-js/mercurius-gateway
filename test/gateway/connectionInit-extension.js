@@ -5,7 +5,7 @@ const Fastify = require('fastify')
 const WebSocket = require('ws')
 const GQL = require('mercurius')
 
-const { createGateway } = require('../../index')
+const { createGateway, buildFederationSchema } = require('../../index')
 
 test('connectionInit extension e2e testing', t => {
   t.plan(9)
@@ -52,7 +52,7 @@ test('connectionInit extension e2e testing', t => {
   ]
 
   userService.register(GQL, {
-    schema: `
+    schema: buildFederationSchema(`
       type User {
         id: ID!
         name: String
@@ -69,7 +69,7 @@ test('connectionInit extension e2e testing', t => {
       extend type Subscription {
         userAdded: User
       }
-    `,
+    `),
     resolvers: {
       Query: {
         users: () => users
@@ -97,12 +97,11 @@ test('connectionInit extension e2e testing', t => {
         }
       }
     },
-    federationMetadata: true,
     subscription: { onConnect }
   })
 
   notificationService.register(GQL, {
-    schema: `
+    schema: buildFederationSchema(`
       type Notification {
         id: ID!
         message: String
@@ -119,7 +118,7 @@ test('connectionInit extension e2e testing', t => {
       extend type Subscription {
         notificationAdded: Notification
       }
-    `,
+    `),
     resolvers: {
       Query: {
         notifications: () => notifications
@@ -147,7 +146,6 @@ test('connectionInit extension e2e testing', t => {
         }
       }
     },
-    federationMetadata: true,
     subscription: { onConnect }
   })
 

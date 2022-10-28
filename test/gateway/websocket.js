@@ -6,16 +6,15 @@ const GQL = require('mercurius')
 const { createClient } = require('graphql-ws')
 const ws = require('ws')
 const { promisify } = require('util')
-const { createGateway } = require('../../index')
+const { createGateway, buildFederationSchema } = require('../../index')
 const sleep = promisify(setTimeout)
 
 async function createTestService(port, schema, resolvers = {}) {
   const service = Fastify()
 
   service.register(GQL, {
-    schema,
+    schema: buildFederationSchema(schema),
     resolvers,
-    federationMetadata: true,
     ide: true,
     routes: true,
     subscription: true

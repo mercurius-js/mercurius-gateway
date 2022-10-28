@@ -3,14 +3,13 @@
 const { test } = require('tap')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
-const { createGateway } = require('../../index')
+const { createGateway, buildFederationSchema } = require('../../index')
 
 async function createService(t, schema, resolvers = {}) {
   const service = Fastify()
   service.register(GQL, {
-    schema,
-    resolvers,
-    federationMetadata: true
+    schema: buildFederationSchema(schema),
+    resolvers
   })
   await service.listen({ port: 0 })
 
@@ -270,8 +269,9 @@ test('gateway passes field arguments through to types labeled by @extends direct
     await postService.close()
     await userService.close()
   })
-  gateway.register(GQL, {
-    gateway: {
+
+  const { schema } = await createGateway(
+    {
       services: [
         {
           name: 'user',
@@ -282,7 +282,12 @@ test('gateway passes field arguments through to types labeled by @extends direct
           url: `http://localhost:${postServicePort}/graphql`
         }
       ]
-    }
+    },
+    gateway
+  )
+
+  gateway.register(GQL, {
+    schema
   })
 
   const query = `
@@ -436,8 +441,9 @@ test('gateway distributes query correctly to services when querying with inline 
     await postService.close()
     await userService.close()
   })
-  gateway.register(GQL, {
-    gateway: {
+
+  const { schema } = await createGateway(
+    {
       services: [
         {
           name: 'user',
@@ -448,7 +454,12 @@ test('gateway distributes query correctly to services when querying with inline 
           url: `http://localhost:${postServicePort}/graphql`
         }
       ]
-    }
+    },
+    gateway
+  )
+
+  gateway.register(GQL, {
+    schema
   })
 
   await gateway.listen({ port: 0 })
@@ -596,8 +607,9 @@ test('gateway handles missing @key', async t => {
     await postService.close()
     await userService.close()
   })
-  gateway.register(GQL, {
-    gateway: {
+
+  const { schema } = await createGateway(
+    {
       services: [
         {
           name: 'user',
@@ -608,7 +620,12 @@ test('gateway handles missing @key', async t => {
           url: `http://localhost:${postServicePort}/graphql`
         }
       ]
-    }
+    },
+    gateway
+  )
+
+  gateway.register(GQL, {
+    schema
   })
 
   const query = `

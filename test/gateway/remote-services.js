@@ -42,6 +42,7 @@ test(
   'Throws an Error and cleans up service connections correctly if the service do not return the SDL',
   { timeout: 10000 },
   async t => {
+    t.plan(1)
     const [service, servicePort] = await createNonWorkingRemoteService(
       invalidSchema
     )
@@ -111,6 +112,7 @@ test(
   'Returns schema related errors for mandatory services',
   { timeout: 10000 },
   async t => {
+    t.plan(1)
     const [service, servicePort] = await createRemoteService(invalidSchema)
 
     const gateway = Fastify()
@@ -144,6 +146,7 @@ test(
   'Does not error if at least one service schema is valid',
   { timeout: 10000 },
   async t => {
+    t.plan(3)
     const [service, servicePort] = await createRemoteService(validSchema)
     const [invalidService, invalidServicePort] = await createRemoteService(
       invalidSchema

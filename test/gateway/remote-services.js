@@ -49,7 +49,6 @@ test(
     const gateway = Fastify()
 
     t.teardown(async () => {
-      await gateway.close()
       await service.close()
     })
 
@@ -78,12 +77,12 @@ test(
   'Throws an Error and cleans up service connections correctly if there are no valid services',
   { timeout: 4000 },
   async t => {
+    t.plan(1)
     const [service, servicePort] = await createRemoteService(invalidSchema)
 
     const gateway = Fastify()
 
     t.teardown(async () => {
-      await gateway.close()
       await service.close()
     })
 
@@ -154,11 +153,7 @@ test('Does not error if at least one service schema is valid', async t => {
   }
 
   t.teardown(async () => {
-    await Promise.all([
-      gateway.close(),
-      service.close(),
-      invalidService.close()
-    ])
+    await Promise.all([service.close(), invalidService.close()])
   })
 
   try {

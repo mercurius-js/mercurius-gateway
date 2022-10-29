@@ -166,7 +166,9 @@ async function createTestGatewayServer(t) {
 
   const gateway = Fastify()
   t.teardown(async () => {
-    await gateway.close()
+    if (typeof gateway.close === 'function') {
+      await gateway.close()
+    }
     await userService.close()
     await messageService.close()
   })

@@ -133,7 +133,7 @@ test('gateway subscription handling works correctly', t => {
       resolvers: userResolvers,
       subscription: true
     })
-    await userService.listen({ port: 3600 })
+    await userService.listen({ port: 0 })
   }
 
   async function createMessageService() {
@@ -143,7 +143,7 @@ test('gateway subscription handling works correctly', t => {
       resolvers: messageResolvers,
       subscription: true
     })
-    await messageService.listen({ port: 3601 })
+    await messageService.listen({ port: 0 })
   }
 
   async function createGatewayApp() {
@@ -176,7 +176,7 @@ test('gateway subscription handling works correctly', t => {
       schema
     })
 
-    await gateway.listen({ port: 3501 })
+    await gateway.listen({ port: 0 })
   }
 
   function runSubscription() {
@@ -309,16 +309,15 @@ test('gateway subscription handling works correctly', t => {
   Promise.all([createUserService(), createMessageService()])
     .then(() => createGatewayApp())
     .then(() => runSubscription())
-    .then(() => {
-      t.end()
-    })
 })
 
 test('gateway wsConnectionParams object is passed to SubscriptionClient', t => {
   t.plan(1)
+
   function onConnect(data) {
-    t.same(data.payload, connectionInitPayload)
-    t.end()
+    setTimeout(() => {
+      t.same(data.payload, connectionInitPayload)
+    }, 500)
   }
 
   const connectionInitPayload = {
@@ -327,9 +326,12 @@ test('gateway wsConnectionParams object is passed to SubscriptionClient', t => {
 
   let testService
   let gateway
+  let closeGateway
 
   t.teardown(async () => {
-    await gateway.close()
+    if (typeof closeGateway === 'function') {
+      await closeGateway()
+    }
     await testService.close()
   })
 
@@ -344,13 +346,14 @@ test('gateway wsConnectionParams object is passed to SubscriptionClient', t => {
       subscription: { onConnect }
     })
 
-    return testService.listen({ port: 3500 })
+    await testService.listen({ port: 0 })
+    await testService.ready()
   }
 
   async function createGatewayApp() {
     const testServicePort = testService.server.address().port
     gateway = Fastify()
-    const { schema } = await createGateway(
+    const result = await createGateway(
       {
         services: [
           {
@@ -366,25 +369,23 @@ test('gateway wsConnectionParams object is passed to SubscriptionClient', t => {
       gateway
     )
 
-    await gateway.register(GQL, {
-      subscription: true,
-      schema
-    })
-    await gateway.ready()
+    closeGateway = result.close
   }
 
   createTestService().then(() => createGatewayApp())
 })
 
+// DONE
 test('gateway wsConnectionParams function is passed to SubscriptionClient', t => {
+  t.plan(2)
   function onConnect(data) {
     t.same(data.payload, connectionInitPayload)
-    t.end()
   }
 
   const connectionInitPayload = {
     hello: 'world'
   }
+
   const testService = Fastify()
 
   testService.register(GQL, {
@@ -396,17 +397,16 @@ test('gateway wsConnectionParams function is passed to SubscriptionClient', t =>
     subscription: { onConnect }
   })
 
-  testService.listen({ port: 3510 }, async err => {
+  testService.listen({ port: 0 }, async err => {
     t.error(err)
     const testServicePort = testService.server.address().port
 
     const gateway = Fastify()
     t.teardown(async () => {
-      await gateway.close()
       await testService.close()
     })
 
-    const { schema } = await createGateway(
+    await createGateway(
       {
         services: [
           {
@@ -423,17 +423,12 @@ test('gateway wsConnectionParams function is passed to SubscriptionClient', t =>
       },
       gateway
     )
-
-    gateway.register(GQL, {
-      subscription: true,
-      schema
-    })
-    await gateway.ready()
   })
 })
 
+// done
 test('gateway forwards the connection_init payload to the federated service on gql_start using the connectionInit extension', t => {
-  t.plan(3)
+  t.plan(4)
   function onConnect(data) {
     if (data && data.payload && Object.entries(data.payload).length) {
       t.same(data.payload, connectionInitPayload)
@@ -469,7 +464,7 @@ test('gateway forwards the connection_init payload to the federated service on g
       Subscription: {
         notificationAdded: {
           subscribe: () => {
-            t.end()
+            t.pass()
           }
         }
       }
@@ -477,7 +472,7 @@ test('gateway forwards the connection_init payload to the federated service on g
     subscription: { onConnect }
   })
 
-  testService.listen({ port: 3520 }, async err => {
+  testService.listen({ port: 0 }, async err => {
     t.error(err)
 
     const testServicePort = testService.server.address().port
@@ -506,7 +501,7 @@ test('gateway forwards the connection_init payload to the federated service on g
       schema
     })
 
-    gateway.listen({ port: 3540 }, async err => {
+    gateway.listen({ port: 0 }, async err => {
       t.error(err)
       const ws = new WebSocket(
         `ws://localhost:${gateway.server.address().port}/graphql`,
@@ -553,7 +548,7 @@ test('gateway forwards the connection_init payload to the federated service on g
 })
 
 test('connection_init payload is overwritten at gateway and forwarded to the federated service', t => {
-  t.plan(6)
+  t.plan(7)
   const initialPayload = { token: 'some-token' }
   const rewritePayload = { user: { id: '1' } }
 
@@ -603,7 +598,7 @@ test('connection_init payload is overwritten at gateway and forwarded to the fed
       Subscription: {
         notificationAdded: {
           subscribe: () => {
-            t.end()
+            t.pass()
           }
         }
       }
@@ -611,14 +606,16 @@ test('connection_init payload is overwritten at gateway and forwarded to the fed
     subscription: { onConnect: onConnectService }
   })
 
-  testService.listen({ port: 3602 }, async err => {
+  testService.listen({ port: 0 }, async err => {
     t.error(err)
 
     const testServicePort = testService.server.address().port
 
     const gateway = Fastify()
     t.teardown(async () => {
-      await gateway.close()
+      if (typeof gateway.close === 'function') {
+        await gateway.close()
+      }
       await testService.close()
     })
 
@@ -645,7 +642,7 @@ test('connection_init payload is overwritten at gateway and forwarded to the fed
       schema
     })
 
-    gateway.listen({ port: 3603 }, async err => {
+    gateway.listen({ port: 0 }, async err => {
       t.error(err)
       const ws = new WebSocket(
         `ws://localhost:${gateway.server.address().port}/graphql`,
@@ -691,6 +688,7 @@ test('connection_init payload is overwritten at gateway and forwarded to the fed
   })
 })
 
+// DONE
 test('subscriptions work with scalars', async t => {
   let testService
   let gateway
@@ -739,7 +737,7 @@ test('subscriptions work with scalars', async t => {
       subscription: true
     })
 
-    return testService.listen({ port: 3604 })
+    return testService.listen({ port: 0 })
   }
 
   async function createGatewayApp() {
@@ -765,7 +763,7 @@ test('subscriptions work with scalars', async t => {
       schema
     })
 
-    return gateway.listen({ port: 3605 })
+    return gateway.listen({ port: 0 })
   }
 
   function runSubscription() {
@@ -930,7 +928,7 @@ test('subscriptions work with different contexts', async t => {
       subscription: true
     })
 
-    return testService.listen({ port: 3606 })
+    return testService.listen({ port: 0 })
   }
 
   async function createGatewayApp() {
@@ -956,7 +954,7 @@ test('subscriptions work with different contexts', async t => {
       schema
     })
 
-    return gateway.listen({ port: 3607 })
+    return gateway.listen({ port: 0 })
   }
 
   function runSubscription(id) {
@@ -1126,7 +1124,7 @@ test('connection_init headers available in federation event resolver', async t =
       subscription: { onConnect }
     })
 
-    return resolverService.listen({ port: 3608 })
+    return resolverService.listen({ port: 0 })
   }
 
   function createSubscriptionService() {
@@ -1183,7 +1181,7 @@ test('connection_init headers available in federation event resolver', async t =
       subscription: { onConnect }
     })
 
-    return subscriptionService.listen({ port: 3609 })
+    return subscriptionService.listen({ port: 0 })
   }
 
   async function createGatewayApp() {
@@ -1216,7 +1214,7 @@ test('connection_init headers available in federation event resolver', async t =
       schema
     })
 
-    return gateway.listen({ port: 3610 })
+    return gateway.listen({ port: 0 })
   }
 
   function runSubscription(id) {

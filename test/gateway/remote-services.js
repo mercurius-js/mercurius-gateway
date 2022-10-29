@@ -40,7 +40,7 @@ async function createNonWorkingRemoteService() {
 
 test(
   'Throws an Error and cleans up service connections correctly if the service do not return the SDL',
-  { timeout: 4000 },
+  { timeout: 10000 },
   async t => {
     const [service, servicePort] = await createNonWorkingRemoteService(
       invalidSchema
@@ -75,7 +75,7 @@ test(
 
 test(
   'Throws an Error and cleans up service connections correctly if there are no valid services',
-  { timeout: 4000 },
+  { timeout: 10000 },
   async t => {
     t.plan(1)
     const [service, servicePort] = await createRemoteService(invalidSchema)
@@ -107,73 +107,81 @@ test(
   }
 )
 
-test('Returns schema related errors for mandatory services', async t => {
-  const [service, servicePort] = await createRemoteService(invalidSchema)
+test(
+  'Returns schema related errors for mandatory services',
+  { timeout: 10000 },
+  async t => {
+    const [service, servicePort] = await createRemoteService(invalidSchema)
 
-  const gateway = Fastify()
+    const gateway = Fastify()
 
-  t.teardown(async () => {
-    await Promise.all([gateway.close(), service.close()])
-  })
+    t.teardown(async () => {
+      await Promise.all([gateway.close(), service.close()])
+    })
 
-  try {
-    await createGateway(
-      {
-        services: [
-          {
-            name: 'not-working',
-            url: `http://localhost:${servicePort}/graphql`,
-            mandatory: true,
-            keepAliveTimeout: 10, // milliseconds
-            keepAliveMaxTimeout: 10 // milliseconds
-          }
-        ]
-      },
-      gateway
+    try {
+      await createGateway(
+        {
+          services: [
+            {
+              name: 'not-working',
+              url: `http://localhost:${servicePort}/graphql`,
+              mandatory: true,
+              keepAliveTimeout: 10, // milliseconds
+              keepAliveMaxTimeout: 10 // milliseconds
+            }
+          ]
+        },
+        gateway
+      )
+    } catch (err) {
+      t.equal(err.message, 'Unknown type "World".')
+    }
+  }
+)
+
+test(
+  'Does not error if at least one service schema is valid',
+  { timeout: 10000 },
+  async t => {
+    const [service, servicePort] = await createRemoteService(validSchema)
+    const [invalidService, invalidServicePort] = await createRemoteService(
+      invalidSchema
     )
-  } catch (err) {
-    t.equal(err.message, 'Unknown type "World".')
+
+    const gateway = Fastify({
+      logger: true
+    })
+
+    let warnCalled = 0
+    gateway.log.warn = message => {
+      warnCalled++
+      t.matchSnapshot(message)
+    }
+
+    t.teardown(async () => {
+      await Promise.all([service.close(), invalidService.close()])
+    })
+
+    try {
+      await createGateway(
+        {
+          services: [
+            {
+              name: 'working',
+              url: `http://localhost:${servicePort}/graphql`
+            },
+            {
+              name: 'not-working',
+              url: `http://localhost:${invalidServicePort}/graphql`
+            }
+          ]
+        },
+        gateway
+      )
+    } catch (err) {
+      t.error(err)
+    }
+    t.equal(warnCalled, 2, 'Warning is called')
   }
-})
-
-test('Does not error if at least one service schema is valid', async t => {
-  const [service, servicePort] = await createRemoteService(validSchema)
-  const [invalidService, invalidServicePort] = await createRemoteService(
-    invalidSchema
-  )
-
-  const gateway = Fastify({
-    logger: true
-  })
-
-  let warnCalled = 0
-  gateway.log.warn = message => {
-    warnCalled++
-    t.matchSnapshot(message)
-  }
-
-  t.teardown(async () => {
-    await Promise.all([service.close(), invalidService.close()])
-  })
-
-  try {
-    await createGateway(
-      {
-        services: [
-          {
-            name: 'working',
-            url: `http://localhost:${servicePort}/graphql`
-          },
-          {
-            name: 'not-working',
-            url: `http://localhost:${invalidServicePort}/graphql`
-          }
-        ]
-      },
-      gateway
-    )
-  } catch (err) {
-    t.error(err)
-  }
-  t.equal(warnCalled, 2, 'Warning is called')
-})
+)

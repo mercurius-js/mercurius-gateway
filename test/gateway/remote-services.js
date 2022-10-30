@@ -42,7 +42,6 @@ test(
   'Throws an Error and cleans up service connections correctly if the service do not return the SDL',
   { timeout: 4000 },
   async t => {
-    t.plan(1)
     const [service, servicePort] = await createNonWorkingRemoteService(
       invalidSchema
     )
@@ -50,6 +49,7 @@ test(
     const gateway = Fastify()
 
     t.teardown(async () => {
+      await gateway.close()
       await service.close()
     })
 
@@ -70,6 +70,7 @@ test(
         err.message,
         'Gateway schema init issues No valid service SDLs were provided'
       )
+      t.end()
     }
   }
 )
@@ -78,12 +79,12 @@ test(
   'Throws an Error and cleans up service connections correctly if there are no valid services',
   { timeout: 4000 },
   async t => {
-    t.plan(1)
     const [service, servicePort] = await createRemoteService(invalidSchema)
 
     const gateway = Fastify()
 
     t.teardown(async () => {
+      await gateway.close()
       await service.close()
     })
 
@@ -104,6 +105,7 @@ test(
         err.message,
         'Gateway schema init issues No valid service SDLs were provided'
       )
+      t.end()
     }
   }
 )
@@ -112,12 +114,12 @@ test(
   'Returns schema related errors for mandatory services',
   { timeout: 4000 },
   async t => {
-    t.plan(1)
     const [service, servicePort] = await createRemoteService(invalidSchema)
 
     const gateway = Fastify()
 
     t.teardown(async () => {
+      await gateway.close()
       await service.close()
     })
 
@@ -138,6 +140,7 @@ test(
       )
     } catch (err) {
       t.equal(err.message, 'Unknown type "World".')
+      t.end()
     }
   }
 )
@@ -146,7 +149,6 @@ test(
   'Does not error if at least one service schema is valid',
   { timeout: 4000 },
   async t => {
-    t.plan(3)
     const [service, servicePort] = await createRemoteService(validSchema)
     const [invalidService, invalidServicePort] = await createRemoteService(
       invalidSchema
@@ -164,6 +166,7 @@ test(
 
     t.teardown(async () => {
       await close()
+      await gateway.close()
       await service.close()
       await invalidService.close()
     })
@@ -189,5 +192,6 @@ test(
       t.error(err)
     }
     t.equal(warnCalled, 2, 'Warning is called')
+    t.end()
   }
 )

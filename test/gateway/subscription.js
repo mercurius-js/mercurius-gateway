@@ -403,10 +403,16 @@ test('gateway wsConnectionParams function is passed to SubscriptionClient', t =>
 
     const gateway = Fastify()
     t.teardown(async () => {
+      // due the type of test can happen that the test finish before che schema is created
+      try {
+        await close()
+      } catch {
+        setTimeout(() => close(), 2000)
+      }
       await testService.close()
     })
 
-    await createGateway(
+    const { close } = await createGateway(
       {
         services: [
           {

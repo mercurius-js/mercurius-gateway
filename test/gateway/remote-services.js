@@ -163,11 +163,14 @@ test(
     }
 
     t.teardown(async () => {
-      await Promise.all([service.close(), invalidService.close()])
+      await close()
+      await service.close()
+      await invalidService.close()
     })
 
+    let close
     try {
-      await createGateway(
+      ;({ close } = await createGateway(
         {
           services: [
             {
@@ -181,7 +184,7 @@ test(
           ]
         },
         gateway
-      )
+      ))
     } catch (err) {
       t.error(err)
     }

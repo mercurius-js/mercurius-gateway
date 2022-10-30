@@ -4,6 +4,7 @@ jobs:
   test:
     runs-on: ${{ matrix.os }}
     strategy:
+      max-parallel: 1
       matrix:
         node-version: [14.x, 16.x, 18.x]
         os: [ubuntu-latest, windows-latest, macOS-latest]

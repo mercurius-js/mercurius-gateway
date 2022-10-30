@@ -27,90 +27,90 @@ async function createRemoteService(schema) {
   return [service, service.server.address().port]
 }
 
-// async function createNonWorkingRemoteService() {
-//   const service = Fastify()
-//   service.post('/graphql', async (request, reply) => {
-//     reply.send({ data: undefined })
-//   })
-//
-//   await service.listen({ port: 0 })
-//
-//   return [service, service.server.address().port]
-// }
-//
-// test(
-//   'Throws an Error and cleans up service connections correctly if the service do not return the SDL',
-//   { timeout: 10000 },
-//   async t => {
-//     t.plan(1)
-//     const [service, servicePort] = await createNonWorkingRemoteService(
-//       invalidSchema
-//     )
-//
-//     const gateway = Fastify()
-//
-//     t.teardown(async () => {
-//       await service.close()
-//     })
-//
-//     try {
-//       await createGateway(
-//         {
-//           services: [
-//             {
-//               name: 'not-working',
-//               url: `http://localhost:${servicePort}/graphql`
-//             }
-//           ]
-//         },
-//         gateway
-//       )
-//     } catch (err) {
-//       t.equal(
-//         err.message,
-//         'Gateway schema init issues No valid service SDLs were provided'
-//       )
-//     }
-//   }
-// )
-//
-// test(
-//   'Throws an Error and cleans up service connections correctly if there are no valid services',
-//   { timeout: 10000 },
-//   async t => {
-//     t.plan(1)
-//     const [service, servicePort] = await createRemoteService(invalidSchema)
-//
-//     const gateway = Fastify()
-//
-//     t.teardown(async () => {
-//       await service.close()
-//     })
-//
-//     try {
-//       await createGateway(
-//         {
-//           services: [
-//             {
-//               name: 'not-working',
-//               url: `http://localhost:${servicePort}/graphql`
-//             }
-//           ]
-//         },
-//         gateway
-//       )
-//     } catch (err) {
-//       t.equal(
-//         err.message,
-//         'Gateway schema init issues No valid service SDLs were provided'
-//       )
-//     }
-//   }
-// )
+async function createNonWorkingRemoteService() {
+  const service = Fastify()
+  service.post('/graphql', async (request, reply) => {
+    reply.send({ data: undefined })
+  })
+
+  await service.listen({ port: 0 })
+
+  return [service, service.server.address().port]
+}
+
+test(
+  'Throws an Error and cleans up service connections correctly if the service do not return the SDL',
+  { timeout: 4000 },
+  async t => {
+    t.plan(1)
+    const [service, servicePort] = await createNonWorkingRemoteService(
+      invalidSchema
+    )
+
+    const gateway = Fastify()
+
+    t.teardown(async () => {
+      await service.close()
+    })
+
+    try {
+      await createGateway(
+        {
+          services: [
+            {
+              name: 'not-working',
+              url: `http://localhost:${servicePort}/graphql`
+            }
+          ]
+        },
+        gateway
+      )
+    } catch (err) {
+      t.equal(
+        err.message,
+        'Gateway schema init issues No valid service SDLs were provided'
+      )
+    }
+  }
+)
+
+test(
+  'Throws an Error and cleans up service connections correctly if there are no valid services',
+  { timeout: 4000 },
+  async t => {
+    t.plan(1)
+    const [service, servicePort] = await createRemoteService(invalidSchema)
+
+    const gateway = Fastify()
+
+    t.teardown(async () => {
+      await service.close()
+    })
+
+    try {
+      await createGateway(
+        {
+          services: [
+            {
+              name: 'not-working',
+              url: `http://localhost:${servicePort}/graphql`
+            }
+          ]
+        },
+        gateway
+      )
+    } catch (err) {
+      t.equal(
+        err.message,
+        'Gateway schema init issues No valid service SDLs were provided'
+      )
+    }
+  }
+)
 
 test(
   'Returns schema related errors for mandatory services',
-  { timeout: 10000 },
+  { timeout: 4000 },
   async t => {
     t.plan(1)
     const [service, servicePort] = await createRemoteService(invalidSchema)
@@ -144,7 +144,7 @@ test(
 
 test(
   'Does not error if at least one service schema is valid',
-  { timeout: 10000 },
+  { timeout: 4000 },
   async t => {
     t.plan(3)
     const [service, servicePort] = await createRemoteService(validSchema)

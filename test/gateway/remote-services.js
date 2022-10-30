@@ -118,7 +118,7 @@ test(
     const gateway = Fastify()
 
     t.teardown(async () => {
-      await Promise.all([gateway.close(), service.close()])
+      await service.close()
     })
 
     try {

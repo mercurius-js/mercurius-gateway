@@ -13,7 +13,7 @@
     "lint": "eslint .",
     "example": "node example/index.js",
     "test": "npm run test:unit",
-    "test:unit": "tap --jobs=1 --coverage-report=html test/*.js test/gateway/*.js",
+    "test:unit": "tap --jobs=1 --coverage-report=html test/gateway/*.js",
     "test:types": "tsd",
     "prepare": "husky install"
   },

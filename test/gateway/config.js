@@ -2,18 +2,17 @@
 
 const { test } = require('tap')
 const Fastify = require('fastify')
-const { createGateway } = require('../../index')
+const plugin = require('../../index')
 
 test('Throws an Error if the service list is empty', async t => {
-  const app = Fastify()
+  const gateway = Fastify()
 
   try {
-    await createGateway(
-      {
+    await gateway.register(plugin, {
+      gateway: {
         services: []
-      },
-      app
-    )
+      }
+    })
   } catch (err) {
     t.equal(
       err.message,
@@ -23,10 +22,12 @@ test('Throws an Error if the service list is empty', async t => {
 })
 
 test('Throws an Error if the service list is empty', async t => {
-  const app = Fastify()
+  const gateway = Fastify()
 
   try {
-    await createGateway({}, app)
+    await gateway.register(plugin, {
+      gateway: {}
+    })
   } catch (err) {
     t.equal(
       err.message,
@@ -36,15 +37,12 @@ test('Throws an Error if the service list is empty', async t => {
 })
 
 test('Each "gateway" option "services" must be an object', async t => {
-  const app = Fastify()
+  const gateway = Fastify()
 
   try {
-    await createGateway(
-      {
-        services: ['foo']
-      },
-      app
-    )
+    await gateway.register(plugin, {
+      gateway: { services: ['foo'] }
+    })
   } catch (err) {
     t.equal(
       err.message,
@@ -54,15 +52,12 @@ test('Each "gateway" option "services" must be an object', async t => {
 })
 
 test('Each "gateway" option "services" must have a "name"', async t => {
-  const app = Fastify()
+  const gateway = Fastify()
 
   try {
-    await createGateway(
-      {
-        services: [{}]
-      },
-      app
-    )
+    await gateway.register(plugin, {
+      gateway: { services: [{}] }
+    })
   } catch (err) {
     t.equal(
       err.message,
@@ -72,15 +67,12 @@ test('Each "gateway" option "services" must have a "name"', async t => {
 })
 
 test('Each "gateway" option "services" must have a "name" that is a String', async t => {
-  const app = Fastify()
+  const gateway = Fastify()
 
   try {
-    await createGateway(
-      {
-        services: [{ name: 42 }]
-      },
-      app
-    )
+    await gateway.register(plugin, {
+      gateway: { services: [{ name: 42 }] }
+    })
   } catch (err) {
     t.equal(
       err.message,
@@ -90,15 +82,14 @@ test('Each "gateway" option "services" must have a "name" that is a String', asy
 })
 
 test('Each "gateway" option "services" must have a "name" that is unique', async t => {
-  const app = Fastify()
+  const gateway = Fastify()
 
   try {
-    await createGateway(
-      {
+    await gateway.register(plugin, {
+      gateway: {
         services: [{ name: 'foo', url: 'https://foo' }, { name: 'foo' }]
-      },
-      app
-    )
+      }
+    })
   } catch (err) {
     t.equal(
       err.message,
@@ -108,15 +99,14 @@ test('Each "gateway" option "services" must have a "name" that is unique', async
 })
 
 test('Each "gateway" option "services" must have an "url"', async t => {
-  const app = Fastify()
+  const gateway = Fastify()
 
   try {
-    await createGateway(
-      {
+    await gateway.register(plugin, {
+      gateway: {
         services: [{ name: 'foo' }]
-      },
-      app
-    )
+      }
+    })
   } catch (err) {
     t.equal(
       err.message,
@@ -126,15 +116,14 @@ test('Each "gateway" option "services" must have an "url"', async t => {
 })
 
 test('Each "gateway" option "services" must have an "url" that is a String or an Array', async t => {
-  const app = Fastify()
+  const gateway = Fastify()
 
   try {
-    await createGateway(
-      {
+    await gateway.register(plugin, {
+      gateway: {
         services: [{ name: 'foo', url: new URL('https://foo') }]
-      },
-      app
-    )
+      }
+    })
   } catch (err) {
     t.equal(
       err.message,
@@ -144,15 +133,14 @@ test('Each "gateway" option "services" must have an "url" that is a String or an
 })
 
 test('Each "gateway" option "services" must have an "url" that, if it is an Array, should not be empty', async t => {
-  const app = Fastify()
+  const gateway = Fastify()
 
   try {
-    await createGateway(
-      {
+    await gateway.register(plugin, {
+      gateway: {
         services: [{ name: 'foo', url: [] }]
-      },
-      app
-    )
+      }
+    })
   } catch (err) {
     t.equal(
       err.message,
@@ -162,15 +150,14 @@ test('Each "gateway" option "services" must have an "url" that, if it is an Arra
 })
 
 test('Each "gateway" option "services" must have an "url" that, if it is a non-empty Array, should be filled with Strings only', async t => {
-  const app = Fastify()
+  const gateway = Fastify()
 
   try {
-    await createGateway(
-      {
+    await gateway.register(plugin, {
+      gateway: {
         services: [{ name: 'foo', url: [new URL('https://foo')] }]
-      },
-      app
-    )
+      }
+    })
   } catch (err) {
     t.equal(
       err.message,

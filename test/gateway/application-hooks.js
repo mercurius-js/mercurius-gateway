@@ -7,7 +7,7 @@ const { promisify } = require('util')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
 const buildFederationSchema = require('../../lib/federation')
-const { createGateway } = require('../../index')
+const plugin = require('../../index')
 
 const immediate = promisify(setImmediate)
 
@@ -69,8 +69,8 @@ test('onGatewayReplaceSchema - polling interval with a new schema should trigger
 
   const userServicePort = userService.server.address().port
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'user',
@@ -78,12 +78,7 @@ test('onGatewayReplaceSchema - polling interval with a new schema should trigger
         }
       ],
       pollingInterval: 2000
-    },
-    gateway
-  )
-
-  await gateway.register(GQL, {
-    schema
+    }
   })
 
   gateway.graphql.addHook(
@@ -162,8 +157,8 @@ test('onGatewayReplaceSchema - should log an error should any errors occur in th
 
   const userServicePort = userService.server.address().port
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'user',
@@ -171,12 +166,7 @@ test('onGatewayReplaceSchema - should log an error should any errors occur in th
         }
       ],
       pollingInterval: 2000
-    },
-    gateway
-  )
-
-  await gateway.register(GQL, {
-    schema
+    }
   })
 
   gateway.graphql.addHook('onGatewayReplaceSchema', async () => {

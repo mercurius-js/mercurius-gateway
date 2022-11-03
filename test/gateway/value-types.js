@@ -7,7 +7,7 @@ const { promisify } = require('util')
 const immediate = promisify(setImmediate)
 const buildFederationSchema = require('../../lib/federation')
 const GQL = require('mercurius')
-const { createGateway } = require('../../index')
+const plugin = require('../../index')
 
 async function createService(t, schema, resolvers = {}) {
   const service = Fastify()
@@ -523,8 +523,8 @@ test('Should be able to query with value types', async t => {
     await commentService.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'user',
@@ -539,12 +539,7 @@ test('Should be able to query with value types', async t => {
           url: `http://localhost:${commentServicePort}/graphql`
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   const usersRes = await gateway.inject({
@@ -613,8 +608,8 @@ test('Should be able to mutate with value types', async t => {
     await commentService.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'user',
@@ -629,12 +624,7 @@ test('Should be able to mutate with value types', async t => {
           url: `http://localhost:${commentServicePort}/graphql`
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   const usersRes = await gateway.inject({
@@ -703,8 +693,8 @@ test('Should be able to query top-level with value types', async t => {
     await commentService.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'user',
@@ -719,12 +709,7 @@ test('Should be able to query top-level with value types', async t => {
           url: `http://localhost:${commentServicePort}/graphql`
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   const usersRes = await gateway.inject({
@@ -805,8 +790,8 @@ test('Should be able to query with value types and polling', async t => {
     await commentService.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'user',
@@ -822,12 +807,7 @@ test('Should be able to query with value types and polling', async t => {
         }
       ],
       pollingInterval: 2000
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   const postsRes = await gateway.inject({
@@ -952,8 +932,8 @@ test('Should use last service in list for duplicate entity types', async t => {
     await userServiceB.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'userB',
@@ -964,12 +944,7 @@ test('Should use last service in list for duplicate entity types', async t => {
           url: `http://localhost:${userServicePortB}/graphql`
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   const usersRes = await gateway.inject({
@@ -1025,8 +1000,8 @@ test('Should be able to query nested value types', async t => {
     await commentService.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'user',
@@ -1041,12 +1016,7 @@ test('Should be able to query nested value types', async t => {
           url: `http://localhost:${commentServicePort}/graphql`
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   const usersRes = await gateway.inject({

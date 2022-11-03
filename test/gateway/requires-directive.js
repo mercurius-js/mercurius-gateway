@@ -3,7 +3,8 @@
 const { test } = require('tap')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
-const { createGateway, buildFederationSchema } = require('../../index')
+const plugin = require('../../index')
+const { buildFederationSchema } = require('../../index')
 
 async function createService(schema, resolvers = {}) {
   const service = Fastify()
@@ -29,15 +30,10 @@ async function createGatewayService(...services) {
     url: `http://localhost:${service.server.address().port}/graphql`
   }))
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: servicesMap
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   await gateway.listen({ port: 0 })

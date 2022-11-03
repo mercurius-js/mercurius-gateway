@@ -3,7 +3,8 @@
 const t = require('tap')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
-const { createGateway, buildFederationSchema } = require('../../index')
+const plugin = require('../../index')
+const { buildFederationSchema } = require('../../index')
 
 async function createTestService(t, schema, resolvers = {}) {
   const service = Fastify()
@@ -163,8 +164,8 @@ t.test('gateway', t => {
       await postService.close()
     })
 
-    const { schema } = await createGateway(
-      {
+    await gateway.register(plugin, {
+      gateway: {
         services: [
           {
             name: 'user',
@@ -175,13 +176,9 @@ t.test('gateway', t => {
             url: `http://localhost:${postServicePort}/graphql`
           }
         ]
-      },
-      gateway
-    )
-
-    gateway.register(GQL, {
-      schema
+      }
     })
+
     await gateway.ready()
 
     const userDirectiveNames = userService.graphql.schema
@@ -290,8 +287,8 @@ t.test('gateway', t => {
       })
 
       try {
-        await createGateway(
-          {
+        await gateway.register(plugin, {
+          gateway: {
             services: [
               {
                 ...serviceOpts,
@@ -304,9 +301,8 @@ t.test('gateway', t => {
                 url: `http://localhost:${postServicePort}/graphql`
               }
             ]
-          },
-          gateway
-        )
+          }
+        })
       } catch (error) {
         t.same(
           error.message,

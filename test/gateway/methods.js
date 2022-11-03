@@ -3,7 +3,8 @@
 const { test } = require('tap')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
-const { createGateway, buildFederationSchema } = require('../../index')
+const plugin = require('../../index')
+const { buildFederationSchema } = require('../../index')
 
 async function createService(t, schema, resolvers = {}) {
   const service = Fastify()
@@ -31,32 +32,27 @@ test('calling defineLoaders throws an error in gateway mode', async t => {
   `
   )
 
-  const app = Fastify()
+  const gateway = Fastify()
   t.teardown(async () => {
-    await app.close()
+    await gateway.close()
     await service.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'service-1',
           url: `http://localhost:${port}/graphql`
         }
       ]
-    },
-    app
-  )
-
-  app.register(GQL, {
-    schema
+    }
   })
 
-  await app.ready()
+  await gateway.ready()
 
   try {
-    app.graphql.defineLoaders({
+    gateway.graphql.defineLoaders({
       Query: {
         field() {}
       }
@@ -84,32 +80,27 @@ test('calling defineResolvers throws an error in gateway mode', async t => {
   `
   )
 
-  const app = Fastify()
+  const gateway = Fastify()
   t.teardown(async () => {
-    await app.close()
+    await gateway.close()
     await service.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'service-1',
           url: `http://localhost:${port}/graphql`
         }
       ]
-    },
-    app
-  )
-
-  app.register(GQL, {
-    schema
+    }
   })
 
-  await app.ready()
+  await gateway.ready()
 
   try {
-    app.graphql.defineResolvers({
+    gateway.graphql.defineResolvers({
       Query: {
         field() {}
       }
@@ -137,32 +128,27 @@ test('calling extendSchema throws an error in gateway mode', async t => {
   `
   )
 
-  const app = Fastify()
+  const gateway = Fastify()
   t.teardown(async () => {
-    await app.close()
+    await gateway.close()
     await service.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'service-1',
           url: `http://localhost:${port}/graphql`
         }
       ]
-    },
-    app
-  )
-
-  app.register(GQL, {
-    schema
+    }
   })
 
-  await app.ready()
+  await gateway.ready()
 
   try {
-    app.graphql.extendSchema(`
+    gateway.graphql.extendSchema(`
       extend type Query {
         field: String!
       }

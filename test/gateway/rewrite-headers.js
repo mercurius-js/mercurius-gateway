@@ -3,7 +3,8 @@
 const { test } = require('tap')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
-const { createGateway, buildFederationSchema } = require('../../index')
+const plugin = require('../../index')
+const { buildFederationSchema } = require('../../index')
 
 async function createTestService(schema, resolvers = {}, hooks = {}) {
   const service = Fastify()
@@ -64,13 +65,8 @@ test('gateway - service rewriteHeaders', async t => {
     }
 
     const url = `http://localhost:${usersPort}/graphql`
-    const { schema } = await createGateway(
-      { services: [{ name: 'user', url, rewriteHeaders }] },
-      gateway
-    )
-
-    gateway.register(GQL, {
-      schema
+    await gateway.register(plugin, {
+      gateway: { services: [{ name: 'user', url, rewriteHeaders }] }
     })
 
     const res = await gateway.inject({
@@ -103,13 +99,8 @@ test('gateway - service rewriteHeaders', async t => {
     const rewriteHeaders = async () => ({ 'x-custom': custom })
     const url = `http://localhost:${usersPort}/graphql`
 
-    const { schema } = await createGateway(
-      { services: [{ name: 'user', url, rewriteHeaders }] },
-      gateway
-    )
-
-    gateway.register(GQL, {
-      schema
+    await gateway.register(plugin, {
+      gateway: { services: [{ name: 'user', url, rewriteHeaders }] }
     })
 
     const res = await gateway.inject({

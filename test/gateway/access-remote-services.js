@@ -2,7 +2,7 @@
 
 const { test } = require('tap')
 const Fastify = require('fastify')
-const { createGateway } = require('../../index')
+const plugin = require('../../index')
 
 const invalidSchema = `
   extend type Query {
@@ -54,17 +54,16 @@ test(
     })
 
     try {
-      await createGateway(
-        {
+      gateway.register(plugin, {
+        gateway: {
           services: [
             {
               name: 'not-working',
               url: `http://localhost:${servicePort}/graphql`
             }
           ]
-        },
-        gateway
-      )
+        }
+      })
     } catch (err) {
       t.equal(
         err.message,
@@ -89,17 +88,16 @@ test(
     })
 
     try {
-      await createGateway(
-        {
+      gateway.register(plugin, {
+        gateway: {
           services: [
             {
               name: 'not-working',
               url: `http://localhost:${servicePort}/graphql`
             }
           ]
-        },
-        gateway
-      )
+        }
+      })
     } catch (err) {
       t.equal(
         err.message,
@@ -124,8 +122,8 @@ test(
     })
 
     try {
-      await createGateway(
-        {
+      gateway.register(plugin, {
+        gateway: {
           services: [
             {
               name: 'not-working',
@@ -135,9 +133,8 @@ test(
               keepAliveMaxTimeout: 10 // milliseconds
             }
           ]
-        },
-        gateway
-      )
+        }
+      })
     } catch (err) {
       t.equal(err.message, 'Unknown type "World".')
       t.end()
@@ -165,16 +162,13 @@ test(
     }
 
     t.teardown(async () => {
-      await close()
       await gateway.close()
       await service.close()
       await invalidService.close()
     })
-
-    let close
     try {
-      ;({ close } = await createGateway(
-        {
+      await gateway.register(plugin, {
+        gateway: {
           services: [
             {
               name: 'working',
@@ -185,9 +179,8 @@ test(
               url: `http://localhost:${invalidServicePort}/graphql`
             }
           ]
-        },
-        gateway
-      ))
+        }
+      })
     } catch (err) {
       t.error(err)
     }

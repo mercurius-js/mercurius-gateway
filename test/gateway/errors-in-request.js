@@ -1,8 +1,7 @@
 const { test } = require('tap')
 const Fastify = require('fastify')
 const { MockAgent, setGlobalDispatcher } = require('undici')
-const GQL = require('mercurius')
-const { createGateway } = require('../../index')
+const plugin = require('../../index')
 
 async function createTestGatewayServer(t, userServiceUrl, agent) {
   // User service
@@ -27,8 +26,8 @@ async function createTestGatewayServer(t, userServiceUrl, agent) {
     await gateway.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           agent,
@@ -37,11 +36,7 @@ async function createTestGatewayServer(t, userServiceUrl, agent) {
           url: userServiceUrl
         }
       ]
-    },
-    gateway
-  )
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   return gateway

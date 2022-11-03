@@ -6,7 +6,8 @@ const WebSocket = require('ws')
 const { once } = require('events')
 const { GraphQLSchema, parse } = require('graphql')
 const GQL = require('mercurius')
-const { createGateway, buildFederationSchema } = require('../../index')
+const plugin = require('../../index')
+const { buildFederationSchema } = require('../../index')
 
 let assignedPort = 3700
 const users = {
@@ -173,8 +174,8 @@ async function createTestGatewayServer(t) {
     await messageService.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'user',
@@ -188,13 +189,9 @@ async function createTestGatewayServer(t) {
         }
       ]
     },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    subscription: true,
-    schema
+    subscription: true
   })
+
   return gateway
 }
 

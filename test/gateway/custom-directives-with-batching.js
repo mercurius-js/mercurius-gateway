@@ -3,7 +3,8 @@
 const t = require('tap')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
-const { createGateway, buildFederationSchema } = require('../../index')
+const plugin = require('../../index')
+const { buildFederationSchema } = require('../../index')
 
 async function createTestService(t, schema, resolvers = {}) {
   const service = Fastify()
@@ -161,8 +162,8 @@ t.test('gateway with batching', t => {
       await postService.close()
     })
 
-    const { schema } = await createGateway(
-      {
+    await gateway.register(plugin, {
+      gateway: {
         services: [
           {
             name: 'user',
@@ -175,12 +176,7 @@ t.test('gateway with batching', t => {
             allowBatchedQueries: true
           }
         ]
-      },
-      gateway
-    )
-
-    gateway.register(GQL, {
-      schema
+      }
     })
 
     await gateway.ready()
@@ -292,8 +288,8 @@ t.test('gateway with batching', t => {
       })
 
       try {
-        await createGateway(
-          {
+        await gateway.register(plugin, {
+          gateway: {
             services: [
               {
                 ...serviceOpts,
@@ -308,9 +304,8 @@ t.test('gateway with batching', t => {
                 allowBatchedQueries: true
               }
             ]
-          },
-          gateway
-        )
+          }
+        })
       } catch (error) {
         t.same(
           error.message,

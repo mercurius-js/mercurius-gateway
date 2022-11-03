@@ -6,7 +6,8 @@ const GQL = require('mercurius')
 const { createClient } = require('graphql-ws')
 const ws = require('ws')
 const { promisify } = require('util')
-const { createGateway, buildFederationSchema } = require('../../index')
+const plugin = require('../../index')
+const { buildFederationSchema } = require('../../index')
 const sleep = promisify(setTimeout)
 
 async function createTestService(port, schema, resolvers = {}) {
@@ -54,15 +55,15 @@ test('gateway - send query using graphql-ws protocol', async t => {
   t.plan(1)
 
   const service1 = await createTestService(0, schemaBody, resolvers)
-  const app = Fastify()
+  const gateway = Fastify()
 
   t.teardown(async () => {
-    await app.close()
+    await gateway.close()
     await service1.close()
   })
 
-  const gateway = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'test',
@@ -75,22 +76,17 @@ test('gateway - send query using graphql-ws protocol', async t => {
         }
       ]
     },
-    app
-  )
-
-  await app.register(GQL, {
     routes: true,
     subscription: {
       fullWsTransport: true
     },
-    jit: 1,
-    schema: gateway.schema
+    jit: 1
   })
 
-  await app.listen({ port: 0 })
+  await gateway.listen({ port: 0 })
 
   const client = createClient({
-    url: `ws://localhost:${app.server.address().port}/graphql`,
+    url: `ws://localhost:${gateway.server.address().port}/graphql`,
     webSocketImpl: ws
   })
 
@@ -116,14 +112,14 @@ test('gateway - send mutations using graphql-ws protocol', async t => {
   t.plan(1)
   const service1 = await createTestService(0, schemaBody, resolvers)
 
-  const app = Fastify()
+  const gateway = Fastify()
   t.teardown(async () => {
-    await app.close()
+    await gateway.close()
     await service1.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'test',
@@ -136,22 +132,17 @@ test('gateway - send mutations using graphql-ws protocol', async t => {
         }
       ]
     },
-    app
-  )
-
-  await app.register(GQL, {
     routes: true,
     subscription: {
       fullWsTransport: true
     },
-    jit: 1,
-    schema
+    jit: 1
   })
 
-  await app.listen({ port: 0 })
+  await gateway.listen({ port: 0 })
 
   const client = createClient({
-    url: `ws://localhost:${app.server.address().port}/graphql`,
+    url: `ws://localhost:${gateway.server.address().port}/graphql`,
     webSocketImpl: ws
   })
 

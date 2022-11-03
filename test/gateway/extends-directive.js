@@ -3,7 +3,8 @@
 const { test } = require('tap')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
-const { createGateway, buildFederationSchema } = require('../../index')
+const plugin = require('../../index')
+const { buildFederationSchema } = require('../../index')
 
 async function createService(t, schema, resolvers = {}) {
   const service = Fastify()
@@ -122,8 +123,8 @@ test('gateway handles @extends directive correctly', async t => {
     await userService.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'user',
@@ -134,12 +135,7 @@ test('gateway handles @extends directive correctly', async t => {
           url: `http://localhost:${postServicePort}/graphql`
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   const query = `
@@ -270,8 +266,8 @@ test('gateway passes field arguments through to types labeled by @extends direct
     await userService.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'user',
@@ -282,12 +278,7 @@ test('gateway passes field arguments through to types labeled by @extends direct
           url: `http://localhost:${postServicePort}/graphql`
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   const query = `
@@ -442,8 +433,8 @@ test('gateway distributes query correctly to services when querying with inline 
     await userService.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'user',
@@ -454,12 +445,7 @@ test('gateway distributes query correctly to services when querying with inline 
           url: `http://localhost:${postServicePort}/graphql`
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   await gateway.listen({ port: 0 })
@@ -608,8 +594,8 @@ test('gateway handles missing @key', async t => {
     await userService.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'user',
@@ -620,12 +606,7 @@ test('gateway handles missing @key', async t => {
           url: `http://localhost:${postServicePort}/graphql`
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   const query = `

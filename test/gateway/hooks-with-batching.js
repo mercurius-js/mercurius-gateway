@@ -5,7 +5,8 @@ const Fastify = require('fastify')
 const { GraphQLSchema, parse } = require('graphql')
 const { promisify } = require('util')
 const GQL = require('mercurius')
-const { createGateway, buildFederationSchema } = require('../../index')
+const plugin = require('../../index')
+const { buildFederationSchema } = require('../../index')
 
 const immediate = promisify(setImmediate)
 
@@ -156,8 +157,8 @@ async function createTestGatewayServer(t, opts = {}) {
     await postService.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'user',
@@ -171,13 +172,9 @@ async function createTestGatewayServer(t, opts = {}) {
         }
       ]
     },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    ...opts,
-    schema
+    ...opts
   })
+
   return gateway
 }
 

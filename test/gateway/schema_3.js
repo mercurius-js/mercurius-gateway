@@ -3,7 +3,8 @@
 const { test } = require('tap')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
-const { createGateway, buildFederationSchema } = require('../../index')
+const plugin = require('../../index')
+const { buildFederationSchema } = require('../../index')
 
 async function createService(t, schema, resolvers = {}) {
   const service = Fastify()
@@ -77,20 +78,15 @@ test('Should handle union with InlineFragment', async t => {
     await productService.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'product',
           url: `http://localhost:${productServicePort}/graphql`
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   const query = `
@@ -172,8 +168,8 @@ test('Gateway sends initHeaders with _service sdl query', async t => {
     await service.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'svc',
@@ -183,12 +179,7 @@ test('Gateway sends initHeaders with _service sdl query', async t => {
           }
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   await gateway.ready()
@@ -224,8 +215,8 @@ test('Gateway sends initHeaders function result with _service sdl query', async 
     await service.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'svc',
@@ -237,12 +228,7 @@ test('Gateway sends initHeaders function result with _service sdl query', async 
           }
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   await gateway.ready()
@@ -315,20 +301,15 @@ test('Should handle interface', async t => {
     await productService.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'product',
           url: `http://localhost:${productServicePort}/graphql`
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   const query = `
@@ -491,8 +472,8 @@ test('Should handle interface referenced multiple times in different services', 
     await bookService.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'book',
@@ -503,12 +484,7 @@ test('Should handle interface referenced multiple times in different services', 
           url: `http://localhost:${dictionariesServicePort}/graphql`
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   const query1 = `
@@ -797,8 +773,8 @@ test('Should handle complex and nested interfaces with external types', async t 
     await userService.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'user',
@@ -813,12 +789,7 @@ test('Should handle complex and nested interfaces with external types', async t 
           url: `http://localhost:${configCServicePort}/graphql`
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   const query = `

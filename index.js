@@ -1,7 +1,6 @@
-const { createGateway } = require('./lib/gateway')
+const plugin = require('./lib/plugin')
 const buildFederationSchema = require('./lib/federation')
 
-module.exports = {
-  createGateway,
-  buildFederationSchema
-}
+plugin.buildFederationSchema = buildFederationSchema
+
+module.exports = plugin

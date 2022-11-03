@@ -3,7 +3,8 @@
 const { test } = require('tap')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
-const { createGateway, buildFederationSchema } = require('../../index')
+const { buildFederationSchema } = require('../../index')
+const plugin = require('../../index')
 
 async function createTestService(t, schema, resolvers = {}) {
   const service = Fastify()
@@ -128,8 +129,9 @@ async function createTestGatewayServer(t) {
     await userService.close()
     await postService.close()
   })
-  const { schema } = await createGateway(
-    {
+
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'user',
@@ -142,12 +144,7 @@ async function createTestGatewayServer(t) {
           allowBatchedQueries: true
         }
       ]
-    },
-    gateway
-  )
-
-  await gateway.register(GQL, {
-    schema
+    }
   })
 
   return gateway

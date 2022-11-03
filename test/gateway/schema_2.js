@@ -3,7 +3,8 @@
 const { test } = require('tap')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
-const { createGateway, buildFederationSchema } = require('../../index')
+const plugin = require('../../index')
+const { buildFederationSchema } = require('../../index')
 
 async function createService(t, schema, resolvers = {}) {
   const service = Fastify()
@@ -107,8 +108,8 @@ test('Should support array references with _entities query', async t => {
     await userService.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'post',
@@ -119,12 +120,7 @@ test('Should support array references with _entities query', async t => {
           url: `http://localhost:${userServicePort}/graphql`
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   const query = `
@@ -212,20 +208,15 @@ test('Should support multiple `extends` of the same type in the service SDL', as
     await productService.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'product',
           url: `http://localhost:${productServicePort}/graphql`
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   const res = await gateway.inject({
@@ -354,8 +345,8 @@ test('Should support array references with _entities query and empty response', 
     await userService.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'post',
@@ -366,12 +357,7 @@ test('Should support array references with _entities query and empty response', 
           url: `http://localhost:${userServicePort}/graphql`
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   const query = `
@@ -507,8 +493,8 @@ test('Should support array references with _entities query and empty response an
     await userService.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'post',
@@ -519,12 +505,7 @@ test('Should support array references with _entities query and empty response an
           url: `http://localhost:${userServicePort}/graphql`
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   const query = `

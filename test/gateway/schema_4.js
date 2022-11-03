@@ -3,7 +3,8 @@
 const { test } = require('tap')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
-const { createGateway, buildFederationSchema } = require('../../index')
+const plugin = require('../../index')
+const { buildFederationSchema } = require('../../index')
 
 async function createService(t, schema, resolvers = {}) {
   const service = Fastify()
@@ -157,8 +158,8 @@ test('Uses the supplied schema for federation rather than fetching it remotely',
     await userService.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'user',
@@ -170,12 +171,7 @@ test('Uses the supplied schema for federation rather than fetching it remotely',
           schema: postServiceSdl
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   const query = `
@@ -368,8 +364,8 @@ test('Non mandatory gateway failure wont stop gateway creation', async t => {
     await workingService.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'working',
@@ -380,12 +376,7 @@ test('Non mandatory gateway failure wont stop gateway creation', async t => {
           url: `http://localhost:${brokenServicePort}/graphql`
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   const query = `
@@ -435,8 +426,8 @@ test('Update the schema', async t => {
     await service.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'working',
@@ -444,12 +435,7 @@ test('Update the schema', async t => {
           schema: partialSchema
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   const query = `
@@ -512,8 +498,8 @@ test('Update the schema without any changes', async t => {
     await service.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'working',
@@ -521,12 +507,7 @@ test('Update the schema without any changes', async t => {
           schema: schemaNode
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   const query = `
@@ -701,8 +682,8 @@ test('It builds the gateway schema correctly with two services query extension h
     await userService.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'user',
@@ -720,12 +701,7 @@ test('It builds the gateway schema correctly with two services query extension h
           url: `http://localhost:${postServicePort}/graphql`
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   const query = `

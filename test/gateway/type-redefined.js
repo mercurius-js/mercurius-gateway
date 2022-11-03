@@ -3,7 +3,8 @@
 const { test } = require('tap')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
-const { createGateway, buildFederationSchema } = require('../../index')
+const plugin = require('../../index')
+const { buildFederationSchema } = require('../../index')
 
 const users = {
   1: {
@@ -104,10 +105,10 @@ async function buildServiceExternal() {
 }
 
 async function buildProxy(port1, port2) {
-  const proxy = Fastify()
+  const gateway = Fastify()
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'ext1',
@@ -119,16 +120,10 @@ async function buildProxy(port1, port2) {
         }
       ]
     },
-    proxy
-  )
-
-  proxy.register(GQL, {
-    graphiql: true,
-    schema,
     pollingInterval: 2000
   })
 
-  return proxy
+  return gateway
 }
 
 test('federated node should be able to redefine type', async t => {

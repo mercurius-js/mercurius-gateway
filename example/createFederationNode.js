@@ -1,12 +1,21 @@
 const Fastify = require('fastify')
-const mercurius = require('mercurius')
+const plugin = require('./index')
 
 async function createNode(name, schema, resolvers, port) {
   const app = Fastify()
-  app.register(mercurius, {
-    schema,
-    resolvers,
-    federationMetadata: true
+  app.register(plugin, {
+    gateway: {
+      services: [
+        {
+          name: 'user',
+          url: 'http://localhost:4001/graphql'
+        },
+        {
+          name: 'post',
+          url: 'http://localhost:4002/graphql'
+        }
+      ]
+    }
   })
 
   app.get('/', async function () {

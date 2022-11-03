@@ -4,7 +4,8 @@ const { test } = require('tap')
 const Fastify = require('fastify')
 const WebSocket = require('ws')
 const GQL = require('mercurius')
-const { createGateway, buildFederationSchema } = require('../../index')
+const plugin = require('../../index')
+const { buildFederationSchema } = require('../../index')
 
 const users = {
   u1: {
@@ -152,8 +153,8 @@ test('gateway subscription handling works correctly', t => {
 
     gateway = Fastify()
 
-    const { schema } = await createGateway(
-      {
+    await gateway.register(plugin, {
+      gateway: {
         services: [
           {
             name: 'user',
@@ -167,13 +168,8 @@ test('gateway subscription handling works correctly', t => {
           }
         ]
       },
-      gateway
-    )
-
-    await gateway.register(GQL, {
       subscription: true,
-      jit: 1,
-      schema
+      jit: 1
     })
 
     await gateway.listen({ port: 0 })
@@ -326,12 +322,9 @@ test('gateway wsConnectionParams object is passed to SubscriptionClient', t => {
 
   let testService
   let gateway
-  let closeGateway
 
   t.teardown(async () => {
-    if (typeof closeGateway === 'function') {
-      await closeGateway()
-    }
+    await gateway.close()
     await testService.close()
   })
 
@@ -353,8 +346,8 @@ test('gateway wsConnectionParams object is passed to SubscriptionClient', t => {
   async function createGatewayApp() {
     const testServicePort = testService.server.address().port
     gateway = Fastify()
-    const result = await createGateway(
-      {
+    await gateway.register(plugin, {
+      gateway: {
         services: [
           {
             name: 'test',
@@ -365,11 +358,8 @@ test('gateway wsConnectionParams object is passed to SubscriptionClient', t => {
             }
           }
         ]
-      },
-      gateway
-    )
-
-    closeGateway = result.close
+      }
+    })
   }
 
   createTestService().then(() => createGatewayApp())
@@ -403,17 +393,12 @@ test('gateway wsConnectionParams function is passed to SubscriptionClient', t =>
 
     const gateway = Fastify()
     t.teardown(async () => {
-      // due the type of test can happen that the test finish before che schema is created
-      try {
-        await close()
-      } catch {
-        setTimeout(() => close(), 2000)
-      }
+      await gateway.close()
       await testService.close()
     })
 
-    const { close } = await createGateway(
-      {
+    await gateway.register(plugin, {
+      gateway: {
         services: [
           {
             name: 'test',
@@ -426,9 +411,8 @@ test('gateway wsConnectionParams function is passed to SubscriptionClient', t =>
             }
           }
         ]
-      },
-      gateway
-    )
+      }
+    })
   })
 })
 
@@ -489,8 +473,8 @@ test('gateway forwards the connection_init payload to the federated service on g
       await testService.close()
     })
 
-    const { schema } = await createGateway(
-      {
+    await gateway.register(plugin, {
+      gateway: {
         services: [
           {
             name: 'test',
@@ -499,12 +483,7 @@ test('gateway forwards the connection_init payload to the federated service on g
           }
         ]
       },
-      gateway
-    )
-
-    gateway.register(GQL, {
-      subscription: true,
-      schema
+      subscription: true
     })
 
     gateway.listen({ port: 0 }, async err => {
@@ -625,8 +604,8 @@ test('connection_init payload is overwritten at gateway and forwarded to the fed
       await testService.close()
     })
 
-    const { schema } = await createGateway(
-      {
+    await gateway.register(plugin, {
+      gateway: {
         services: [
           {
             name: 'test',
@@ -638,14 +617,9 @@ test('connection_init payload is overwritten at gateway and forwarded to the fed
           }
         ]
       },
-      gateway
-    )
-
-    gateway.register(GQL, {
       subscription: {
         onConnect: onConnectGateway
-      },
-      schema
+      }
     })
 
     gateway.listen({ port: 0 }, async err => {
@@ -751,8 +725,8 @@ test('subscriptions work with scalars', async t => {
 
     gateway = Fastify()
 
-    const { schema } = await createGateway(
-      {
+    await gateway.register(plugin, {
+      gateway: {
         services: [
           {
             name: 'testService',
@@ -761,12 +735,7 @@ test('subscriptions work with scalars', async t => {
           }
         ]
       },
-      gateway
-    )
-
-    gateway.register(GQL, {
-      subscription: true,
-      schema
+      subscription: true
     })
 
     return gateway.listen({ port: 0 })
@@ -942,8 +911,8 @@ test('subscriptions work with different contexts', async t => {
 
     gateway = Fastify()
 
-    const { schema } = await createGateway(
-      {
+    await gateway.register(plugin, {
+      gateway: {
         services: [
           {
             name: 'testService',
@@ -952,12 +921,7 @@ test('subscriptions work with different contexts', async t => {
           }
         ]
       },
-      gateway
-    )
-
-    gateway.register(GQL, {
-      subscription: true,
-      schema
+      subscription: true
     })
 
     return gateway.listen({ port: 0 })
@@ -1196,8 +1160,8 @@ test('connection_init headers available in federation event resolver', async t =
 
     gateway = Fastify()
 
-    const { schema } = await createGateway(
-      {
+    await gateway.register(plugin, {
+      gateway: {
         services: [
           {
             name: 'subscriptionService',
@@ -1213,11 +1177,7 @@ test('connection_init headers available in federation event resolver', async t =
           }
         ]
       },
-      gateway
-    )
-    gateway.register(GQL, {
-      subscription: true,
-      schema
+      subscription: true
     })
 
     return gateway.listen({ port: 0 })

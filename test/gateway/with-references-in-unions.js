@@ -3,7 +3,8 @@
 const { test } = require('tap')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
-const { createGateway, buildFederationSchema } = require('../../index')
+const plugin = require('../../index')
+const { buildFederationSchema } = require('../../index')
 
 async function createService(schema, resolvers = {}) {
   const service = Fastify()
@@ -127,8 +128,8 @@ test('gateway handles reference types in unions at the same schema paths correct
     await userService.close()
   })
 
-  const { schema } = await createGateway(
-    {
+  await gateway.register(plugin, {
+    gateway: {
       services: [
         {
           name: 'message',
@@ -139,12 +140,7 @@ test('gateway handles reference types in unions at the same schema paths correct
           url: `http://localhost:${userServicePort}/graphql`
         }
       ]
-    },
-    gateway
-  )
-
-  gateway.register(GQL, {
-    schema
+    }
   })
 
   const query = `

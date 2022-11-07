@@ -1,5 +1,5 @@
 {
-  "name": "mercurius-federation-support",
+  "name": "@mercurius/gateway",
   "version": "0.0.1",
   "description": "A plugin for mercurius federation",
   "main": "index.js",
@@ -13,7 +13,7 @@
     "lint": "eslint .",
     "example": "node example/index.js",
     "test": "npm run test:unit",
-    "test:unit": "tap --jobs=1 --coverage-report=html test/gateway/*.js",
+    "test:unit": "tap --jobs=1 --coverage-report=html test/*.js",
     "test:types": "tsd",
     "prepare": "husky install"
   },
@@ -55,6 +55,7 @@
     "*.{js,jsx}": "eslint --cache --fix"
   },
   "dependencies": {
+    "@mercurius/federation": "^1.0.0",
     "fastify-plugin": "^4.2.1",
     "graphql": "^16.6.0",
     "graphql-ws": "^5.11.2",

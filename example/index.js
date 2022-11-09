@@ -14,7 +14,7 @@ app.addHook('onClose', (instance, done) => {
   done()
 })
 
-async function run(fastifyApp) {
+async function run (fastifyApp) {
   await fastifyApp.listen(config.app.port, '0.0.0.0')
 }
 

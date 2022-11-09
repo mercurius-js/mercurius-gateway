@@ -6,7 +6,7 @@ module.exports = options => {
       name: 'mercurius-federation-sample',
       level: options.level || 'info',
       formatters: {
-        level(label) {
+        level (label) {
           return { level: label.toUpperCase() }
         }
       }

@@ -3,7 +3,7 @@ const Fastify = require('fastify')
 const { MockAgent, setGlobalDispatcher } = require('undici')
 const plugin = require('../index')
 
-async function createTestGatewayServer(t, userServiceUrl, agent) {
+async function createTestGatewayServer (t, userServiceUrl, agent) {
   // User service
   const userServiceSchema = `
   type Query @extends {

@@ -6,7 +6,7 @@ const GQL = require('mercurius')
 const plugin = require('../index')
 const { buildFederationSchema } = require('@mercuriusjs/federation')
 
-async function createService(t, schema, resolvers = {}) {
+async function createService (t, schema, resolvers = {}) {
   const service = Fastify()
   service.register(GQL, {
     schema: buildFederationSchema(schema),
@@ -618,7 +618,7 @@ test('Should handle InlineFragment', async t => {
   `,
     {
       Product: {
-        resolveType(value) {
+        resolveType (value) {
           return value.type
         }
       },

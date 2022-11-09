@@ -5,10 +5,10 @@
  * Make sure to inspect the output below.  Do not ignore changes!
  */
 'use strict'
-exports[`test/access-remote-services.js TAP Does not error if at least one service schema is valid > must match snapshot 1`] = `
+exports['test/access-remote-services.js TAP Does not error if at least one service schema is valid > must match snapshot 1'] = `
 Initializing service "not-working" failed with message: "Unknown type "World"."
 `
 
-exports[`test/access-remote-services.js TAP Does not error if at least one service schema is valid > must match snapshot 2`] = `
+exports['test/access-remote-services.js TAP Does not error if at least one service schema is valid > must match snapshot 2'] = `
 Initializing service "not-working" failed with message: "Unknown type "World"."
 `

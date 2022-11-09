@@ -6,7 +6,7 @@ const GQL = require('mercurius')
 const plugin = require('../index')
 const { buildFederationSchema } = require('@mercuriusjs/federation')
 
-async function createService(t, schema, resolvers = {}) {
+async function createService (t, schema, resolvers = {}) {
   const service = Fastify()
   service.register(GQL, {
     schema: buildFederationSchema(schema),
@@ -54,7 +54,7 @@ test('Should handle union with InlineFragment', async t => {
   `,
     {
       Product: {
-        resolveType(value) {
+        resolveType (value) {
           return value.type
         }
       },
@@ -221,7 +221,7 @@ test('Gateway sends initHeaders function result with _service sdl query', async 
         {
           name: 'svc',
           url: `http://localhost:${service.server.address().port}/graphql`,
-          async initHeaders() {
+          async initHeaders () {
             return {
               authorization: 'ok'
             }
@@ -277,7 +277,7 @@ test('Should handle interface', async t => {
   `,
     {
       Product: {
-        resolveType(value) {
+        resolveType (value) {
           return value.type
         }
       },
@@ -417,7 +417,7 @@ test('Should handle interface referenced multiple times in different services', 
   `,
     {
       Product: {
-        resolveType(value) {
+        resolveType (value) {
           return value.type
         }
       },
@@ -453,7 +453,7 @@ test('Should handle interface referenced multiple times in different services', 
   `,
     {
       Product: {
-        resolveType(value) {
+        resolveType (value) {
           return value.type
         }
       },
@@ -700,7 +700,7 @@ test('Should handle complex and nested interfaces with external types', async t 
   `,
     {
       ConfigInterface: {
-        resolveType(value) {
+        resolveType (value) {
           return value.type
         }
       },
@@ -743,12 +743,12 @@ test('Should handle complex and nested interfaces with external types', async t 
   `,
     {
       ServiceConfigC: {
-        __resolveReference(root) {
+        __resolveReference (root) {
           return configsC.find(c => c.id === root.id)
         }
       },
       ConfigInterface: {
-        resolveType(value) {
+        resolveType (value) {
           return value.type
         }
       },

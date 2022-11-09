@@ -10,7 +10,7 @@ const plugin = require('../index')
 const { buildFederationSchema } = require('@mercuriusjs/federation')
 const sleep = promisify(setTimeout)
 
-async function createTestService(port, schema, resolvers = {}) {
+async function createTestService (port, schema, resolvers = {}) {
   const service = Fastify()
 
   service.register(GQL, {

@@ -6,7 +6,7 @@ const GQL = require('mercurius')
 const plugin = require('../index')
 const { buildFederationSchema } = require('@mercuriusjs/federation')
 
-async function createTestService(
+async function createTestService (
   t,
   schema,
   resolvers = {},

@@ -10,7 +10,7 @@ const { buildFederationSchema } = require('@mercuriusjs/federation')
 
 const immediate = promisify(setImmediate)
 
-async function createTestService(t, schema, resolvers = {}) {
+async function createTestService (t, schema, resolvers = {}) {
   const service = Fastify()
   service.register(GQL, {
     schema: buildFederationSchema(schema),
@@ -77,7 +77,7 @@ const query = `
   }
 `
 
-async function createTestGatewayServer(t, opts = {}) {
+async function createTestGatewayServer (t, opts = {}) {
   // User service
   const userServiceSchema = `
   type Query @extends {

@@ -291,7 +291,7 @@ test('Polling schemas (gateway.polling interval is not a number)', async t => {
   const userService = Fastify()
   const gateway = Fastify({
     log: {
-      warn() {
+      warn () {
         t.pass()
       }
     }

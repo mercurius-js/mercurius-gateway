@@ -7,7 +7,7 @@ const { ErrorWithProps } = require('../lib/errors')
 const plugin = require('../index')
 const { buildFederationSchema } = require('@mercuriusjs/federation')
 
-async function createTestService(
+async function createTestService (
   t,
   schema,
   resolvers = {},
@@ -23,7 +23,7 @@ async function createTestService(
   return [service, service.server.address().port]
 }
 
-async function createTestGatewayServer(t, allowBatchedQueries = false) {
+async function createTestGatewayServer (t, allowBatchedQueries = false) {
   // User service
   const userServiceSchema = `
   type Query @extends {

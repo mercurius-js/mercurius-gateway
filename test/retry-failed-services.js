@@ -8,7 +8,7 @@ const FakeTimers = require('@sinonjs/fake-timers')
 const plugin = require('../index')
 const { buildFederationSchema } = require('@mercuriusjs/federation')
 
-async function createTestService(port, schema, resolvers = {}) {
+async function createTestService (port, schema, resolvers = {}) {
   const service = Fastify()
   service.register(GQL, {
     schema: buildFederationSchema(schema),

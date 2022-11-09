@@ -1,7 +1,7 @@
 const Fastify = require('fastify')
 const { mercuriusFederationPlugin } = require('@mercuriusjs/federation')
 
-async function createNode(name, schema, resolvers, port) {
+async function createNode (name, schema, resolvers, port) {
   const app = Fastify()
   app.register(mercuriusFederationPlugin, {
     schema,

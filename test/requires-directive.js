@@ -6,7 +6,7 @@ const GQL = require('mercurius')
 const plugin = require('../index')
 const { buildFederationSchema } = require('@mercuriusjs/federation')
 
-async function createService(schema, resolvers = {}) {
+async function createService (schema, resolvers = {}) {
   const service = Fastify()
   service.register(GQL, {
     schema: buildFederationSchema(schema),
@@ -17,7 +17,7 @@ async function createService(schema, resolvers = {}) {
   return service
 }
 
-async function createGatewayService(...services) {
+async function createGatewayService (...services) {
   const gateway = Fastify()
   const teardown = async () => {
     await gateway.close()
@@ -40,7 +40,7 @@ async function createGatewayService(...services) {
   return { gateway, teardown }
 }
 
-function gatewayRequest(gateway, query) {
+function gatewayRequest (gateway, query) {
   return gateway.inject({
     method: 'POST',
     headers: {
@@ -133,7 +133,7 @@ test('gateway handles @requires directive correctly', async t => {
   `,
     {
       User: {
-        biography(user) {
+        biography (user) {
           const numberOfPosts = Object.values(posts).filter(
             p => p.authorId === user.id
           ).length
@@ -229,10 +229,10 @@ test('gateway handles @requires directive correctly from different services', as
     }`,
     {
       Host: {
-        regionData(host) {
+        regionData (host) {
           return host.region && regions.find(r => r.id === host.region)
         },
-        sizeData(host) {
+        sizeData (host) {
           return host.size && sizes.find(s => s.id === host.size)
         }
       }
@@ -268,7 +268,7 @@ test('gateway handles @requires directive correctly from different services', as
     }`,
     {
       Query: {
-        hosts() {
+        hosts () {
           return hosts
         }
       }
@@ -421,10 +421,10 @@ test('gateway handles @requires directive correctly apart of other directives', 
     }`,
     {
       Host: {
-        regionData(host) {
+        regionData (host) {
           return host.region && regions.find(r => r.id === host.region)
         },
-        sizeData(host) {
+        sizeData (host) {
           return host.size && sizes.find(s => s.id === host.size)
         }
       }
@@ -460,7 +460,7 @@ test('gateway handles @requires directive correctly apart of other directives', 
     }`,
     {
       Query: {
-        hosts() {
+        hosts () {
           return hosts
         }
       }
@@ -555,7 +555,7 @@ test('gateway exposes @requires directive in list of directives', async t => {
   `,
     {
       User: {
-        biography(user) {
+        biography (user) {
           return `${user.name} with id ${user.id} test biography`
         }
       }

@@ -6,7 +6,7 @@ const GQL = require('mercurius')
 const plugin = require('../index')
 const { buildFederationSchema } = require('@mercuriusjs/federation')
 
-async function createTestService(
+async function createTestService (
   t,
   schema,
   resolvers = {},
@@ -60,7 +60,7 @@ const posts = {
   }
 }
 
-async function createTestGatewayServer(t, allowBatchedQueries = false) {
+async function createTestGatewayServer (t, allowBatchedQueries = false) {
   // User service
   const userServiceSchema = `
   type Query @extends {

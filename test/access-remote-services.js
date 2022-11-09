@@ -16,7 +16,7 @@ const validSchema = `
   }
 `
 
-async function createRemoteService(schema) {
+async function createRemoteService (schema) {
   const service = Fastify()
   service.post('/graphql', async (request, reply) => {
     reply.send({ data: { _service: { sdl: schema } } })
@@ -27,7 +27,7 @@ async function createRemoteService(schema) {
   return [service, service.server.address().port]
 }
 
-async function createNonWorkingRemoteService() {
+async function createNonWorkingRemoteService () {
   const service = Fastify()
   service.post('/graphql', async (request, reply) => {
     reply.send({ data: undefined })

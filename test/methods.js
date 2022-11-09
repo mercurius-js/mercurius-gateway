@@ -6,7 +6,7 @@ const GQL = require('mercurius')
 const plugin = require('../index')
 const { buildFederationSchema } = require('@mercuriusjs/federation')
 
-async function createService(t, schema, resolvers = {}) {
+async function createService (t, schema, resolvers = {}) {
   const service = Fastify()
   service.register(GQL, {
     schema: buildFederationSchema(schema),
@@ -54,7 +54,7 @@ test('calling defineLoaders throws an error in gateway mode', async t => {
   try {
     gateway.graphql.defineLoaders({
       Query: {
-        field() {}
+        field () {}
       }
     })
   } catch (err) {
@@ -102,7 +102,7 @@ test('calling defineResolvers throws an error in gateway mode', async t => {
   try {
     gateway.graphql.defineResolvers({
       Query: {
-        field() {}
+        field () {}
       }
     })
   } catch (err) {

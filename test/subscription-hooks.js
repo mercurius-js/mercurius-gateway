@@ -62,7 +62,7 @@ input MessageInput {
 }
 `
 
-function query(user) {
+function query (user) {
   return `
     subscription {
       newMessage(toUser: "${user}") {
@@ -96,7 +96,7 @@ const userResolvers = {
 
 const messageResolvers = {
   Mutation: {
-    async sendMessage(root, { message }, { pubsub }) {
+    async sendMessage (root, { message }, { pubsub }) {
       const id = Object.values(messages).length + 1
 
       const result = {
@@ -142,7 +142,7 @@ const messageResolvers = {
   }
 }
 
-async function createTestService(t, schema, resolvers) {
+async function createTestService (t, schema, resolvers) {
   const service = Fastify()
   service.register(GQL, {
     schema: buildFederationSchema(schema),
@@ -153,7 +153,7 @@ async function createTestService(t, schema, resolvers) {
   return [service, service.server.address().port]
 }
 
-async function createTestGatewayServer(t) {
+async function createTestGatewayServer (t) {
   const [userService, userServicePort] = await createTestService(
     t,
     userSchema,
@@ -195,7 +195,7 @@ async function createTestGatewayServer(t) {
   return gateway
 }
 
-function createWebSocketClient(t, app) {
+function createWebSocketClient (t, app) {
   const ws = new WebSocket(
     'ws://localhost:' + app.server.address().port + '/graphql',
     'graphql-ws'

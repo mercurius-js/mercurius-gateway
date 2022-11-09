@@ -6,7 +6,7 @@ const GQL = require('mercurius')
 const plugin = require('../index')
 const { buildFederationSchema } = require('@mercuriusjs/federation')
 
-async function createTestService(schema, resolvers = {}, hooks = {}) {
+async function createTestService (schema, resolvers = {}, hooks = {}) {
   const service = Fastify()
   service.register(GQL, { schema: buildFederationSchema(schema), resolvers })
 
@@ -24,7 +24,7 @@ const TEST_USERS = {
 }
 
 // User service
-async function createUserService({ hooks } = {}) {
+async function createUserService ({ hooks } = {}) {
   const schema = `
   type Query @extends {
     me: User

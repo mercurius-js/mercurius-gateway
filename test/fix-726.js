@@ -19,7 +19,7 @@ const users = {
   }
 }
 
-async function buildService() {
+async function buildService () {
   const app = Fastify()
   const schema = `
     extend type Query {
@@ -43,7 +43,7 @@ async function buildService() {
 
   const loaders = {
     User: {
-      async __resolveReference(queries) {
+      async __resolveReference (queries) {
         return queries.map(({ obj }) => users[obj.id])
       }
     }
@@ -59,7 +59,7 @@ async function buildService() {
   return app
 }
 
-async function buildServiceExternal() {
+async function buildServiceExternal () {
   const app = Fastify()
   const schema = `
     extend type Query {
@@ -121,7 +121,7 @@ async function buildServiceExternal() {
   return app
 }
 
-async function buildProxy(port1, port2) {
+async function buildProxy (port1, port2) {
   const gateway = Fastify()
 
   await gateway.register(plugin, {

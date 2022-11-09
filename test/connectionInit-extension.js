@@ -12,7 +12,7 @@ test('connectionInit extension e2e testing', t => {
   t.plan(9)
   const userContext = { name: 'test-user' }
 
-  function onConnect(data) {
+  function onConnect (data) {
     const { payload } = data
     if (typeof payload.headers === 'object') {
       // 3 different 'dummy' methods for authentication
@@ -169,7 +169,7 @@ test('connectionInit extension e2e testing', t => {
                 userService.server.address().port
               }/graphql`,
               wsConnectionParams: {
-                connectionInitPayload() {
+                connectionInitPayload () {
                   return {
                     headers: {
                       allowGateway: true,
@@ -188,7 +188,7 @@ test('connectionInit extension e2e testing', t => {
                 notificationService.server.address().port
               }/graphql`,
               wsConnectionParams: {
-                connectionInitPayload() {
+                connectionInitPayload () {
                   return {
                     headers: {
                       allowGateway: true,
@@ -207,7 +207,7 @@ test('connectionInit extension e2e testing', t => {
       gateway.listen({ port: 0 }, err => {
         t.error(err)
 
-        async function addUser() {
+        async function addUser () {
           await gateway.inject({
             method: 'POST',
             url: '/graphql',
@@ -223,7 +223,7 @@ test('connectionInit extension e2e testing', t => {
           })
         }
 
-        async function addNotification() {
+        async function addNotification () {
           await gateway.inject({
             method: 'POST',
             url: '/graphql',
@@ -267,7 +267,7 @@ test('connectionInit extension e2e testing', t => {
         let done1 = false
         let done2 = false
 
-        async function connectionAckCallback(clientNb) {
+        async function connectionAckCallback (clientNb) {
           if (clientNb === 1) {
             ready1 = true
           } else if (clientNb === 2) {
@@ -279,7 +279,7 @@ test('connectionInit extension e2e testing', t => {
           }
         }
 
-        function terminateCallback(clientNb) {
+        function terminateCallback (clientNb) {
           if (clientNb === 1) {
             done1 = true
           } else if (clientNb === 2) {
@@ -291,8 +291,8 @@ test('connectionInit extension e2e testing', t => {
           }
         }
 
-        function makeDataHandler(clientNb) {
-          return async function dataHandler(chunk) {
+        function makeDataHandler (clientNb) {
+          return async function dataHandler (chunk) {
             const data = JSON.parse(chunk)
             switch (data.type) {
               case 'connection_ack':

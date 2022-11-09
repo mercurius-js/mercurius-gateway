@@ -1,6 +1,6 @@
 # federation-support
 
-A module to create a federation gateway in `mercurius`.
+A module to create aa Apollo Federation v1 gateway with `mercurius`.
 
 ## Quick start
 

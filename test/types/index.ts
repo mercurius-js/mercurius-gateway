@@ -4,7 +4,6 @@ import { MercuriusContext } from 'mercurius'
 
 import mercuriusGatewayPlugin from '../../index'
 
-
 const gateway = Fastify()
 
 expectError(() => {
@@ -41,6 +40,7 @@ gateway.register(mercuriusGatewayPlugin, {
             authorization: 'bearer supersecret'
           },
           failedConnectionCallback: (err) => {
+            /* eslint-disable-next-line no-unused-expressions */
             err.message
           },
           failedReconnectCallback: () => {},
@@ -62,6 +62,7 @@ gateway.register(mercuriusGatewayPlugin, {
               authorization: 'bearer supersecret'
             },
             failedConnectionCallback: (err) => {
+              /* eslint-disable-next-line no-unused-expressions */
               err.message
             },
             failedReconnectCallback: () => {},

@@ -1,3 +1,5 @@
+'use strict'
+
 const Fastify = require('fastify')
 const { mercuriusFederationPlugin } = require('@mercuriusjs/federation')
 

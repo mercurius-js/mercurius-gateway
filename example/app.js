@@ -1,3 +1,5 @@
+'use strict'
+
 const fp = require('fastify-plugin')
 const autoload = require('@fastify/autoload')
 const cors = require('@fastify/cors')

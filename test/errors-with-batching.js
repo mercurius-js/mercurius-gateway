@@ -5,7 +5,7 @@ const Fastify = require('fastify')
 const GQL = require('mercurius')
 const { ErrorWithProps } = require('../lib/errors')
 const plugin = require('../index')
-const { buildFederationSchema } = require('@mercurius/federation')
+const { buildFederationSchema } = require('@mercuriusjs/federation')
 
 async function createTestService(
   t,

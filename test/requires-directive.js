@@ -4,7 +4,7 @@ const { test } = require('tap')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
 const plugin = require('../index')
-const { buildFederationSchema } = require('@mercurius/federation')
+const { buildFederationSchema } = require('@mercuriusjs/federation')
 
 async function createService(schema, resolvers = {}) {
   const service = Fastify()

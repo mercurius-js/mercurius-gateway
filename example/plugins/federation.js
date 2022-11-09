@@ -1,11 +1,11 @@
-const mercurius = require('mercurius')
 const fp = require('fastify-plugin')
-const { createGateway } = require('../../index')
+const plugin = require('../../index')
 
 module.exports = fp(
   async (fastify, options) => {
-    const gateway = await createGateway(
-      {
+    await fastify.register(plugin, {
+      graphiql: options.graphql.graphiql,
+      gateway: {
         services: [
           {
             name: 'user',
@@ -16,13 +16,7 @@ module.exports = fp(
             url: 'http://localhost:4002/graphql'
           }
         ]
-      },
-      fastify
-    )
-
-    await fastify.register(mercurius, {
-      schema: gateway.schema,
-      graphiql: options.graphql.graphiql
+      }
     })
 
     fastify.get('/sdl', async function () {

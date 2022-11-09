@@ -6,7 +6,7 @@ const { GraphQLSchema } = require('graphql')
 const { promisify } = require('util')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
-const { buildFederationSchema } = require('@mercurius/federation')
+const { buildFederationSchema } = require('@mercuriusjs/federation')
 
 const plugin = require('../index')
 

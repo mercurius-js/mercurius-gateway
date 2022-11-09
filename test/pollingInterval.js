@@ -10,7 +10,7 @@ const immediate = promisify(setImmediate)
 
 const Fastify = require('fastify')
 const WebSocket = require('ws')
-const { buildFederationSchema } = require('@mercurius/federation')
+const { buildFederationSchema } = require('@mercuriusjs/federation')
 const GQL = require('mercurius')
 const plugin = require('../index')
 

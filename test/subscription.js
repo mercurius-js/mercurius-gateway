@@ -5,7 +5,7 @@ const Fastify = require('fastify')
 const WebSocket = require('ws')
 const GQL = require('mercurius')
 const plugin = require('../index')
-const { buildFederationSchema } = require('@mercurius/federation')
+const { buildFederationSchema } = require('@mercuriusjs/federation')
 
 const users = {
   u1: {

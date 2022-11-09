@@ -6,7 +6,7 @@ const { GraphQLSchema, parse } = require('graphql')
 const { promisify } = require('util')
 const GQL = require('mercurius')
 const plugin = require('../index')
-const { buildFederationSchema } = require('@mercurius/federation')
+const { buildFederationSchema } = require('@mercuriusjs/federation')
 
 const immediate = promisify(setImmediate)
 

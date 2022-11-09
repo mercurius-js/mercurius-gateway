@@ -7,7 +7,7 @@ const { once } = require('events')
 const { GraphQLSchema, parse } = require('graphql')
 const GQL = require('mercurius')
 const plugin = require('../index')
-const { buildFederationSchema } = require('@mercurius/federation')
+const { buildFederationSchema } = require('@mercuriusjs/federation')
 
 let assignedPort = 3700
 const users = {

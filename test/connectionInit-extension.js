@@ -6,7 +6,7 @@ const WebSocket = require('ws')
 const GQL = require('mercurius')
 
 const plugin = require('../index')
-const { buildFederationSchema } = require('@mercurius/federation')
+const { buildFederationSchema } = require('@mercuriusjs/federation')
 
 test('connectionInit extension e2e testing', t => {
   t.plan(9)

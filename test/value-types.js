@@ -5,7 +5,7 @@ const Fastify = require('fastify')
 const FakeTimers = require('@sinonjs/fake-timers')
 const { promisify } = require('util')
 const immediate = promisify(setImmediate)
-const { buildFederationSchema } = require('@mercurius/federation')
+const { buildFederationSchema } = require('@mercuriusjs/federation')
 const GQL = require('mercurius')
 const plugin = require('../index')
 

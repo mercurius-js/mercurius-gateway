@@ -7,7 +7,7 @@ const { createClient } = require('graphql-ws')
 const ws = require('ws')
 const { promisify } = require('util')
 const plugin = require('../index')
-const { buildFederationSchema } = require('@mercurius/federation')
+const { buildFederationSchema } = require('@mercuriusjs/federation')
 const sleep = promisify(setTimeout)
 
 async function createTestService(port, schema, resolvers = {}) {

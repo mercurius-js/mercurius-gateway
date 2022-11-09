@@ -5,7 +5,7 @@ A module to create a federation gateway in `mercurius`.
 ## Quick start
 
 ```javascript
-npm i fastify @mercurius/federation @mercurius/gateway
+npm i fastify @mercuriusjs/federation @mercuriusjs/gateway
 ```
 
 ```js
@@ -13,8 +13,8 @@ npm i fastify @mercurius/federation @mercurius/gateway
 
 const Fastify = require('fastify')
 const mercurius = require('mercurius')
-const { mercuriusFederationPlugin } = require('@mercurius/federation')
-const mergcuriusGatewayPlugin = require('@mercurius/gateway')
+const { mercuriusFederationPlugin } = require('@mercuriusjs/federation')
+const mergcuriusGatewayPlugin = require('@mercuriusjs/gateway')
 
 const users = {
   1: {

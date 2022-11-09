@@ -1,5 +1,5 @@
 {
-  "name": "@mercurius/gateway",
+  "name": "@mercuriusjs/gateway",
   "version": "0.0.1",
   "description": "A plugin for mercurius federation",
   "main": "index.js",
@@ -55,7 +55,7 @@
     "*.{js,jsx}": "eslint --cache --fix"
   },
   "dependencies": {
-    "@mercurius/federation": "^1.0.0",
+    "@mercuriusjs/federation": "^0.1.0",
     "fastify-plugin": "^4.2.1",
     "graphql": "^16.6.0",
     "graphql-ws": "^5.11.2",

@@ -1,4 +1,4 @@
-# federation-support
+# @mercurius/gateway
 
 A module to create aa Apollo Federation v1 gateway with `mercurius`.
 
@@ -8,13 +8,12 @@ A module to create aa Apollo Federation v1 gateway with `mercurius`.
 npm i fastify @mercuriusjs/federation @mercuriusjs/gateway
 ```
 
+Create the `user` service
 ```js
 'use strict'
 
 const Fastify = require('fastify')
-const mercurius = require('mercurius')
 const { mercuriusFederationPlugin } = require('@mercuriusjs/federation')
-const mergcuriusGatewayPlugin = require('@mercuriusjs/gateway')
 
 const users = {
   1: {
@@ -61,9 +60,78 @@ service.register(mercuriusFederationPlugin, {
 })
 
 service.listen({ port: 4001 })
+```
+
+Create the `post` service
+```js
+'use strict'
+
+const Fastify = require('fastify')
+const { mercuriusFederationPlugin } = require('@mercuriusjs/federation')
+
+const posts = {
+  p1: {
+    pid: 'p1',
+    title: 'Post 1',
+    content: 'Content 1',
+    authorId: 'u1'
+  },
+  p2: {
+    pid: 'p2',
+    title: 'Post 2',
+    content: 'Content 2',
+    authorId: 'u2'
+  }
+}
+
+const service = Fastify()
+const schema = `
+  extend type Query {
+    topPosts(count: Int): [Post]
+  }
+
+  type Post @key(fields: "pid") {
+    pid: ID!
+    title: String
+    content: String
+    author: User @requires(fields: "pid title")
+  }
+`
+
+const resolvers = {
+  Query: {
+    topPosts: (root, { count = 2 }) => Object.values(posts).slice(0, count)
+  },
+  Post: {
+    __resolveReference: post => {
+      return posts[post.pid]
+    },
+    author: post => {
+      return {
+        __typename: 'User',
+        id: post.authorId
+      }
+    }
+  }
+}
+
+service.register(mercuriusFederationPlugin, {
+  schema,
+  resolvers
+})
+
+service.listen({ port: 4002 })
+```
+
+Create the `gateway`
+```js
+'use strict'
+
+const Fastify = require('fastify')
+const mercuriusGateway = require('@mercuriusjs/gateway')
 
 const gateway = Fastify()
-gateway.register(mercuriusGatewayPlugin, {
+gateway.register(mercuriusGateway, {
   gateway: {
     services: [
       {
@@ -81,22 +149,20 @@ gateway.register(mercuriusGatewayPlugin, {
 gateway.listen({ port: 3000 })
 ```
 
-
-
 ## API
 
-### mercuriusFederationPlugin
+### mercuriusGateway
 
-A fastify plugin to create a `mercurius` server that expose the `federation` directives.
+Register the gateway in `fastify`.
 
 ```javascript
-const mercuriusFederationPlugin = require('@mercurius/gateway')
+const mercuriusGateway = require('@mercurius/gateway')
 
 const schema = ...
 const resolvers = ...
 const app = Fastify()
 
-app.register(mercuriusFederationPlugin, {
+app.register(mercuriusGateway, {
   gateway: [
     services: [
       {

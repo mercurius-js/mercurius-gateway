@@ -1,0 +1,72 @@
+{
+  "name": "@mercuriusjs/gateway",
+  "version": "0.0.1",
+  "description": "A plugin for mercurius federation",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "lib"
+  ],
+  "scripts": {
+    "lint": "npm run lint:standard && npm run lint:typescript",
+    "lint:fix": "standard --fix && npm run lint:typescript:fix",
+    "lint:standard": "standard | snazzy",
+    "lint:typescript": "standard --parser @typescript-eslint/parser --plugin @typescript-eslint/eslint-plugin test/types/*.ts",
+    "lint:typescript:fix": "standard --parser @typescript-eslint/parser --plugin @typescript-eslint/eslint-plugin test/types/*.ts --fix",
+    "example": "node example/index.js",
+    "test": "npm run lint && npm run test:types && npm run test:unit ",
+    "test:unit": "tap --jobs=1 --coverage-report=html test/*.js",
+    "test:types": "tsd",
+    "prepare": "husky install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mercurius-js/federation-support"
+  },
+  "keywords": [
+    "mercurius"
+  ],
+  "author": "Davide Fiorello <davide@codeflyer.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mercurius-js/federation-support/issues"
+  },
+  "homepage": "https://github.com/mercurius-js/federation-support#readme",
+  "devDependencies": {
+    "@commitlint/cli": "^17.2.0",
+    "@commitlint/config-conventional": "^17.2.0",
+    "@fastify/autoload": "^5.4.1",
+    "@fastify/cors": "^8.2.0",
+    "@sinonjs/fake-timers": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.42.1",
+    "@typescript-eslint/parser": "^5.42.1",
+    "fastify": "^4.9.2",
+    "husky": "^8.0.2",
+    "lint-staged": "^13.0.3",
+    "sinon": "^14.0.2",
+    "snazzy": "^9.0.0",
+    "standard": "^17.0.0",
+    "tap": "^16.3.0",
+    "tsd": "^0.24.1"
+  },
+  "tsd": {
+    "directory": "test/types"
+  },
+  "lint-staged": {
+    "*.{js,jsx}": "standard --cache --fix"
+  },
+  "dependencies": {
+    "@mercuriusjs/federation": "^0.1.0",
+    "fastify-plugin": "^4.3.0",
+    "graphql": "^16.6.0",
+    "graphql-ws": "^5.11.2",
+    "mercurius": "^11.3.0",
+    "p-map": "^4.0.0",
+    "single-user-cache": "^0.6.0",
+    "tiny-lru": "^8.0.1",
+    "use-strict": "1.0.1",
+    "ws": "^8.11.0"
+  }
+}

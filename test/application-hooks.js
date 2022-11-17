@@ -82,7 +82,7 @@ test('onGatewayReplaceSchema - polling interval with a new schema should trigger
     }
   })
 
-  gateway.graphql.addHook(
+  gateway.graphql.gateway.addHook(
     'onGatewayReplaceSchema',
     async (instance, schema) => {
       t.type(instance, 'object')
@@ -170,12 +170,12 @@ test('onGatewayReplaceSchema - should log an error should any errors occur in th
     }
   })
 
-  gateway.graphql.addHook('onGatewayReplaceSchema', async () => {
+  gateway.graphql.gateway.addHook('onGatewayReplaceSchema', async () => {
     t.ok('trigger error')
     throw new Error('kaboom')
   })
 
-  gateway.graphql.addHook('onGatewayReplaceSchema', async () => {
+  gateway.graphql.gateway.addHook('onGatewayReplaceSchema', async () => {
     t.fail('should not be called')
   })
 

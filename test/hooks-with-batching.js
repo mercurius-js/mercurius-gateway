@@ -220,7 +220,7 @@ test('gateway - hooks', async t => {
   //  - once for post service query
   //  - once for reference type topPosts on User
   //  - once for reference type author on Post
-  app.graphql.addHook(
+  app.graphql.gateway.addHook(
     'preGatewayExecution',
     async function (schema, document, context) {
       await immediate()
@@ -293,7 +293,7 @@ test('gateway - hooks validation should handle invalid hook name types', async t
   const app = await createTestGatewayServer(t)
 
   try {
-    app.graphql.addHook(1, async () => {})
+    app.graphql.gateway.addHook(1, async () => {})
   } catch (e) {
     t.equal(e.code, 'MER_ERR_HOOK_INVALID_TYPE')
     t.equal(e.message, 'The hook name must be a string')
@@ -305,7 +305,7 @@ test('gateway - hooks validation should handle invalid hook handlers', async t =
   const app = await createTestGatewayServer(t)
 
   try {
-    app.graphql.addHook('preParsing', 'not a function')
+    app.graphql.gateway.addHook('onGatewayReplaceSchema', 'not a function')
   } catch (e) {
     t.equal(e.code, 'MER_ERR_HOOK_INVALID_HANDLER')
     t.equal(e.message, 'The hook callback must be a function')
@@ -352,7 +352,7 @@ test('gateway - hooks should trigger when JIT is enabled', async t => {
   //  - once for post service query
   //  - once for reference type topPosts on User
   //  - once for reference type author on Post
-  app.graphql.addHook(
+  app.graphql.gateway.addHook(
     'preGatewayExecution',
     async function (schema, document, context) {
       await immediate()
@@ -878,7 +878,7 @@ test('gateway - preGatewayExecution hooks should handle errors', async t => {
   t.plan(10)
   const app = await createTestGatewayServer(t)
 
-  app.graphql.addHook(
+  app.graphql.gateway.addHook(
     'preGatewayExecution',
     async (schema, document, context) => {
       t.type(schema, GraphQLSchema)
@@ -888,7 +888,7 @@ test('gateway - preGatewayExecution hooks should handle errors', async t => {
     }
   )
 
-  app.graphql.addHook('preGatewayExecution', async () => {
+  app.graphql.gateway.addHook('preGatewayExecution', async () => {
     t.fail('this should not be called')
   })
 
@@ -930,7 +930,7 @@ test('gateway - preGatewayExecution hooks should be able to put values onto the 
   t.plan(29)
   const app = await createTestGatewayServer(t)
 
-  app.graphql.addHook(
+  app.graphql.gateway.addHook(
     'preGatewayExecution',
     async (schema, document, context) => {
       t.type(schema, GraphQLSchema)
@@ -940,7 +940,7 @@ test('gateway - preGatewayExecution hooks should be able to put values onto the 
     }
   )
 
-  app.graphql.addHook(
+  app.graphql.gateway.addHook(
     'preGatewayExecution',
     async (schema, document, context) => {
       t.type(schema, GraphQLSchema)
@@ -993,7 +993,7 @@ test('gateway - preGatewayExecution hooks should be able to add to the errors ar
   t.plan(33)
   const app = await createTestGatewayServer(t)
 
-  app.graphql.addHook(
+  app.graphql.gateway.addHook(
     'preGatewayExecution',
     async (schema, document, context) => {
       t.type(schema, GraphQLSchema)
@@ -1006,7 +1006,7 @@ test('gateway - preGatewayExecution hooks should be able to add to the errors ar
     }
   )
 
-  app.graphql.addHook(
+  app.graphql.gateway.addHook(
     'preGatewayExecution',
     async (schema, document, context) => {
       t.type(schema, GraphQLSchema)
@@ -1088,7 +1088,7 @@ test('gateway - preGatewayExecution hooks should be able to modify the request d
   t.plan(17)
   const app = await createTestGatewayServer(t)
 
-  app.graphql.addHook(
+  app.graphql.gateway.addHook(
     'preGatewayExecution',
     async (schema, document, context) => {
       t.type(schema, GraphQLSchema)
@@ -1152,7 +1152,7 @@ test('gateway - preGatewayExecution hooks should contain service metadata', asyn
   //  - post service: once for post service query
   //  - post service: once for reference type topPosts on User
   //  - user service: once for reference type author on Post
-  app.graphql.addHook(
+  app.graphql.gateway.addHook(
     'preGatewayExecution',
     async function (schema, document, context, service) {
       await immediate()

@@ -55,7 +55,9 @@ test('it works with a basic example', async t => {
   const entity2 = createEntity('p2')
   const result = await getQueryResult({
     context: {
-      preGatewayExecution: null,
+      gateway: {
+        preGatewayExecution: null
+      },
       reply: {
         request: {
           headers: {}
@@ -91,7 +93,9 @@ test('it works with a basic example and batched queries', async t => {
   const entity2 = createEntity('p4')
   const result = await getQueryResult({
     context: {
-      preGatewayExecution: null,
+      gateway: {
+        preGatewayExecution: null
+      },
       reply: {
         request: {
           headers: {}

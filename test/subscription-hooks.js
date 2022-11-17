@@ -235,7 +235,7 @@ test('gateway subscription - hooks basic', async t => {
     }
   )
 
-  gateway.graphql.addHook(
+  gateway.graphql.gateway.addHook(
     'preGatewaySubscriptionExecution',
     async (schema, document, context) => {
       t.type(schema, GraphQLSchema)
@@ -417,7 +417,7 @@ test('gateway - preSubscriptionExecution hooks should handle errors', async t =>
     t.fail('preSubscriptionExecution should not be called again')
   })
 
-  gateway.graphql.addHook('preGatewaySubscriptionExecution', async () => {
+  gateway.graphql.gateway.addHook('preGatewaySubscriptionExecution', async () => {
     t.fail('preGatewaySubscriptionExecution should not be called')
   })
 
@@ -469,10 +469,10 @@ test('gateway - preGatewaySubscriptionExecution hooks should handle errors', asy
   t.plan(2)
   const gateway = await createTestGatewayServer(t)
 
-  gateway.graphql.addHook('preGatewaySubscriptionExecution', async () => {
+  gateway.graphql.gateway.addHook('preGatewaySubscriptionExecution', async () => {
     throw new Error('a preGatewaySubscriptionExecution error occurred')
   })
-  gateway.graphql.addHook('preGatewaySubscriptionExecution', async () => {
+  gateway.graphql.gateway.addHook('preGatewaySubscriptionExecution', async () => {
     t.fail('preGatewaySubscriptionExecution should not be called again')
   })
 
@@ -523,7 +523,7 @@ test('gateway subscription - preGatewaySubscriptionExecution hooks should contai
 
   const subscriptionQuery = query('u1')
 
-  gateway.graphql.addHook(
+  gateway.graphql.gateway.addHook(
     'preGatewaySubscriptionExecution',
     async (schema, document, context, service) => {
       t.type(schema, GraphQLSchema)

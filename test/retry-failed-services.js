@@ -169,7 +169,7 @@ test('gateway - retry mandatory failed services on startup', async t => {
     jit: 1
   })
 
-  gateway.graphql.addHook(
+  gateway.graphql.gateway.addHook(
     'onGatewayReplaceSchema',
     async (instance, schema) => {
       t.type(instance, 'object')
@@ -473,7 +473,7 @@ test('gateway - should log error if retry throws', async t => {
     jit: 1
   })
 
-  gateway.graphql.addHook('onGatewayReplaceSchema', async () => {
+  gateway.graphql.gateway.addHook('onGatewayReplaceSchema', async () => {
     throw new Error('kaboom')
   })
 

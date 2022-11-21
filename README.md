@@ -212,7 +212,7 @@ app.register(mercuriusGateway, {
 
 ## Hooks
 
-Hooks are registered with the `fastify.graphql.gateway.addHook` method 
+Hooks are registered with the `fastify.graphqlGateway.addHook` method 
 and allow you to listen to specific events in the GraphQL request/response lifecycle. 
 You have to register a hook before the event is triggered, otherwise the event is lost.
 
@@ -312,7 +312,7 @@ Note, this hook contains service metadata in the `service` parameter:
 - `name`: service name
 
 ```js
-fastify.graphql.gateway.addHook('preGatewayExecution', async (schema, document, context, service) => {
+fastify.graphqlGateway.addHook('preGatewayExecution', async (schema, document, context, service) => {
   const { modifiedDocument, errors } = await asyncMethod(document)
 
   return {
@@ -327,7 +327,7 @@ If you get an error during the execution of your hook, you can just throw an err
 The `preGatewayExecution` hook, which will continue execution of the rest of the query and append the error to the errors array in the response.
 
 ```js
-fastify.graphql.gateway.addHook('preGatewayExecution', async (schema, document, context, service) => {
+fastify.graphqlGateway.addHook('preGatewayExecution', async (schema, document, context, service) => {
   throw new Error('Some error')
 })
 ```
@@ -337,7 +337,7 @@ fastify.graphql.gateway.addHook('preGatewayExecution', async (schema, document, 
 The `preGatewayExecution` hook support adding errors to the GraphQL response.
 
 ```js
-fastify.graphql.gateway.addHook('preGatewayExecution', async (schema, document, context) => {
+fastify.graphqlGateway.addHook('preGatewayExecution', async (schema, document, context) => {
   return {
     errors: [new Error('foo')]
   }
@@ -371,7 +371,7 @@ Note, this hook contains service metadata in the `service` parameter:
 - `name`: service name
 
 ```js
-fastify.graphql.gateway.addHook('preGatewaySubscriptionExecution', async (schema, document, context, service) => {
+fastify.graphqlGateway.addHook('preGatewaySubscriptionExecution', async (schema, document, context, service) => {
   await asyncMethod()
 })
 ```
@@ -381,7 +381,7 @@ fastify.graphql.gateway.addHook('preGatewaySubscriptionExecution', async (schema
 If you get an error during the execution of your subscription hook, you can just throw an error and Mercurius will send the appropriate errors to the user along the websocket.`
 
 ```js
-fastify.graphql.gateway.addHook('preSubscriptionParsing', async (schema, source, context) => {
+fastify.graphqlGateway.addHook('preSubscriptionParsing', async (schema, source, context) => {
   throw new Error('Some error')
 })
 ```
@@ -400,7 +400,7 @@ It has the following parameters:
 - `schema` - The new schema that has been built from the gateway refresh.
 
 ```js
-fastify.graphql.gateway.addHook('onGatewayReplaceSchema', async (instance, schema) => {
+fastify.graphqlGateway.addHook('onGatewayReplaceSchema', async (instance, schema) => {
   await someSchemaTraversalFn()
 })
 ```

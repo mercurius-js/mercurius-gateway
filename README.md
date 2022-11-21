@@ -209,3 +209,200 @@ app.register(mercuriusGateway, {
       - `wsConnectionParams.rewriteConnectionInitPayload`: `Function` A function that gets the original `connection_init` payload along with the context as a parameter and returns an object that replaces the original `connection_init` payload before forwarding it to the federated service
   - `gateway.retryServicesCount`: `Number` Specifies the maximum number of retries when a service fails to start on gateway initialization. (Default: 10)
   - `gateway.retryServicesInterval`: `Number` The amount of time(in milliseconds) between service retry attempts in case a service fails to start on gateway initialization. (Default: 3000)
+
+## Hooks
+
+Hooks are registered with the `fastify.graphql.gateway.addHook` method 
+and allow you to listen to specific events in the GraphQL request/response lifecycle. 
+You have to register a hook before the event is triggered, otherwise the event is lost.
+
+By using hooks you can interact directly with the GraphQL lifecycle of Mercurius gateway. 
+There are GraphQL Request and Subscription hooks:
+
+- [GraphQL Request Hooks](#graphql-request-hooks)
+  - [preGatewayExecution](#pregatewayexecution)
+- [GraphQL Subscription Hooks](#graphql-subscription-hooks)
+  - [preGatewaySubscriptionExecution](#pregatewaysubscriptionexecution)
+
+**Notice:** these hooks are only supported with `async`/`await` or returning a `Promise`.
+
+### Lifecycle
+
+The schema of the internal lifecycle of Mercurius gateway.<br>
+
+On the right branch of every section there is the next phase of the lifecycle, on the left branch there is the corresponding GraphQL error(s) that will be generated if the parent throws an error *(note that all the errors are automatically handled by Mercurius)*.
+
+#### Gateway lifecycle
+
+How the gateway lifecycle works integrated with the Mercurius lifecycle.
+
+```
+Incoming GraphQL Request
+  │
+  └─▶ Routing
+           │
+  errors ◀─┴─▶ preParsing Hook
+                  │
+         errors ◀─┴─▶ Parsing
+                        │
+               errors ◀─┴─▶ preValidation Hook
+                               │
+                      errors ◀─┴─▶ Validation
+                                     │
+                            errors ◀─┴─▶ preExecution Hook
+                                            │
+                                   errors ◀─┴─▶ Execution
+                                                  │
+                                                  └─▶ preGatewayExecution Hook(s) (appends errors only)
+                                                         │
+                                                errors ◀─┴─▶ GatewayExecution(s)
+                                                               │
+                                                      errors ◀─┴─▶ Resolution (once all GatewayExecutions have finished)
+                                                                     │
+                                                                     └─▶ onResolution Hook
+```
+
+#### Gateway subscription lifecycle
+
+How the gateway subscription lifecycle works integrated with the Mercurius lifecycle.
+```
+Incoming GraphQL Websocket subscription data
+  │
+  └─▶ Routing
+           │
+  errors ◀─┴─▶ preSubscriptionParsing Hook
+                  │
+         errors ◀─┴─▶ Subscription Parsing
+                        │
+               errors ◀─┴─▶ preSubscriptionExecution Hook
+                              │
+                     errors ◀─┴─▶ Subscription Execution
+                                    │
+                                    │
+                                    └─▶ preGatewaySubscriptionExecution Hook(s)
+                                            │
+                                   errors ◀─┴─▶ Gateway Subscription Execution(s)
+                                                  │
+                                      wait for subscription data
+                                                  │
+                   subscription closed on error ◀─┴─▶ Subscription Resolution (when subscription data is received)
+                                                        │
+                                                        └─▶ onSubscriptionResolution Hook
+                                                              │
+                                              keeping processing until subscription ended
+                                                              │
+                               subscription closed on error ◀─┴─▶ Subscription End (when subscription stop is received)
+                                                                    │
+                                                                    └─▶ onSubscriptionEnd Hook
+```
+
+### GraphQL Request Hooks
+
+It is pretty easy to understand where each hook is executed by looking at the lifecycle definition.<br>
+
+#### preGatewayExecution
+
+In the `preGatewayExecution` hook, you can modify the following items by returning them in the hook definition:
+- `document`
+- `errors`
+
+This hook will only be triggered in gateway mode. When in gateway mode, each hook definition will trigger multiple times in a single request just before executing remote GraphQL queries on the federated services.
+
+Note, this hook contains service metadata in the `service` parameter:
+- `name`: service name
+
+```js
+fastify.graphql.gateway.addHook('preGatewayExecution', async (schema, document, context, service) => {
+  const { modifiedDocument, errors } = await asyncMethod(document)
+
+  return {
+    document: modifiedDocument,
+    errors
+  }
+})
+```
+
+#### Manage Errors from a request hook
+If you get an error during the execution of your hook, you can just throw an error.
+The `preGatewayExecution` hook, which will continue execution of the rest of the query and append the error to the errors array in the response.
+
+```js
+fastify.graphql.gateway.addHook('preGatewayExecution', async (schema, document, context, service) => {
+  throw new Error('Some error')
+})
+```
+
+#### Add errors to the GraphQL response from a hook
+
+The `preGatewayExecution` hook support adding errors to the GraphQL response.
+
+```js
+fastify.graphql.gateway.addHook('preGatewayExecution', async (schema, document, context) => {
+  return {
+    errors: [new Error('foo')]
+  }
+})
+```
+
+Note, the original query will still execute. Adding the above will result in the following response:
+
+```json
+{
+  "data": {
+    "foo": "bar"
+  },
+  "errors": [
+    {
+      "message": "foo"
+    }
+  ]
+}
+```
+
+### GraphQL Subscription Hooks
+
+It is pretty easy to understand where each hook is executed by looking at the lifecycle definition.<br>
+
+#### preGatewaySubscriptionExecution
+
+This hook will only be triggered in gateway mode. When in gateway mode, each hook definition will trigger when creating a subscription with a federated service.
+
+Note, this hook contains service metadata in the `service` parameter:
+- `name`: service name
+
+```js
+fastify.graphql.gateway.addHook('preGatewaySubscriptionExecution', async (schema, document, context, service) => {
+  await asyncMethod()
+})
+```
+
+#### Manage Errors from a subscription hook
+
+If you get an error during the execution of your subscription hook, you can just throw an error and Mercurius will send the appropriate errors to the user along the websocket.`
+
+```js
+fastify.graphql.gateway.addHook('preSubscriptionParsing', async (schema, source, context) => {
+  throw new Error('Some error')
+})
+```
+
+### GraphQL Application lifecycle Hooks
+
+There is one hook that you can use in a GraphQL application.
+
+#### onGatewayReplaceSchema
+
+When the Gateway service obtains new versions of federated schemas within a defined polling interval, the `onGatewayReplaceSchema` hook will be triggered every time a new schema is built. It is called just before the old schema is replaced with the new one.
+
+It has the following parameters:
+
+- `instance` - The gateway server `FastifyInstance` (this contains the old schema).
+- `schema` - The new schema that has been built from the gateway refresh.
+
+```js
+fastify.graphql.gateway.addHook('onGatewayReplaceSchema', async (instance, schema) => {
+  await someSchemaTraversalFn()
+})
+```
+
+If this hook throws, the error will be caught and logged using the `FastifyInstance` logger. Subsequent `onGatewayReplaceSchema` hooks that are registered will not be run for this interval.

@@ -1,16 +1,17 @@
 import { expectAssignable, expectError } from 'tsd'
-import Fastify from 'fastify'
+import Fastify, { FastifyInstance } from 'fastify'
 import { MercuriusContext } from 'mercurius'
 
-import mercuriusGatewayPlugin from '../../index'
+import mercuriusGatewayPlugin, { MercuriusServiceMetadata } from '../../index'
+import { DocumentNode, GraphQLSchema } from 'graphql'
 
-const gateway = Fastify()
+const app = Fastify()
 
 expectError(() => {
-  gateway.register(mercuriusGatewayPlugin, {})
+  app.register(mercuriusGatewayPlugin, {})
 })
 
-gateway.register(mercuriusGatewayPlugin, {
+app.register(mercuriusGatewayPlugin, {
   gateway: {
     services: [
       {
@@ -80,7 +81,7 @@ gateway.register(mercuriusGatewayPlugin, {
 })
 
 // Async rewriteHeaders
-gateway.register(mercuriusGatewayPlugin, {
+app.register(mercuriusGatewayPlugin, {
   gateway: {
     services: [
       {
@@ -103,7 +104,7 @@ gateway.register(mercuriusGatewayPlugin, {
 })
 
 // keepAlive value in service config
-gateway.register(mercuriusGatewayPlugin, {
+app.register(mercuriusGatewayPlugin, {
   gateway: {
     services: [
       {
@@ -119,7 +120,7 @@ gateway.register(mercuriusGatewayPlugin, {
   }
 })
 
-gateway.register(mercuriusGatewayPlugin, {
+app.register(mercuriusGatewayPlugin, {
   gateway: {
     services: [
       {
@@ -135,7 +136,7 @@ gateway.register(mercuriusGatewayPlugin, {
   }
 })
 
-expectError(() => gateway.register(mercuriusGatewayPlugin, {
+expectError(() => app.register(mercuriusGatewayPlugin, {
   gateway: {
     services: [
       {
@@ -151,7 +152,7 @@ expectError(() => gateway.register(mercuriusGatewayPlugin, {
   }
 }))
 
-expectError(() => gateway.register(mercuriusGatewayPlugin, {
+expectError(() => app.register(mercuriusGatewayPlugin, {
   gateway: {
     services: [
       {
@@ -167,7 +168,7 @@ expectError(() => gateway.register(mercuriusGatewayPlugin, {
   }
 }))
 
-expectError(() => gateway.register(mercuriusGatewayPlugin, {
+expectError(() => app.register(mercuriusGatewayPlugin, {
   gateway: {
     services: [
       {
@@ -184,7 +185,7 @@ expectError(() => gateway.register(mercuriusGatewayPlugin, {
 }))
 
 // Gateway mode with load balanced services
-gateway.register(mercuriusGatewayPlugin, {
+app.register(mercuriusGatewayPlugin, {
   gateway: {
     services: [
       {
@@ -200,7 +201,7 @@ gateway.register(mercuriusGatewayPlugin, {
 })
 
 // Gateway mode with custom services retry props
-gateway.register(mercuriusGatewayPlugin, {
+app.register(mercuriusGatewayPlugin, {
   gateway: {
     services: [
       {
@@ -213,7 +214,7 @@ gateway.register(mercuriusGatewayPlugin, {
   }
 })
 
-expectError(() => gateway.register(mercuriusGatewayPlugin, {
+expectError(() => app.register(mercuriusGatewayPlugin, {
   gateway: {
     services: [
       {
@@ -225,3 +226,71 @@ expectError(() => gateway.register(mercuriusGatewayPlugin, {
     retryServicesInterval: '5000'
   }
 }))
+
+app.graphqlGateway.addHook('preGatewayExecution', async function (schema, document, context) {
+  expectAssignable<GraphQLSchema>(schema)
+  expectAssignable<DocumentNode>(document)
+  expectAssignable<MercuriusContext>(context)
+  return {
+    document,
+    errors: [
+      new Error('foo')
+    ]
+  }
+})
+
+app.graphqlGateway.addHook('preGatewayExecution', function (schema, document, context) {
+  expectAssignable<GraphQLSchema>(schema)
+  expectAssignable<DocumentNode>(document)
+  expectAssignable<MercuriusContext>(context)
+  return {
+    document,
+    errors: [
+      new Error('foo')
+    ]
+  }
+})
+
+app.graphqlGateway.addHook('preGatewayExecution', function (schema, document, context) {
+  expectAssignable<GraphQLSchema>(schema)
+  expectAssignable<DocumentNode>(document)
+  expectAssignable<MercuriusContext>(context)
+})
+
+app.graphqlGateway.addHook('preGatewaySubscriptionExecution', async function (schema, document, context) {
+  expectAssignable<GraphQLSchema>(schema)
+  expectAssignable<DocumentNode>(document)
+  expectAssignable<MercuriusContext>(context)
+})
+
+app.graphqlGateway.addHook('preGatewaySubscriptionExecution', function (schema, document, context) {
+  expectAssignable<GraphQLSchema>(schema)
+  expectAssignable<DocumentNode>(document)
+  expectAssignable<MercuriusContext>(context)
+})
+
+// Hooks containing service metadata
+app.graphqlGateway.addHook('preGatewayExecution', async function (schema, document, context, service) {
+  expectAssignable<GraphQLSchema>(schema)
+  expectAssignable<DocumentNode>(document)
+  expectAssignable<MercuriusContext>(context)
+  expectAssignable<MercuriusServiceMetadata>(service)
+})
+
+app.graphqlGateway.addHook('preGatewaySubscriptionExecution', async function (schema, document, context, service) {
+  expectAssignable<GraphQLSchema>(schema)
+  expectAssignable<DocumentNode>(document)
+  expectAssignable<MercuriusContext>(context)
+  expectAssignable<MercuriusServiceMetadata>(service)
+})
+
+// GraphQL Application lifecycle hooks
+app.graphqlGateway.addHook('onGatewayReplaceSchema', async function (instance, schema) {
+  expectAssignable<FastifyInstance>(instance)
+  expectAssignable<GraphQLSchema>(schema)
+})
+
+app.graphqlGateway.addHook('onGatewayReplaceSchema', function (instance, schema) {
+  expectAssignable<FastifyInstance>(instance)
+  expectAssignable<GraphQLSchema>(schema)
+})

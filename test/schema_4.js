@@ -457,8 +457,8 @@ test('Update the schema', async t => {
     'Cannot query field "world" on type "Query".'
   )
 
-  gateway.graphql.gateway.serviceMap.working.setSchema(fullSchema)
-  const newSchema = await gateway.graphql.gateway.refresh()
+  gateway.graphqlGateway.serviceMap.working.setSchema(fullSchema)
+  const newSchema = await gateway.graphqlGateway.refresh()
 
   gateway.graphql.replaceSchema(newSchema)
 
@@ -529,8 +529,8 @@ test('Update the schema without any changes', async t => {
     }
   })
 
-  gateway.graphql.gateway.serviceMap.working.setSchema(schemaNode)
-  const newSchema = await gateway.graphql.gateway.refresh()
+  gateway.graphqlGateway.serviceMap.working.setSchema(schemaNode)
+  const newSchema = await gateway.graphqlGateway.refresh()
 
   t.equal(newSchema, null)
 })

@@ -605,11 +605,11 @@ test('Polling schemas (if service is mandatory, exception should be thrown)', as
     })
   }
 
-  gateway.graphql.gateway.close()
+  gateway.graphqlGateway.close()
   await userService.close()
 
   t.rejects(async () => {
-    await gateway.graphql.gateway.refresh()
+    await gateway.graphqlGateway.refresh()
   })
 })
 

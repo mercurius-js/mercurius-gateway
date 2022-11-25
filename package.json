@@ -35,21 +35,24 @@
   },
   "homepage": "https://github.com/mercurius-js/federation-support#readme",
   "devDependencies": {
-    "@commitlint/cli": "^17.2.0",
-    "@commitlint/config-conventional": "^17.2.0",
-    "@fastify/autoload": "^5.4.1",
+    "@commitlint/cli": "^17.3.0",
+    "@commitlint/config-conventional": "^17.3.0",
+    "@fastify/autoload": "^5.6.0",
     "@fastify/cors": "^8.2.0",
     "@sinonjs/fake-timers": "^10.0.0",
-    "@typescript-eslint/eslint-plugin": "^5.42.1",
-    "@typescript-eslint/parser": "^5.42.1",
-    "fastify": "^4.9.2",
+    "@typescript-eslint/eslint-plugin": "^5.44.0",
+    "@typescript-eslint/parser": "^5.44.0",
+    "autocannon": "^7.10.0",
+    "concurrently": "^7.6.0",
+    "fastify": "^4.10.2",
     "husky": "^8.0.2",
-    "lint-staged": "^13.0.3",
+    "lint-staged": "^13.0.4",
     "sinon": "^14.0.2",
     "snazzy": "^9.0.0",
     "standard": "^17.0.0",
     "tap": "^16.3.2",
-    "tsd": "^0.24.1"
+    "tsd": "^0.24.1",
+    "wait-on": "^6.0.1"
   },
   "tsd": {
     "directory": "test/types"

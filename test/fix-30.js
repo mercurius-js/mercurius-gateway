@@ -65,6 +65,7 @@ async function createTestGatewayServer (t) {
     {
       User: {
         __resolveReference: (user, args, context, info) => {
+          t.fail('should skip this')
           return users[user.id]
         }
       }

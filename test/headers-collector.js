@@ -35,6 +35,17 @@ const users = {
   }
 }
 
+const customers = {
+  c1: {
+    id: 'u1',
+    name: 'John'
+  },
+  c2: {
+    id: 'u2',
+    name: 'Jane'
+  }
+}
+
 const posts = {
   p1: {
     pid: 'p1',
@@ -76,6 +87,10 @@ const query = `
       }
       topPosts(count: 2) {
         pid
+      }
+      customer {
+        id
+        name
       }
     }
   `
@@ -155,11 +170,43 @@ async function createTestGatewayServer (t, opts = {}) {
     'post'
   )
 
+  // Customer service
+  const customerServiceSchema = `
+    type Query @extends {
+      customer: Customer
+    }
+  
+    type Customer @key(fields: "id") {
+      id: ID!
+      name: String!
+    }`
+
+  const customerServiceResolvers = {
+    Query: {
+      customer: () => {
+        return customers.c1
+      }
+    },
+    Customer: {
+      __resolveReference: (customer) => {
+        return customers[customer.id]
+      }
+    }
+  }
+
+  const [customerService, customerServicePort] = await createTestService(
+    t,
+    customerServiceSchema,
+    customerServiceResolvers,
+    'customer'
+  )
+
   const gateway = Fastify()
   t.teardown(async () => {
     await gateway.close()
     await userService.close()
     await postService.close()
+    await customerService.close()
   })
 
   await gateway.register(plugin, {
@@ -178,6 +225,13 @@ async function createTestGatewayServer (t, opts = {}) {
           collectors: {
             collectHeaders: true
           }
+        },
+        {
+          name: 'customer',
+          url: `http://localhost:${customerServicePort}/graphql`,
+          collectors: {
+            collectHeaders: false
+          }
         }
       ]
     },
@@ -191,7 +245,7 @@ async function createTestGatewayServer (t, opts = {}) {
 // hooks
 // -----
 test('gateway - hooks', async (t) => {
-  t.plan(1)
+  t.plan(2)
   const app = await createTestGatewayServer(t)
 
   app.graphql.addHook('onResolution', async function (_, context) {
@@ -202,6 +256,11 @@ test('gateway - hooks', async (t) => {
       },
       me: {
         user: 'true'
+      }
+    })
+    t.notHas(context.collectors.responseHeaders, {
+      customer: {
+        customer: 'true'
       }
     })
   })

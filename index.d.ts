@@ -75,6 +75,10 @@ export interface MercuriusServiceMetadata {
   name: string;
 }
 
+export interface Collectors {
+  collectHeaders?: boolean;
+}
+
 interface WsConnectionParams {
   connectionInitPayload?:
     | (() => Record<string, any> | Promise<Record<string, any>>)
@@ -108,6 +112,7 @@ export interface MercuriusGatewayService {
     | (() => WsConnectionParams | Promise<WsConnectionParams>)
     | WsConnectionParams;
   setResponseHeaders?: (reply: FastifyReply) => void;
+  collectors?: Collectors;
 }
 
 export interface MercuriusGatewayOptions {

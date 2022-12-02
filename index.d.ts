@@ -77,6 +77,7 @@ export interface MercuriusServiceMetadata {
 
 export interface Collectors {
   collectHeaders?: boolean;
+  collectStatutsCodes?: boolean;
 }
 
 interface WsConnectionParams {

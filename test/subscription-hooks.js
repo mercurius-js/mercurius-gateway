@@ -8,18 +8,9 @@ const { GraphQLSchema, parse } = require('graphql')
 const GQL = require('mercurius')
 const plugin = require('../index')
 const { buildFederationSchema } = require('@mercuriusjs/federation')
+const { users } = require('./utils/mocks')
 
 let assignedPort = 3700
-const users = {
-  u1: {
-    id: 'u1',
-    name: 'John'
-  },
-  u2: {
-    id: 'u2',
-    name: 'Jane'
-  }
-}
 
 const messages = {}
 

@@ -5,6 +5,7 @@ const Fastify = require('fastify')
 const GQL = require('mercurius')
 const plugin = require('../index')
 const { buildFederationSchema } = require('@mercuriusjs/federation')
+const { users, posts } = require('./utils/mocks')
 
 async function createTestService (t, schema, resolvers = {}) {
   const service = Fastify()
@@ -15,44 +16,6 @@ async function createTestService (t, schema, resolvers = {}) {
   })
   await service.listen({ port: 0 })
   return [service, service.server.address().port]
-}
-
-const users = {
-  u1: {
-    id: 'u1',
-    name: 'John'
-  },
-  u2: {
-    id: 'u2',
-    name: 'Jane'
-  }
-}
-
-const posts = {
-  p1: {
-    pid: 'p1',
-    authorId: 'u1'
-  },
-  p2: {
-    pid: 'p2',
-    authorId: 'u2'
-  },
-  p3: {
-    pid: 'p3',
-    authorId: 'u1'
-  },
-  p4: {
-    pid: 'p4',
-    authorId: 'u1'
-  },
-  p5: {
-    pid: 'p5',
-    authorId: 'u2'
-  },
-  p6: {
-    pid: 'p6',
-    authorId: 'u1'
-  }
 }
 
 async function createTestGatewayServer (t) {

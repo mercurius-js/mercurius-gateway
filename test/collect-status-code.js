@@ -8,7 +8,7 @@ const plugin = require('../index')
 const { buildFederationSchema } = require('@mercuriusjs/federation')
 const immediate = promisify(setImmediate)
 
-async function createTestService (t, schema, resolvers = {}, mockStatusCode) {
+async function createTestService (t, schema, resolvers, mockStatusCode) {
   const service = Fastify()
 
   service.register(GQL, {

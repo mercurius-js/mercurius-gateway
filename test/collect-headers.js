@@ -8,7 +8,7 @@ const plugin = require('../index')
 const { buildFederationSchema } = require('@mercuriusjs/federation')
 const immediate = promisify(setImmediate)
 
-async function createTestService (t, schema, resolvers = {}, serviceName) {
+async function createTestService (t, schema, resolvers, serviceName) {
   const service = Fastify()
 
   service.register(GQL, {
@@ -16,12 +16,8 @@ async function createTestService (t, schema, resolvers = {}, serviceName) {
     resolvers
   })
 
-  await service.ready()
-
-  service.graphql.addHook('onResolution', async (execution) => {
-    execution.extensions = {
-      [serviceName]: serviceName
-    }
+  service.addHook('onSend', async (request, reply, payload) => {
+    reply.header(serviceName, 'true')
   })
 
   await service.listen({ port: 0 })
@@ -220,21 +216,21 @@ async function createTestGatewayServer (t, opts = {}) {
           name: 'user',
           url: `http://localhost:${userServicePort}/graphql`,
           collectors: {
-            collectExtensions: true
+            collectHeaders: true
           }
         },
         {
           name: 'post',
           url: `http://localhost:${postServicePort}/graphql`,
           collectors: {
-            collectExtensions: true
+            collectHeaders: true
           }
         },
         {
           name: 'customer',
           url: `http://localhost:${customerServicePort}/graphql`,
           collectors: {
-            collectExtensions: false
+            collectHeaders: false
           }
         }
       ]
@@ -254,17 +250,17 @@ test('gateway - hooks', async (t) => {
 
   app.graphql.addHook('onResolution', async function (_, context) {
     await immediate()
-    t.has(context.collectors.extensions, {
+    t.has(context.collectors.responseHeaders, {
       topPosts: {
-        post: 'post'
+        post: 'true'
       },
       me: {
-        user: 'user'
+        user: 'true'
       }
     })
-    t.notHas(context.collectors.extensions, {
+    t.notHas(context.collectors.responseHeaders, {
       customer: {
-        customer: 'customer'
+        customer: 'true'
       }
     })
   })

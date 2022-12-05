@@ -207,6 +207,10 @@ app.register(mercuriusGateway, {
       - `wsConnectionParams.failedConnectionCallback`: `Function` A function called after a `connection_error` message is received, the first argument contains the message payload.
       - `wsConnectionParams.failedReconnectCallback`: `Function` A function called if reconnect is enabled and maxReconnectAttempts is reached.
       - `wsConnectionParams.rewriteConnectionInitPayload`: `Function` A function that gets the original `connection_init` payload along with the context as a parameter and returns an object that replaces the original `connection_init` payload before forwarding it to the federated service
+    - `service.collectors`: `Object`
+      - `collectors.collectHeaders`: `boolean` Adds to `context` the `collectors.responseHeaders` object in which are stored the response headers from federated services.
+      - `collectors.collectStatutsCodes`: `boolean` Adds to `context` the `collectors.statusCodes` object in which are stored the status codes of the response from federated services.
+       - `collectors.collectExtensions`: `boolean` Adds to `context` the `collectors.extensions` object in which are stored the extensions field of the response from federated services.
   - `gateway.retryServicesCount`: `Number` Specifies the maximum number of retries when a service fails to start on gateway initialization. (Default: 10)
   - `gateway.retryServicesInterval`: `Number` The amount of time(in milliseconds) between service retry attempts in case a service fails to start on gateway initialization. (Default: 3000)
 
@@ -406,3 +410,53 @@ fastify.graphqlGateway.addHook('onGatewayReplaceSchema', async (instance, schema
 ```
 
 If this hook throws, the error will be caught and logged using the `FastifyInstance` logger. Subsequent `onGatewayReplaceSchema` hooks that are registered will not be run for this interval.
+
+### Collectors
+
+Collectors gather additional information about the response from the services that are part of the gateway and adds them to the `context.collectors` object.
+
+Depending on the configuration it may have the following fields:
+
+- `responseHeaders`
+- `statusCodes`
+- `extensions`
+
+Each collector stores data in the same format:
+```json
+  {
+    "foo": { // query id
+      "service": "bar", // name of the service
+      "data": {
+         "foo": "bar" // example: statusCode: 500
+      }
+    }
+  }
+```
+It is possible to access and manipulate `context.collectors` via [onResolution Hook](https://github.com/mercurius-js/mercurius/blob/master/docs/hooks.md#onresolution)
+
+```js
+  app.graphql.addHook('onResolution', async function (execution, context) {
+    console.log(context.collectors)
+
+    // {
+    //   statusCodes: {
+    //     topPosts: {
+    //       service: 'post',
+    //       data: {
+    //         statusCode: 500
+    //       }
+    //     },
+    //     me: {
+    //       service: 'user',
+    //       data: {
+    //         statusCode: 404
+    //       }
+    //     }
+    //   },
+    //   responseHeaders: {...},
+    //   extensions: {...},
+    // }
+
+    execution.collectors = context.collectors // add collectors to response
+  })
+```

@@ -40,7 +40,7 @@ const query = `
       topPosts(count: 2) {
         pid
       }
-      customer {
+      lastCustomer {
         id
         name
       }
@@ -125,7 +125,7 @@ async function createTestGatewayServer (t, opts = {}) {
   // Customer service
   const customerServiceSchema = `
     type Query @extends {
-      customer: Customer
+      lastCustomer: Customer
     }
   
     type Customer @key(fields: "id") {
@@ -135,7 +135,7 @@ async function createTestGatewayServer (t, opts = {}) {
 
   const customerServiceResolvers = {
     Query: {
-      customer: () => {
+      lastCustomer: () => {
         return customers.c1
       }
     },
@@ -204,16 +204,23 @@ test('gateway - hooks', async (t) => {
     await immediate()
     t.has(context.collectors.statusCodes, {
       topPosts: {
-        statusCode: 500
+        service: 'post',
+        data: {
+          statusCode: 500
+        }
       },
       me: {
-        statusCode: 404
+        service: 'user',
+        data: {
+          statusCode: 404
+        }
       }
 
     })
     t.notHas(context.collectors.statusCodes, {
-      customer: {
-        customer: {
+      lastCustomer: {
+        service: 'customer',
+        data: {
           statusCode: 400
         }
       }

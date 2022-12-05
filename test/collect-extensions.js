@@ -6,8 +6,9 @@ const { promisify } = require('util')
 const GQL = require('mercurius')
 const plugin = require('../index')
 const { buildFederationSchema } = require('@mercuriusjs/federation')
-const immediate = promisify(setImmediate)
 const { users, customers, posts } = require('./utils/mocks')
+
+const immediate = promisify(setImmediate)
 
 async function createTestService (t, schema, resolvers, serviceName) {
   const service = Fastify()
@@ -44,7 +45,7 @@ const query = `
       topPosts(count: 2) {
         pid
       }
-      customer {
+      lastCustomer {
         id
         name
       }
@@ -129,7 +130,7 @@ async function createTestGatewayServer (t, opts = {}) {
   // Customer service
   const customerServiceSchema = `
     type Query @extends {
-      customer: Customer
+      lastCustomer: Customer
     }
   
     type Customer @key(fields: "id") {
@@ -139,7 +140,7 @@ async function createTestGatewayServer (t, opts = {}) {
 
   const customerServiceResolvers = {
     Query: {
-      customer: () => {
+      lastCustomer: () => {
         return customers.c1
       }
     },
@@ -208,15 +209,25 @@ test('gateway - hooks', async (t) => {
     await immediate()
     t.has(context.collectors.extensions, {
       topPosts: {
-        post: 'post'
+        service: 'post',
+        data: {
+          post: 'post'
+        }
       },
       me: {
-        user: 'user'
+        service: 'user',
+        data: {
+          user: 'user'
+        }
+
       }
     })
     t.notHas(context.collectors.extensions, {
-      customer: {
-        customer: 'customer'
+      lastCustomer: {
+        service: 'customer',
+        data: {
+          customer: 'customer'
+        }
       }
     })
   })

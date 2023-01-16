@@ -1,6 +1,6 @@
 # @mercurius/gateway
 
-A module to create aa Apollo Federation v1 gateway with `mercurius`.
+A module to create an Apollo Federation v1 gateway with `mercurius`.
 
 ## Quick start
 

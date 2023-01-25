@@ -431,8 +431,8 @@ test('gateway - should log error if retry throws', async t => {
           mandatory: true
         }
       ],
-      retryServicesCount: 1,
-      retryServicesInterval: 4000
+      retryServicesCount: 2,
+      retryServicesInterval: 3000
     },
     jit: 1
   })

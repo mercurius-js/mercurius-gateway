@@ -392,13 +392,14 @@ test('gateway - should log error if retry throws', async t => {
   )
 
   let service2 = null
+
   t.context.clock.setTimeout(async () => {
     service2 = await createTestService(
       5114,
       postService.schema,
       postService.resolvers
     )
-  }, 1000)
+  }, 500)
 
   const gateway = Fastify()
 

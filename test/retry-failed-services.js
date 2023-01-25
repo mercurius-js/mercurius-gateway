@@ -399,7 +399,7 @@ test('gateway - should log error if retry throws', async t => {
       postService.schema,
       postService.resolvers
     )
-  }, 500)
+  }, 2000)
 
   const gateway = Fastify()
 
@@ -432,7 +432,7 @@ test('gateway - should log error if retry throws', async t => {
         }
       ],
       retryServicesCount: 1,
-      retryServicesInterval: 3000
+      retryServicesInterval: 4000
     },
     jit: 1
   })

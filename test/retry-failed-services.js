@@ -392,20 +392,19 @@ test('gateway - should log error if retry throws', async t => {
   )
 
   let service2 = null
+
   t.context.clock.setTimeout(async () => {
     service2 = await createTestService(
       5114,
       postService.schema,
       postService.resolvers
     )
-  }, 2000)
+  }, 500)
 
   const gateway = Fastify()
 
-  let errCount = 0
   gateway.log.error = error => {
-    if (error.message.includes('kaboom') && errCount === 0) {
-      errCount++
+    if (error.message.includes('kaboom')) {
       t.pass()
     }
   }

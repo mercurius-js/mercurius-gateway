@@ -14,6 +14,7 @@ const { buildFederationSchema } = require('@mercuriusjs/federation')
 const GQL = require('mercurius')
 const plugin = require('../index')
 
+t.plan(10)
 t.beforeEach(({ context }) => {
   context.clock = FakeTimers.install({
     shouldClearNativeTimers: true,

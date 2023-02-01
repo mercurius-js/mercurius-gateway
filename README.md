@@ -183,7 +183,7 @@ app.register(mercuriusGateway, {
 - all the mercurius plugin [options](https://mercurius.dev/#/docs/api/options?id=plugin-options)
 - `gateway`: Object. Run the GraphQL server in gateway mode.
 
-  - `gateway.services`: Service[] An array of GraphQL services that are part of the gateway
+  - `gateway.services`: Service[] An array of GraphQL services that are part of the gateway. Alternative a `Function` that returns a `Promise` that resolves to an array of services. Required.
     - `service.name`: A unique name for the service. Required.
     - `service.url`: The URL of the service endpoint. It can also be an `Array` of URLs and in which case all the requests will be load balanced throughout the URLs. Required.
     - `service.mandatory`: `Boolean` Marks service as mandatory. If any of the mandatory services are unavailable, gateway will exit with an error. (Default: `false`)
@@ -213,6 +213,7 @@ app.register(mercuriusGateway, {
        - `collectors.collectExtensions`: `boolean` Adds to `context` the `collectors.extensions` object in which are stored the extensions field of the response from federated services.
   - `gateway.retryServicesCount`: `Number` Specifies the maximum number of retries when a service fails to start on gateway initialization. (Default: 10)
   - `gateway.retryServicesInterval`: `Number` The amount of time(in milliseconds) between service retry attempts in case a service fails to start on gateway initialization. (Default: 3000)
+  - `gateway.pollingInterval`: `Number` The amount of time(in milliseconds) between polling the services for schema updates. If not specified, the gateway will not poll for schema updates. (Default: `undefined`). When `gateway.services` is a function, the list of services is updated with the result of the function every `gateway.pollingInterval` milliseconds.
 
 ## Hooks
 

@@ -1413,12 +1413,13 @@ test('Polling schemas (with dynamic services function, service added)', async (t
     url: `http://localhost:${postServicePort}/graphql`
   })
 
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 15; i++) {
     await t.context.clock.tickAsync(200)
   }
 
-  // We need the event loop to actually spin twice to
+  // We need the event loop to actually spin thrice to
   // be able to propagate the change
+  await immediate()
   await immediate()
   await immediate()
 
@@ -1591,12 +1592,13 @@ test('Polling schemas (with dynamic services function, service deleted)', async 
 
   services.pop()
 
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 15; i++) {
     await t.context.clock.tickAsync(200)
   }
 
-  // We need the event loop to actually spin twice to
+  // We need the event loop to actually spin thrice to
   // be able to propagate the change
+  await immediate()
   await immediate()
   await immediate()
 

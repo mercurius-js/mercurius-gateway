@@ -1417,27 +1417,28 @@ test('Polling schemas (with dynamic services function, service added)', async (t
     await t.context.clock.tickAsync(200)
   }
 
-  // We need the event loop to actually spin twice to
-  // be able to propagate the change
-  await immediate()
-  await immediate()
+  let res3
 
-  const res3 = await gateway.inject({
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json'
-    },
-    url: '/graphql',
-    body: JSON.stringify({
-      query: `
+  while (res3?.statusCode !== 200) {
+    await immediate()
+
+    res3 = await gateway.inject({
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      url: '/graphql',
+      body: JSON.stringify({
+        query: `
         query MainQuery {
           topPosts {
             pid
           }
         }
       `
+      })
     })
-  })
+  }
 
   t.same(JSON.parse(res3.body), {
     data: {
@@ -1595,27 +1596,28 @@ test('Polling schemas (with dynamic services function, service deleted)', async 
     await t.context.clock.tickAsync(200)
   }
 
-  // We need the event loop to actually spin twice to
-  // be able to propagate the change
-  await immediate()
-  await immediate()
+  let res2
 
-  const res2 = await gateway.inject({
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json'
-    },
-    url: '/graphql',
-    body: JSON.stringify({
-      query: `
+  while (res2?.statusCode !== 400) {
+    await immediate()
+
+    res2 = await gateway.inject({
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      url: '/graphql',
+      body: JSON.stringify({
+        query: `
         query MainQuery {
           topPosts {
             pid
           }
         }
       `
+      })
     })
-  })
+  }
 
   t.same(JSON.parse(res2.body), {
     errors: [

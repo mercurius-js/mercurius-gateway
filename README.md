@@ -213,7 +213,7 @@ app.register(mercuriusGateway, {
        - `collectors.collectExtensions`: `boolean` Adds to `context` the `collectors.extensions` object in which are stored the extensions field of the response from federated services.
   - `gateway.retryServicesCount`: `Number` Specifies the maximum number of retries when a service fails to start on gateway initialization. (Default: 10)
   - `gateway.retryServicesInterval`: `Number` The amount of time(in milliseconds) between service retry attempts in case a service fails to start on gateway initialization. (Default: 3000)
-  - `gateway.pollingInterval`: `Number` The amount of time(in milliseconds) between polling the services for schema updates. If not specified, the gateway will not poll for schema updates. (Default: `undefined`). When `gateway.services` is a function, the list of services is updated with the result of the function every `gateway.pollingInterval` milliseconds.
+  - `gateway.pollingInterval`: `Number` The amount of time (milliseconds) between polling the services for schema updates. If not specified, the gateway will not poll for schema updates. When `gateway.services` is a function, the list of services is updated with the result of the function every `gateway.pollingInterval` milliseconds.
 
 ## Hooks
 

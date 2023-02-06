@@ -183,7 +183,7 @@ app.register(mercuriusGateway, {
 - all the mercurius plugin [options](https://mercurius.dev/#/docs/api/options?id=plugin-options)
 - `gateway`: Object. Run the GraphQL server in gateway mode.
 
-  - `gateway.services`: Service[] An array of GraphQL services that are part of the gateway. Alternative a `Function` that returns a `Promise` that resolves to an array of services. Required.
+  - `gateway.services`: `Service[]` | `Function` An array of GraphQL services that are part of the gateway or a `Function` that returns a `Promise` that resolves to an array of services. **Required**.
     - `service.name`: A unique name for the service. Required.
     - `service.url`: The URL of the service endpoint. It can also be an `Array` of URLs and in which case all the requests will be load balanced throughout the URLs. Required.
     - `service.mandatory`: `Boolean` Marks service as mandatory. If any of the mandatory services are unavailable, gateway will exit with an error. (Default: `false`)

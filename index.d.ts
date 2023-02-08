@@ -119,7 +119,7 @@ export interface MercuriusGatewayService {
 
 export interface MercuriusGatewayOptions {
   gateway: {
-    services: Array<MercuriusGatewayService>;
+    services: Array<MercuriusGatewayService> | (() => Array<MercuriusGatewayService>);
     pollingInterval?: number;
     errorHandler?(error: Error, service: MercuriusGatewayService): void;
     retryServicesCount?: number;

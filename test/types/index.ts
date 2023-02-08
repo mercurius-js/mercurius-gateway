@@ -136,6 +136,23 @@ app.register(mercuriusGatewayPlugin, {
   }
 })
 
+const servicesFn = () => [
+  {
+    name: 'user',
+    url: 'http://localhost:4001/graphql',
+    schema: `
+        type Query {
+          dogs: [Dog]
+        }`
+  }
+]
+
+app.register(mercuriusGatewayPlugin, {
+  gateway: {
+    services: servicesFn
+  }
+})
+
 expectError(() => app.register(mercuriusGatewayPlugin, {
   gateway: {
     services: [

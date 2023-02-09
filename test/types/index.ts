@@ -136,7 +136,7 @@ app.register(mercuriusGatewayPlugin, {
   }
 })
 
-const servicesFn = () => [
+const servicesFn = async () => [
   {
     name: 'user',
     url: 'http://localhost:4001/graphql',

@@ -878,7 +878,7 @@ test('Should merge schemas correctly', async (t) => {
     await worldService.close()
   })
 
-  gateway.register(GQL, {
+  gateway.register(plugin, {
     gateway: {
       services: [{
         name: 'hello',

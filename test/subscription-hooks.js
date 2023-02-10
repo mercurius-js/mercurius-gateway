@@ -348,7 +348,7 @@ test('gateway - preSubscriptionParsing hooks should handle errors', async t => {
     t.fail('preSubscriptionExecution should not be called')
   })
 
-  gateway.graphql.addHook('preGatewaySubscriptionExecution', async () => {
+  gateway.graphqlGateway.addHook('preGatewaySubscriptionExecution', async () => {
     t.fail('preGatewaySubscriptionExecution should not be called')
   })
 

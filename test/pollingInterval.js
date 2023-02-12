@@ -1244,3 +1244,512 @@ test('Polling schemas (subscriptions should be handled)', async t => {
   await gateway.close()
   await userService.close()
 })
+
+test('Polling schemas (with dynamic services function, service added)', async (t) => {
+  const userService = Fastify()
+  const postService = Fastify()
+  const gateway = Fastify()
+  t.teardown(async () => {
+    await gateway.close()
+    await userService.close()
+    await postService.close()
+  })
+
+  const user = {
+    id: 'u1',
+    name: 'John'
+  }
+
+  userService.register(GQL, {
+    schema: buildFederationSchema(`
+      extend type Query {
+        me: User
+      }
+
+      type User @key(fields: "id") {
+        id: ID!
+        name: String!
+      }
+    `),
+    resolvers: {
+      Query: {
+        me: () => user
+      },
+      User: {
+        __resolveReference: (user) => user
+      }
+    }
+  })
+
+  await userService.listen({ port: 0 })
+
+  const userServicePort = userService.server.address().port
+
+  const posts = {
+    p1: {
+      pid: 'p1',
+      title: 'Post 1',
+      content: 'Content 1',
+      authorId: 'u1'
+    }
+  }
+
+  postService.register(GQL, {
+    schema: buildFederationSchema(`
+      type Post @key(fields: "pid") {
+        pid: ID!
+        author: User
+      }
+
+      extend type Query {
+        topPosts(count: Int): [Post]
+      }
+
+      type User @key(fields: "id") @extends {
+        id: ID! @external
+        topPosts(count: Int!): [Post]
+      }`),
+    resolvers: {
+      Post: {
+        __resolveReference: (post, args, context, info) => {
+          return posts[post.pid]
+        },
+        author: (post, args, context, info) => {
+          return {
+            __typename: 'User',
+            id: post.authorId
+          }
+        }
+      },
+      User: {
+        topPosts: (user, { count }, context, info) => {
+          return Object.values(posts)
+            .filter((p) => p.authorId === user.id)
+            .slice(0, count)
+        }
+      },
+      Query: {
+        topPosts: (root, { count = 2 }) => Object.values(posts).slice(0, count)
+      }
+    }
+  })
+
+  await postService.listen({ port: 0 })
+
+  const postServicePort = postService.server.address().port
+
+  const services = [
+    {
+      name: 'user',
+      url: `http://localhost:${userServicePort}/graphql`
+    }
+  ]
+
+  const servicesFn = async () => services
+  await gateway.register(plugin, {
+    gateway: {
+      services: servicesFn,
+      pollingInterval: 2000
+    }
+  })
+
+  const res = await gateway.inject({
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json'
+    },
+    url: '/graphql',
+    body: JSON.stringify({
+      query: `
+        query MainQuery {
+          me {
+            id
+            name
+          }
+        }
+      `
+    })
+  })
+
+  t.same(JSON.parse(res.body), {
+    data: {
+      me: {
+        id: 'u1',
+        name: 'John'
+      }
+    }
+  })
+
+  const res2 = await gateway.inject({
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json'
+    },
+    url: '/graphql',
+    body: JSON.stringify({
+      query: `
+        query MainQuery {
+          topPosts {
+            pid
+          }
+        }
+      `
+    })
+  })
+
+  t.same(JSON.parse(res2.body), {
+    errors: [
+      {
+        message: 'Cannot query field "topPosts" on type "Query".',
+        locations: [{ line: 3, column: 11 }]
+      }
+    ],
+    data: null
+  })
+
+  services.push({
+    name: 'post',
+    url: `http://localhost:${postServicePort}/graphql`
+  })
+
+  for (let i = 0; i < 10; i++) {
+    await t.context.clock.tickAsync(200)
+  }
+
+  let res3
+
+  while (res3?.statusCode !== 200) {
+    await immediate()
+
+    res3 = await gateway.inject({
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      url: '/graphql',
+      body: JSON.stringify({
+        query: `
+        query MainQuery {
+          topPosts {
+            pid
+          }
+        }
+      `
+      })
+    })
+  }
+
+  t.same(JSON.parse(res3.body), {
+    data: {
+      topPosts: [
+        {
+          pid: 'p1'
+        }
+      ]
+    }
+  })
+})
+
+test('Polling schemas (with dynamic services function, service deleted)', async (t) => {
+  const userService = Fastify()
+  const postService = Fastify()
+  const gateway = Fastify()
+  t.teardown(async () => {
+    await gateway.close()
+    await userService.close()
+    await postService.close()
+  })
+
+  const user = {
+    id: 'u1',
+    name: 'John'
+  }
+
+  userService.register(GQL, {
+    schema: buildFederationSchema(`
+      extend type Query {
+        me: User
+      }
+
+      type User @key(fields: "id") {
+        id: ID!
+        name: String!
+      }
+    `),
+    resolvers: {
+      Query: {
+        me: () => user
+      },
+      User: {
+        __resolveReference: (user) => user
+      }
+    }
+  })
+
+  await userService.listen({ port: 0 })
+
+  const userServicePort = userService.server.address().port
+
+  const posts = {
+    p1: {
+      pid: 'p1',
+      title: 'Post 1',
+      content: 'Content 1',
+      authorId: 'u1'
+    }
+  }
+
+  postService.register(GQL, {
+    schema: buildFederationSchema(`
+      type Post @key(fields: "pid") {
+        pid: ID!
+        author: User
+      }
+
+      extend type Query {
+        topPosts(count: Int): [Post]
+      }
+
+      type User @key(fields: "id") @extends {
+        id: ID! @external
+        topPosts(count: Int!): [Post]
+      }`),
+    resolvers: {
+      Post: {
+        __resolveReference: (post, args, context, info) => {
+          return posts[post.pid]
+        },
+        author: (post, args, context, info) => {
+          return {
+            __typename: 'User',
+            id: post.authorId
+          }
+        }
+      },
+      User: {
+        topPosts: (user, { count }, context, info) => {
+          return Object.values(posts)
+            .filter((p) => p.authorId === user.id)
+            .slice(0, count)
+        }
+      },
+      Query: {
+        topPosts: (root, { count = 2 }) => Object.values(posts).slice(0, count)
+      }
+    }
+  })
+
+  await postService.listen({ port: 0 })
+
+  const postServicePort = postService.server.address().port
+
+  const services = [
+    {
+      name: 'user',
+      url: `http://localhost:${userServicePort}/graphql`
+    },
+    {
+      name: 'post',
+      url: `http://localhost:${postServicePort}/graphql`
+    }
+  ]
+
+  const servicesFn = async () => services
+  await gateway.register(plugin, {
+    gateway: {
+      services: servicesFn,
+      pollingInterval: 2000
+    }
+  })
+
+  const res = await gateway.inject({
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json'
+    },
+    url: '/graphql',
+    body: JSON.stringify({
+      query: `
+        query MainQuery {
+          topPosts {
+            pid
+          }
+        }
+      `
+    })
+  })
+
+  t.same(JSON.parse(res.body), {
+    data: {
+      topPosts: [
+        {
+          pid: 'p1'
+        }
+      ]
+    }
+  })
+
+  services.pop()
+
+  for (let i = 0; i < 10; i++) {
+    await t.context.clock.tickAsync(200)
+  }
+
+  let res2
+
+  while (res2?.statusCode !== 400) {
+    await immediate()
+
+    res2 = await gateway.inject({
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      url: '/graphql',
+      body: JSON.stringify({
+        query: `
+        query MainQuery {
+          topPosts {
+            pid
+          }
+        }
+      `
+      })
+    })
+  }
+
+  t.same(JSON.parse(res2.body), {
+    errors: [
+      {
+        message: 'Cannot query field "topPosts" on type "Query".',
+        locations: [{ line: 3, column: 11 }]
+      }
+    ],
+    data: null
+  })
+})
+
+test('should not throw when an error happens on the closing function', async (t) => {
+  const userService = Fastify()
+  const postService = Fastify()
+  const gateway = Fastify()
+  t.teardown(async () => {
+    await gateway.close()
+    await userService.close()
+    await postService.close()
+  })
+
+  const user = {
+    id: 'u1',
+    name: 'John'
+  }
+
+  userService.register(GQL, {
+    schema: buildFederationSchema(`
+      extend type Query {
+        me: User
+      }
+
+      type User @key(fields: "id") {
+        id: ID!
+        name: String!
+      }
+    `),
+    resolvers: {
+      Query: {
+        me: () => user
+      },
+      User: {
+        __resolveReference: (user) => user
+      }
+    }
+  })
+
+  await userService.listen({ port: 0 })
+
+  const userServicePort = userService.server.address().port
+
+  const posts = {
+    p1: {
+      pid: 'p1',
+      title: 'Post 1',
+      content: 'Content 1',
+      authorId: 'u1'
+    }
+  }
+
+  postService.register(GQL, {
+    schema: buildFederationSchema(`
+      type Post @key(fields: "pid") {
+        pid: ID!
+        author: User
+      }
+
+      extend type Query {
+        topPosts(count: Int): [Post]
+      }
+
+      type User @key(fields: "id") @extends {
+        id: ID! @external
+        topPosts(count: Int!): [Post]
+      }`),
+    resolvers: {
+      Post: {
+        __resolveReference: (post, args, context, info) => {
+          return posts[post.pid]
+        },
+        author: (post, args, context, info) => {
+          return {
+            __typename: 'User',
+            id: post.authorId
+          }
+        }
+      },
+      User: {
+        topPosts: (user, { count }, context, info) => {
+          return Object.values(posts)
+            .filter((p) => p.authorId === user.id)
+            .slice(0, count)
+        }
+      },
+      Query: {
+        topPosts: (root, { count = 2 }) => Object.values(posts).slice(0, count)
+      }
+    }
+  })
+
+  await postService.listen({ port: 0 })
+
+  const postServicePort = postService.server.address().port
+
+  const services = [
+    {
+      name: 'user',
+      url: `http://localhost:${userServicePort}/graphql`
+    },
+    {
+      name: 'post',
+      url: `http://localhost:${postServicePort}/graphql`
+    }
+  ]
+
+  const servicesFn = async () => services
+  await gateway.register(plugin, {
+    gateway: {
+      services: servicesFn,
+      pollingInterval: 2000
+    }
+  })
+
+  const prevClose = gateway.graphqlGateway.serviceMap.post.close
+  gateway.graphqlGateway.serviceMap.post.close = async () => {
+    prevClose()
+    t.pass()
+    return Promise.reject(new Error('kaboom'))
+  }
+  services.pop()
+
+  for (let i = 0; i < 10; i++) {
+    await t.context.clock.tickAsync(200)
+  }
+})

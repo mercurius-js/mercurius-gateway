@@ -84,7 +84,6 @@ async function createTestGatewayServer (t) {
 }
 
 test('should contain all the fields', async t => {
-  t.plan(2)
   const app = await createTestGatewayServer(t)
 
   const serviceMap = app.graphqlGateway.serviceMap

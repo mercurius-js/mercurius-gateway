@@ -308,6 +308,195 @@ test('gateway subscription handling works correctly', t => {
     .then(() => runSubscription())
 })
 
+test('gateway subscription properly closes service subscriptions', async t => {
+  t.plan(2)
+  let testService
+  let gateway
+  let client
+
+  async function createTestService () {
+    testService = Fastify()
+    await testService.register(GQL, {
+      schema: buildFederationSchema(`
+        type Notification {
+          id: String!
+        }
+        type Query {
+          notifications: [Notification]
+        }
+        type Mutation {
+          addNotification(id: String!): Notification
+        }
+        type Subscription {
+          notificationAdded(id: String!): Notification
+        }
+      `),
+      resolvers: {
+        Query: {
+          notifications: () => []
+        },
+        Mutation: {
+          addNotification: async (_, args, { pubsub }) => {
+            const notification = {
+              id: args.id
+            }
+            await pubsub.publish({
+              topic: 'NOTIFICATION_ADDED',
+              payload: { notificationAdded: notification }
+            })
+            return notification
+          }
+        },
+        Subscription: {
+          notificationAdded: {
+            subscribe: GQL.withFilter(
+              (_, __, { pubsub }) => {
+                return pubsub.subscribe('NOTIFICATION_ADDED')
+              },
+              (payload, args) => {
+                t.equal(args.id, 'n2')
+                return args.id === payload.notificationAdded.id
+              }
+            )
+          }
+        }
+      },
+      subscription: true
+    })
+    await testService.listen({ port: 0 })
+  }
+
+  async function createGatewayApp () {
+    const testServicePort = testService.server.address().port
+
+    gateway = Fastify()
+
+    await gateway.register(plugin, {
+      gateway: {
+        services: [
+          {
+            name: 'user',
+            url: `http://localhost:${testServicePort}/graphql`,
+            wsUrl: `ws://localhost:${testServicePort}/graphql`
+          }
+        ]
+      },
+      subscription: true,
+      jit: 1
+    })
+
+    await gateway.listen({ port: 0 })
+  }
+
+  function runSubscription () {
+    return new Promise(resolve => {
+      const ws = new WebSocket(
+        `ws://localhost:${gateway.server.address().port}/graphql`,
+        'graphql-ws'
+      )
+      client = WebSocket.createWebSocketStream(ws, {
+        encoding: 'utf8',
+        objectMode: true
+      })
+
+      client.setEncoding('utf8')
+
+      client.write(
+        JSON.stringify({
+          type: 'connection_init'
+        })
+      )
+
+      client.write(
+        JSON.stringify({
+          id: 1,
+          type: 'start',
+          payload: {
+            query: `
+              subscription {
+                notificationAdded(id: "n1") {
+                  id
+                }
+              }
+            `
+          }
+        })
+      )
+
+      client.write(
+        JSON.stringify({
+          id: 2,
+          type: 'start',
+          payload: {
+            query: `
+              subscription {
+                notificationAdded(id: "n2") {
+                  id
+                }
+              }
+            `
+          }
+        })
+      )
+
+      client.on('data', async chunk => {
+        const data = JSON.parse(chunk)
+
+        if (data.type === 'connection_ack') {
+          client.write(
+            JSON.stringify({
+              id: 1,
+              type: 'stop'
+            })
+          )
+        } else if (data.id === 1 && data.type === 'complete') {
+          gateway.inject({
+            method: 'POST',
+            url: '/graphql',
+            body: {
+              query: `
+                mutation {
+                  addNotification(id: "n2") {
+                    id
+                  }
+                }
+              `
+            }
+          })
+        } else if (data.type === 'data') {
+          t.equal(
+            chunk,
+            JSON.stringify({
+              type: 'data',
+              id: 2,
+              payload: {
+                data: {
+                  notificationAdded: {
+                    id: 'n2'
+                  }
+                }
+              }
+            })
+          )
+
+          await client.end()
+          resolve()
+        }
+      })
+    })
+  }
+
+  await createTestService()
+  await createGatewayApp()
+  await runSubscription()
+
+  t.teardown(async () => {
+    await client.destroy()
+    await gateway.close()
+    await testService.close()
+  })
+})
+
 test('gateway wsConnectionParams object is passed to SubscriptionClient', t => {
   t.plan(1)
 

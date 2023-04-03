@@ -43,7 +43,7 @@
     "@typescript-eslint/eslint-plugin": "^5.44.0",
     "@typescript-eslint/parser": "^5.44.0",
     "autocannon": "^7.10.0",
-    "concurrently": "^7.6.0",
+    "concurrently": "^8.0.1",
     "fastify": "^4.10.2",
     "husky": "^8.0.2",
     "lint-staged": "^13.0.4",

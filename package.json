@@ -61,7 +61,7 @@
     "*.{js,jsx}": "standard --cache --fix"
   },
   "dependencies": {
-    "@mercuriusjs/federation": "^1.0.0",
+    "@mercuriusjs/federation": "^2.0.0",
     "@mercuriusjs/subscription-client": "^1.0.0",
     "fastify-plugin": "^4.3.0",
     "graphql": "^16.6.0",

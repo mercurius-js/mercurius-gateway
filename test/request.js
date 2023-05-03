@@ -67,7 +67,7 @@ test('sendRequest method rejects when response is not valid json', async t => {
   }
 })
 
-test('sendRequest method rejects when response contains errors', async t => {
+test('sendRequest method rejects when response contains only errors', async t => {
   t.plan(2)
   const app = fastify()
   app.post('/', async () => {
@@ -104,6 +104,42 @@ test('sendRequest method rejects when response contains errors', async t => {
     t.type(error, FederatedError)
     t.same(error.extensions, { errors: ['foo'] })
   }
+})
+
+test('sendRequest method accepts when response contains data and errors', async t => {
+  t.plan(2)
+  const app = fastify()
+  app.post('/', async () => {
+    return { data: {}, errors: ['foo'] }
+  })
+
+  await app.listen({ port: 0 })
+
+  const url = new URL(`http://localhost:${app.server.address().port}`)
+  const { request, close } = buildRequest({ url })
+  t.teardown(() => {
+    close()
+    return app.close()
+  })
+  const context = {}
+  const result = await sendRequest(
+    request,
+    url
+  )({
+    context,
+    method: 'POST',
+    body: JSON.stringify({
+      query: `
+      query ServiceInfo {
+        _service {
+          sdl
+        }
+      }
+      `
+    })
+  })
+  t.same(result.json, { data: {}, errors: ['foo'] })
+  t.same(context, { errors: ['foo'] })
 })
 
 test('sendRequest method should accept useSecureParse flag and parse the response securely', async t => {

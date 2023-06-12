@@ -120,6 +120,57 @@ app.register(mercuriusGatewayPlugin, {
   }
 })
 
+// bodyTimeout value in service config
+app.register(mercuriusGatewayPlugin, {
+  gateway: {
+    services: [
+      {
+        name: 'user',
+        url: 'http://localhost:4001/graphql',
+        schema: `
+        type Query {
+          dogs: [Dog]
+        }`,
+        bodyTimeout: 60000
+      }
+    ]
+  }
+})
+
+// headersTimeout value in service config
+app.register(mercuriusGatewayPlugin, {
+  gateway: {
+    services: [
+      {
+        name: 'user',
+        url: 'http://localhost:4001/graphql',
+        schema: `
+        type Query {
+          dogs: [Dog]
+        }`,
+        headersTimeout: 60000
+      }
+    ]
+  }
+})
+
+// maxHeaderSize value in service config
+app.register(mercuriusGatewayPlugin, {
+  gateway: {
+    services: [
+      {
+        name: 'user',
+        url: 'http://localhost:4001/graphql',
+        schema: `
+        type Query {
+          dogs: [Dog]
+        }`,
+        maxHeaderSize: 32768
+      }
+    ]
+  }
+})
+
 app.register(mercuriusGatewayPlugin, {
   gateway: {
     services: [

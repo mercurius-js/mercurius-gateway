@@ -297,10 +297,12 @@ test('gateway subscription handling works correctly', t => {
   }
 
   t.teardown(async () => {
-    await client.destroy()
-    await gateway.close()
-    await messageService.close()
-    await userService.close()
+    await Promise.all([
+      client.destroy(),
+      gateway.close(),
+      messageService.close(),
+      userService.close()
+    ])
   })
 
   Promise.all([createUserService(), createMessageService()])
@@ -491,9 +493,11 @@ test('gateway subscription properly closes service subscriptions', async t => {
   await runSubscription()
 
   t.teardown(async () => {
-    await client.destroy()
-    await gateway.close()
-    await testService.close()
+    await Promise.all([
+      client.destroy(),
+      gateway.close(),
+      testService.close()
+    ])
   })
 })
 
@@ -514,8 +518,10 @@ test('gateway wsConnectionParams object is passed to SubscriptionClient', t => {
   let gateway
 
   t.teardown(async () => {
-    await gateway.close()
-    await testService.close()
+    await Promise.all([
+      gateway.close(),
+      testService.close()
+    ])
   })
 
   async function createTestService () {
@@ -583,8 +589,10 @@ test('gateway wsConnectionParams function is passed to SubscriptionClient', t =>
 
     const gateway = Fastify()
     t.teardown(async () => {
-      await gateway.close()
-      await testService.close()
+      await Promise.all([
+        gateway.close(),
+        testService.close()
+      ])
     })
 
     await gateway.register(plugin, {
@@ -659,8 +667,10 @@ test('gateway forwards the connection_init payload to the federated service on g
 
     const gateway = Fastify()
     t.teardown(async () => {
-      await gateway.close()
-      await testService.close()
+      await Promise.all([
+        gateway.close(),
+        testService.close()
+      ])
     })
 
     await gateway.register(plugin, {
@@ -858,7 +868,6 @@ test('connection_init payload is overwritten at gateway and forwarded to the fed
   })
 })
 
-// DONE
 test('subscriptions work with scalars', async t => {
   let testService
   let gateway
@@ -942,8 +951,10 @@ test('subscriptions work with scalars', async t => {
     })
     t.teardown(async () => {
       client.destroy()
-      await gateway.close()
-      await testService.close()
+      await Promise.all([
+        gateway.close(),
+        testService.close()
+      ])
     })
     client.setEncoding('utf8')
 
@@ -1226,10 +1237,13 @@ test('subscriptions work with different contexts', async t => {
   await Promise.all(subscriptions)
 
   t.teardown(async () => {
-    await gateway.close()
-    await testService.close()
+    await Promise.all([
+      gateway.close(),
+      testService.close()
+    ])
   })
 })
+
 test('connection_init headers available in federation event resolver', async t => {
   let subscriptionService
   let resolverService
@@ -1793,11 +1807,13 @@ test('gateway subscription handling works correctly after a schema refresh', asy
 
   await runSubscription(0)
 
-  t.context.clock.uninstall()
-
   t.teardown(async () => {
-    await gateway.close()
-    await subscriptionService.close()
-    await resolverService.close()
+    t.context.clock.uninstall()
+
+    await Promise.all([
+      gateway.close(),
+      subscriptionService.close(),
+      resolverService.close()
+    ])
   })
 })

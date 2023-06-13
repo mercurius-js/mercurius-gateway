@@ -107,6 +107,9 @@ export interface MercuriusGatewayService {
     context: TContext
   ) => OutgoingHttpHeaders | Promise<OutgoingHttpHeaders>;
   connections?: number;
+  bodyTimeout?: number;
+  headersTimeout?: number;
+  maxHeaderSize?: number;
   keepAlive?: number;
   keepAliveMaxTimeout?: number;
   rejectUnauthorized?: boolean;

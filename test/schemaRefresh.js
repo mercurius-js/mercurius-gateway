@@ -1,26 +1,11 @@
 'use strict'
 
-const { test, t } = require('tap')
-
-const FakeTimers = require('@sinonjs/fake-timers')
-const { setImmediate } = require('node:timers/promises')
+const { test } = require('tap')
 
 const Fastify = require('fastify')
 const { buildFederationSchema } = require('@mercuriusjs/federation')
 const GQL = require('mercurius')
 const plugin = require('../index')
-
-t.beforeEach(({ context }) => {
-  context.clock = FakeTimers.install({
-    shouldClearNativeTimers: true,
-    shouldAdvanceTime: true,
-    advanceTimeDelta: 40
-  })
-})
-
-t.afterEach(({ context }) => {
-  context.clock.uninstall()
-})
 
 test('Refreshing gateway schema', async (t) => {
   const resolvers = {
@@ -94,7 +79,7 @@ test('Refreshing gateway schema', async (t) => {
     })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.same(res.json(), {
     data: {
       __type: {
         fields: [
@@ -126,15 +111,6 @@ test('Refreshing gateway schema', async (t) => {
   )
   userService.graphql.defineResolvers(resolvers)
 
-  for (let i = 0; i < 10; i++) {
-    await t.context.clock.tickAsync(200)
-  }
-
-  // We need the event loop to actually spin twice to
-  // be able to propagate the change
-  await setImmediate()
-  await setImmediate()
-
   await gateway.graphqlGateway.refresh()
 
   const updatedRes = await gateway.inject({
@@ -156,7 +132,7 @@ test('Refreshing gateway schema', async (t) => {
     })
   })
 
-  t.same(JSON.parse(updatedRes.body), {
+  t.same(updatedRes.json(), {
     data: {
       __type: {
         fields: [

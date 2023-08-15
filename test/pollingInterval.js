@@ -455,7 +455,7 @@ test("Polling schemas (if service is down, schema shouldn't be changed)", async 
     })
   }
 
-  await userService.close()
+  userService.close()
   await t.context.clock.tickAsync(500)
 
   {

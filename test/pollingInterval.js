@@ -351,7 +351,7 @@ test("Polling schemas (if service is down, schema shouldn't be changed)", async 
     lastName: 'Doe'
   }
 
-  const userService = Fastify()
+  const userService = Fastify({ forceCloseConnections: true })
   const gateway = Fastify()
 
   t.teardown(async () => {

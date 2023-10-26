@@ -2,6 +2,7 @@ const { test } = require('tap')
 const fastify = require('fastify')
 const { sendRequest, buildRequest } = require('../lib/gateway/request')
 const { FederatedError } = require('../lib/errors')
+const zlib = require('zlib')
 
 test('sendRequest method rejects when request errs', t => {
   const url = new URL('http://localhost:3001')
@@ -187,6 +188,47 @@ test('sendRequest method should run without useSecureParse flag', async t => {
   const app = fastify()
   app.post('/', async () => {
     return '{ "foo": "bar" }'
+  })
+
+  await app.listen({ port: 0 })
+
+  const url = new URL(`http://localhost:${app.server.address().port}`)
+  const { request, close } = buildRequest({ url })
+  t.teardown(() => {
+    close()
+    return app.close()
+  })
+  const result = await sendRequest(
+    request,
+    url,
+    false
+  )({
+    method: 'POST',
+    body: JSON.stringify({
+      query: `
+      query ServiceInfo {
+        _service {
+          sdl
+        }
+      }
+      `
+    })
+  })
+
+  t.same(result.json, { foo: 'bar' })
+
+  t.end()
+})
+
+test('sendRequest method should decompress gzip bodies', async t => {
+  const app = fastify()
+  app.post('/', async (request, reply) => {
+    const compressedBody = zlib.gzipSync('{ "foo": "bar" }')
+    return reply
+      .status(200)
+      .type('application/json')
+      .header('content-encoding', 'gzip')
+      .send(compressedBody)
   })
 
   await app.listen({ port: 0 })

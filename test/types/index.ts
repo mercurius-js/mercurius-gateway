@@ -27,6 +27,7 @@ app.register(mercuriusGatewayPlugin, {
         },
         keepAliveMaxTimeout: 10000,
         mandatory: true,
+        allowBatchedQueries: true,
         rejectUnauthorized: true,
         rewriteHeaders: (headers, context) => {
           expectAssignable<MercuriusContext>(context)

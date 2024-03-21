@@ -118,6 +118,7 @@ export interface MercuriusGatewayService {
     | WsConnectionParams;
   setResponseHeaders?: (reply: FastifyReply) => void;
   collectors?: Collectors;
+  allowBatchedQueries?: boolean;
 }
 
 export interface MercuriusGatewayOptions {

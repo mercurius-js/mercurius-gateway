@@ -20,7 +20,7 @@ async function createTestService (port, schema, resolvers = {}) {
     routes: true,
     subscription: true
   })
-  await service.listen(port)
+  await service.listen({ port })
   return service
 }
 

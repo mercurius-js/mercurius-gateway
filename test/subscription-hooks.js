@@ -388,7 +388,9 @@ test('gateway - preSubscriptionParsing hooks should handle errors', async t => {
     t.same(data, {
       id: 1,
       type: 'error',
-      payload: 'a preSubscriptionParsing error occurred'
+      payload: [{
+        message: 'a preSubscriptionParsing error occurred'
+      }]
     })
   }
 })
@@ -448,7 +450,9 @@ test('gateway - preSubscriptionExecution hooks should handle errors', async t =>
     t.same(data, {
       id: 1,
       type: 'error',
-      payload: 'a preSubscriptionExecution error occurred'
+      payload: [{
+        message: 'a preSubscriptionExecution error occurred'
+      }]
     })
   }
 })
@@ -503,7 +507,14 @@ test('gateway - preGatewaySubscriptionExecution hooks should handle errors', asy
     t.same(data, {
       id: 1,
       type: 'error',
-      payload: 'a preGatewaySubscriptionExecution error occurred'
+      payload: [{
+        message: 'a preGatewaySubscriptionExecution error occurred',
+        locations: [{
+          line: 3,
+          column: 7
+        }],
+        path: ['newMessage']
+      }]
     })
   }
 })

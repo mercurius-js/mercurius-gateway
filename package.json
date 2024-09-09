@@ -64,7 +64,7 @@
   "dependencies": {
     "@mercuriusjs/federation": "^4.0.0",
     "@mercuriusjs/subscription-client": "^2.0.0",
-    "fastify-plugin": "^4.3.0",
+    "fastify-plugin": "^5.0.0",
     "graphql": "^16.6.0",
     "graphql-ws": "^5.11.2",
     "mercurius": "^15.0.0",

@@ -587,6 +587,7 @@ test('gateway exposes @requires directive in list of directives', async t => {
           { name: 'skip' },
           { name: 'deprecated' },
           { name: 'specifiedBy' },
+          { name: 'oneOf' },
           { name: 'requires' }
         ]
       }

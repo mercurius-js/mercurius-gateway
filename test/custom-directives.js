@@ -152,6 +152,7 @@ t.test('gateway', t => {
       'skip',
       'deprecated',
       'specifiedBy',
+      'oneOf',
       'external',
       'requires',
       'provides',
@@ -168,6 +169,7 @@ t.test('gateway', t => {
       'skip',
       'deprecated',
       'specifiedBy',
+      'oneOf',
       'external',
       'requires',
       'provides',
@@ -184,6 +186,7 @@ t.test('gateway', t => {
       'skip',
       'deprecated',
       'specifiedBy',
+      'oneOf',
       'requires',
       'custom'
     ])

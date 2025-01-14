@@ -62,15 +62,16 @@
     "*.{js,jsx}": "standard --cache --fix"
   },
   "dependencies": {
-    "@mercuriusjs/federation": "^4.0.0",
+    "@mercuriusjs/federation": "^5.0.0",
     "@mercuriusjs/subscription-client": "^2.0.0",
     "fastify-plugin": "^5.0.0",
     "graphql": "^16.6.0",
     "graphql-ws": "^5.11.2",
-    "mercurius": "^15.0.0",
+    "mercurius": "^16.0.0",
     "p-map": "^4.0.0",
     "single-user-cache": "^1.0.0",
     "tiny-lru": "^11.0.0",
+    "undici": "^7.2.1",
     "use-strict": "1.0.1",
     "ws": "^8.11.0"
   }

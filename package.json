@@ -39,7 +39,7 @@
     "@commitlint/cli": "^17.3.0",
     "@commitlint/config-conventional": "^17.3.0",
     "@fastify/autoload": "^6.0.0",
-    "@fastify/cors": "^9.0.0",
+    "@fastify/cors": "^11.0.1",
     "@sinonjs/fake-timers": "^11.0.0",
     "@typescript-eslint/eslint-plugin": "^5.44.0",
     "@typescript-eslint/parser": "^5.44.0",

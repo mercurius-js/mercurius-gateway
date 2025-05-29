@@ -20,7 +20,7 @@
     "test:unit": "tap test/*.js",
     "test:cov": "tap --coverage-report=html test/*.js",
     "test:types": "tsd",
-    "prepare": "husky install"
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
@@ -39,14 +39,14 @@
     "@commitlint/cli": "^17.3.0",
     "@commitlint/config-conventional": "^17.3.0",
     "@fastify/autoload": "^6.0.0",
-    "@fastify/cors": "^9.0.0",
+    "@fastify/cors": "^11.0.1",
     "@sinonjs/fake-timers": "^11.0.0",
     "@typescript-eslint/eslint-plugin": "^5.44.0",
     "@typescript-eslint/parser": "^5.44.0",
     "autocannon": "^7.10.0",
     "concurrently": "^8.0.1",
-    "fastify": "^5.0.0-alpha.4",
-    "husky": "^8.0.2",
+    "fastify": "^5.0.0",
+    "husky": "^9.1.7",
     "lint-staged": "^13.0.4",
     "sinon": "^15.0.0",
     "snazzy": "^9.0.0",

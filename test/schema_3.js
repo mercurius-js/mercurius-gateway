@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
 const plugin = require('../index')
@@ -73,7 +73,7 @@ test('Should handle union with InlineFragment', async t => {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await productService.close()
   })
@@ -117,18 +117,18 @@ test('Should handle union with InlineFragment', async t => {
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       shelve: {
-        id: 1,
+        id: '1',
         products: [
           {
-            id: 1,
+            id: '1',
             type: 'Book',
             name: 'book1'
           },
           {
-            id: 2,
+            id: '2',
             type: 'Book',
             name: 'book2'
           }
@@ -139,7 +139,7 @@ test('Should handle union with InlineFragment', async t => {
 })
 
 test('Gateway sends initHeaders with _service sdl query', async t => {
-  t.plan(1)
+  let hookCalled = false
   const service = Fastify()
   service.register(GQL, {
     schema: buildFederationSchema(`
@@ -156,14 +156,15 @@ test('Gateway sends initHeaders with _service sdl query', async t => {
     }
   })
   service.addHook('preHandler', async req => {
-    t.equal(req.headers.authorization, 'ok')
+    t.assert.strictEqual(req.headers.authorization, 'ok')
+    hookCalled = true
     if (!req.headers.authorization) throw new Error('Unauthorized')
   })
 
   await service.listen({ port: 0 })
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await service.close()
   })
@@ -183,10 +184,11 @@ test('Gateway sends initHeaders with _service sdl query', async t => {
   })
 
   await gateway.ready()
+  t.assert.strictEqual(hookCalled, true)
 })
 
 test('Gateway sends initHeaders function result with _service sdl query', async t => {
-  t.plan(1)
+  let hookCalled = false
   const service = Fastify()
   service.register(GQL, {
     schema: buildFederationSchema(`
@@ -203,14 +205,15 @@ test('Gateway sends initHeaders function result with _service sdl query', async 
     }
   })
   service.addHook('preHandler', async req => {
-    t.equal(req.headers.authorization, 'ok')
+    t.assert.strictEqual(req.headers.authorization, 'ok')
+    hookCalled = true
     if (!req.headers.authorization) throw new Error('Unauthorized')
   })
 
   await service.listen({ port: 0 })
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await service.close()
   })
@@ -232,6 +235,7 @@ test('Gateway sends initHeaders function result with _service sdl query', async 
   })
 
   await gateway.ready()
+  t.assert.strictEqual(hookCalled, true)
 })
 
 test('Should handle interface', async t => {
@@ -296,7 +300,7 @@ test('Should handle interface', async t => {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await productService.close()
   })
@@ -340,18 +344,18 @@ test('Should handle interface', async t => {
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       shelve: {
-        id: 1,
+        id: '1',
         products: [
           {
-            id: 1,
+            id: '1',
             type: 'Book',
             name: 'book1'
           },
           {
-            id: 2,
+            id: '2',
             type: 'Book',
             name: 'book2'
           }
@@ -466,7 +470,7 @@ test('Should handle interface referenced multiple times in different services', 
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await dictionariesService.close()
     await bookService.close()
@@ -508,17 +512,17 @@ test('Should handle interface referenced multiple times in different services', 
     body: JSON.stringify({ query: query1 })
   })
 
-  t.same(JSON.parse(res1.body), {
+  t.assert.deepStrictEqual(JSON.parse(res1.body), {
     data: {
       books: [
         {
-          id: 1,
+          id: '1',
           type: 'Book',
           name: 'book1',
           author: 'toto'
         },
         {
-          id: 2,
+          id: '2',
           type: 'Book',
           name: 'book2',
           author: 'titi'
@@ -549,17 +553,17 @@ test('Should handle interface referenced multiple times in different services', 
     body: JSON.stringify({ query: query2 })
   })
 
-  t.same(JSON.parse(res2.body), {
+  t.assert.deepStrictEqual(JSON.parse(res2.body), {
     data: {
       dictionaries: [
         {
-          id: 1,
+          id: '1',
           type: 'Dictionary',
           name: 'Dictionary 1',
           editor: 'john'
         },
         {
-          id: 2,
+          id: '2',
           type: 'Dictionary',
           name: 'Dictionary 2',
           editor: 'jim'
@@ -766,7 +770,7 @@ test('Should handle complex and nested interfaces with external types', async t 
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await configCService.close()
     await configABService.close()
@@ -830,7 +834,7 @@ test('Should handle complex and nested interfaces with external types', async t 
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       users: [
         {

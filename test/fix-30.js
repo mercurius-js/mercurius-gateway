@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const plugin = require('../index')
 const createTestService = require('./utils/create-test-service')
@@ -65,7 +65,7 @@ async function createTestGatewayServer (t) {
     {
       User: {
         __resolveReference: (user, args, context, info) => {
-          t.fail('should skip this')
+          t.assert.fail('should skip this')
           return users[user.id]
         }
       }
@@ -107,7 +107,7 @@ async function createTestGatewayServer (t) {
           if (user.posts) {
             return user.posts
           }
-          t.fail('Should not be called')
+          t.assert.fail('Should not be called')
           return Object.values(posts).filter(p => p.authorId === user.id)
         }
       },
@@ -124,7 +124,7 @@ async function createTestGatewayServer (t) {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await firstService.close()
     await secondService.close()
@@ -149,7 +149,6 @@ async function createTestGatewayServer (t) {
 }
 
 test('query returns a scalar type', async t => {
-  t.plan(1)
   const app = await createTestGatewayServer(t)
 
   const query = 'query { userByPost(ids: ["u1","u2"]) { id posts { pid title content } } }'
@@ -161,7 +160,7 @@ test('query returns a scalar type', async t => {
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       userByPost: [{
         id: 'u1',

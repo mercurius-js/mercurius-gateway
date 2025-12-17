@@ -2,7 +2,7 @@
 
 const { parse } = require('graphql')
 const getQueryResult = require('../lib/gateway/get-query-result')
-const { test } = require('tap')
+const { test } = require('node:test')
 
 const getQueryWithCount = count => `
 query EntitiesQuery($representations: [_Any!]!) {
@@ -84,8 +84,8 @@ test('it works with a basic example', async t => {
     }
   })
 
-  t.same(result[0].data._entities[0], entity1)
-  t.same(result[0].data._entities[1], entity2)
+  t.assert.deepStrictEqual(result[0].data._entities[0], entity1)
+  t.assert.deepStrictEqual(result[0].data._entities[1], entity2)
 })
 
 test('it works with a basic example and batched queries', async t => {
@@ -134,8 +134,8 @@ test('it works with a basic example and batched queries', async t => {
     }
   })
 
-  t.same(result[0].data._entities[0], entity1)
-  t.same(result[0].data._entities[1], entity2)
-  t.same(result[1].data._entities[0], entity1)
-  t.same(result[1].data._entities[1], entity2)
+  t.assert.deepStrictEqual(result[0].data._entities[0], entity1)
+  t.assert.deepStrictEqual(result[0].data._entities[1], entity2)
+  t.assert.deepStrictEqual(result[1].data._entities[0], entity1)
+  t.assert.deepStrictEqual(result[1].data._entities[1], entity2)
 })

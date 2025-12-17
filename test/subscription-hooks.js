@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const WebSocket = require('ws')
 const { once } = require('events')
@@ -157,7 +157,7 @@ async function createTestGatewayServer (t) {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     if (typeof gateway.close === 'function') {
       await gateway.close()
     }
@@ -195,13 +195,12 @@ function createWebSocketClient (t, app) {
     encoding: 'utf8',
     objectMode: true
   })
-  t.teardown(client.destroy.bind(client))
+  t.after(() => client.destroy())
   client.setEncoding('utf8')
   return { client, ws }
 }
 
 test('gateway subscription - hooks basic', async t => {
-  // t.plan(17)
   const gateway = await createTestGatewayServer(t)
 
   const subscriptionQuery = query('u1')
@@ -209,37 +208,37 @@ test('gateway subscription - hooks basic', async t => {
   gateway.graphql.addHook(
     'preSubscriptionParsing',
     async (schema, source, context) => {
-      t.type(schema, GraphQLSchema)
-      t.type(source, subscriptionQuery)
-      t.type(context, 'object')
-      t.ok('preSubscriptionParsing called')
+      t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
+      t.assert.strictEqual(source, subscriptionQuery)
+      t.assert.strictEqual(typeof context, 'object')
+      t.assert.ok('preSubscriptionParsing called')
     }
   )
 
   gateway.graphql.addHook(
     'preSubscriptionExecution',
     async (schema, document, context) => {
-      t.type(schema, GraphQLSchema)
-      t.same(document, parse(subscriptionQuery))
-      t.type(context, 'object')
-      t.ok('preSubscriptionExecution called')
+      t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
+      t.assert.deepEqual(document, parse(subscriptionQuery))
+      t.assert.strictEqual(typeof context, 'object')
+      t.assert.ok('preSubscriptionExecution called')
     }
   )
 
   gateway.graphqlGateway.addHook(
     'preGatewaySubscriptionExecution',
     async (schema, document, context) => {
-      t.type(schema, GraphQLSchema)
-      t.type(document, 'object')
-      t.type(context, 'object')
-      t.ok('preGatewaySubscriptionExecution called')
+      t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
+      t.assert.strictEqual(typeof document, 'object')
+      t.assert.strictEqual(typeof context, 'object')
+      t.assert.ok('preGatewaySubscriptionExecution called')
     }
   )
 
   gateway.graphql.addHook(
     'onSubscriptionResolution',
     async (execution, context) => {
-      t.same(execution, {
+      t.assert.deepEqual(execution, {
         data: {
           newMessage: {
             id: '1',
@@ -255,8 +254,8 @@ test('gateway subscription - hooks basic', async t => {
           }
         }
       })
-      t.type(context, 'object')
-      t.ok('onSubscriptionResolution called')
+      t.assert.strictEqual(typeof context, 'object')
+      t.assert.ok('onSubscriptionResolution called')
     }
   )
 
@@ -269,6 +268,7 @@ test('gateway subscription - hooks basic', async t => {
       type: 'connection_init'
     })
   )
+
   client.write(
     JSON.stringify({
       id: 1,
@@ -282,7 +282,7 @@ test('gateway subscription - hooks basic', async t => {
   {
     const [chunk] = await once(client, 'data')
     const data = JSON.parse(chunk)
-    t.equal(data.type, 'connection_ack')
+    t.assert.strictEqual(data.type, 'connection_ack')
   }
 
   gateway.inject({
@@ -306,7 +306,7 @@ test('gateway subscription - hooks basic', async t => {
   {
     const [chunk] = await once(client, 'data')
     const data = JSON.parse(chunk)
-    t.same(data, {
+    t.assert.deepStrictEqual(data, {
       id: 1,
       type: 'data',
       payload: {
@@ -333,7 +333,6 @@ test('gateway subscription - hooks basic', async t => {
 // preSubscriptionParsing
 // ----------------------
 test('gateway - preSubscriptionParsing hooks should handle errors', async t => {
-  t.plan(2)
   const gateway = await createTestGatewayServer(t)
 
   gateway.graphql.addHook('preSubscriptionParsing', async () => {
@@ -341,19 +340,19 @@ test('gateway - preSubscriptionParsing hooks should handle errors', async t => {
   })
 
   gateway.graphql.addHook('preSubscriptionParsing', async () => {
-    t.fail('preSubscriptionParsing should not be called again')
+    t.assert.fail('preSubscriptionParsing should not be called again')
   })
 
   gateway.graphql.addHook('preSubscriptionExecution', async () => {
-    t.fail('preSubscriptionExecution should not be called')
+    t.assert.fail('preSubscriptionExecution should not be called')
   })
 
   gateway.graphqlGateway.addHook('preGatewaySubscriptionExecution', async () => {
-    t.fail('preGatewaySubscriptionExecution should not be called')
+    t.assert.fail('preGatewaySubscriptionExecution should not be called')
   })
 
   gateway.graphql.addHook('onSubscriptionResolution', async () => {
-    t.fail('onSubscriptionResolution should not be called')
+    t.assert.fail('onSubscriptionResolution should not be called')
   })
 
   await gateway.listen({ port: assignedPort++ })
@@ -369,7 +368,7 @@ test('gateway - preSubscriptionParsing hooks should handle errors', async t => {
   {
     const [chunk] = await once(client, 'data')
     const data = JSON.parse(chunk)
-    t.equal(data.type, 'connection_ack')
+    t.assert.strictEqual(data.type, 'connection_ack')
   }
 
   client.write(
@@ -385,7 +384,7 @@ test('gateway - preSubscriptionParsing hooks should handle errors', async t => {
   {
     const [chunk] = await once(client, 'data')
     const data = JSON.parse(chunk)
-    t.same(data, {
+    t.assert.deepStrictEqual(data, {
       id: 1,
       type: 'error',
       payload: [{
@@ -399,7 +398,6 @@ test('gateway - preSubscriptionParsing hooks should handle errors', async t => {
 // preSubscriptionExecution
 // ------------------------
 test('gateway - preSubscriptionExecution hooks should handle errors', async t => {
-  t.plan(2)
   const gateway = await createTestGatewayServer(t)
 
   gateway.graphql.addHook('preSubscriptionExecution', async () => {
@@ -407,15 +405,15 @@ test('gateway - preSubscriptionExecution hooks should handle errors', async t =>
   })
 
   gateway.graphql.addHook('preSubscriptionExecution', async () => {
-    t.fail('preSubscriptionExecution should not be called again')
+    t.assert.fail('preSubscriptionExecution should not be called again')
   })
 
   gateway.graphqlGateway.addHook('preGatewaySubscriptionExecution', async () => {
-    t.fail('preGatewaySubscriptionExecution should not be called')
+    t.assert.fail('preGatewaySubscriptionExecution should not be called')
   })
 
   gateway.graphql.addHook('onSubscriptionResolution', async () => {
-    t.fail('onSubscriptionResolution should not be called')
+    t.assert.fail('onSubscriptionResolution should not be called')
   })
 
   await gateway.listen({ port: assignedPort++ })
@@ -431,7 +429,7 @@ test('gateway - preSubscriptionExecution hooks should handle errors', async t =>
   {
     const [chunk] = await once(client, 'data')
     const data = JSON.parse(chunk)
-    t.equal(data.type, 'connection_ack')
+    t.assert.strictEqual(data.type, 'connection_ack')
   }
 
   client.write(
@@ -447,7 +445,7 @@ test('gateway - preSubscriptionExecution hooks should handle errors', async t =>
   {
     const [chunk] = await once(client, 'data')
     const data = JSON.parse(chunk)
-    t.same(data, {
+    t.assert.deepStrictEqual(data, {
       id: 1,
       type: 'error',
       payload: [{
@@ -461,18 +459,17 @@ test('gateway - preSubscriptionExecution hooks should handle errors', async t =>
 // preGatewaySubscriptionExecution
 // -------------------------------
 test('gateway - preGatewaySubscriptionExecution hooks should handle errors', async t => {
-  t.plan(2)
   const gateway = await createTestGatewayServer(t)
 
   gateway.graphqlGateway.addHook('preGatewaySubscriptionExecution', async () => {
     throw new Error('a preGatewaySubscriptionExecution error occurred')
   })
   gateway.graphqlGateway.addHook('preGatewaySubscriptionExecution', async () => {
-    t.fail('preGatewaySubscriptionExecution should not be called again')
+    t.assert.fail('preGatewaySubscriptionExecution should not be called again')
   })
 
   gateway.graphql.addHook('onSubscriptionResolution', async () => {
-    t.fail('onSubscriptionResolution should not be called')
+    t.assert.fail('onSubscriptionResolution should not be called')
   })
 
   await gateway.listen({ port: assignedPort++ })
@@ -488,7 +485,7 @@ test('gateway - preGatewaySubscriptionExecution hooks should handle errors', asy
   {
     const [chunk] = await once(client, 'data')
     const data = JSON.parse(chunk)
-    t.equal(data.type, 'connection_ack')
+    t.assert.strictEqual(data.type, 'connection_ack')
   }
 
   client.write(
@@ -504,7 +501,7 @@ test('gateway - preGatewaySubscriptionExecution hooks should handle errors', asy
   {
     const [chunk] = await once(client, 'data')
     const data = JSON.parse(chunk)
-    t.same(data, {
+    t.assert.deepStrictEqual(data, {
       id: 1,
       type: 'error',
       payload: [{
@@ -520,7 +517,6 @@ test('gateway - preGatewaySubscriptionExecution hooks should handle errors', asy
 })
 
 test('gateway subscription - preGatewaySubscriptionExecution hooks should contain service metadata', async t => {
-  t.plan(8)
   const gateway = await createTestGatewayServer(t)
 
   const subscriptionQuery = query('u1')
@@ -528,12 +524,12 @@ test('gateway subscription - preGatewaySubscriptionExecution hooks should contai
   gateway.graphqlGateway.addHook(
     'preGatewaySubscriptionExecution',
     async (schema, document, context, service) => {
-      t.type(schema, GraphQLSchema)
-      t.type(document, 'object')
-      t.type(context, 'object')
-      t.type(service, 'object')
-      t.equal(service.name, 'message')
-      t.ok('preGatewaySubscriptionExecution called')
+      t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
+      t.assert.strictEqual(typeof document, 'object')
+      t.assert.strictEqual(typeof context, 'object')
+      t.assert.strictEqual(typeof service, 'object')
+      t.assert.strictEqual(service.name, 'message')
+      t.assert.ok('preGatewaySubscriptionExecution called')
     }
   )
 
@@ -559,7 +555,7 @@ test('gateway subscription - preGatewaySubscriptionExecution hooks should contai
   {
     const [chunk] = await once(client, 'data')
     const data = JSON.parse(chunk)
-    t.equal(data.type, 'connection_ack')
+    t.assert.strictEqual(data.type, 'connection_ack')
   }
 
   gateway.inject({
@@ -583,7 +579,7 @@ test('gateway subscription - preGatewaySubscriptionExecution hooks should contai
   {
     const [chunk] = await once(client, 'data')
     const data = JSON.parse(chunk)
-    t.same(data, {
+    t.assert.deepStrictEqual(data, {
       id: 1,
       type: 'data',
       payload: {
@@ -610,7 +606,6 @@ test('gateway subscription - preGatewaySubscriptionExecution hooks should contai
 // onSubscriptionResolution
 // -------------------------
 test('gateway - onSubscriptionResolution hooks should handle errors', async t => {
-  t.plan(2)
   const gateway = await createTestGatewayServer(t)
 
   gateway.graphql.addHook('onSubscriptionResolution', async () => {
@@ -618,7 +613,7 @@ test('gateway - onSubscriptionResolution hooks should handle errors', async t =>
   })
 
   gateway.graphql.addHook('onSubscriptionResolution', async () => {
-    t.fail('onSubscriptionResolution should not be called again')
+    t.assert.fail('onSubscriptionResolution should not be called again')
   })
 
   await gateway.listen({ port: assignedPort++ })
@@ -643,7 +638,7 @@ test('gateway - onSubscriptionResolution hooks should handle errors', async t =>
   {
     const [chunk] = await once(client, 'data')
     const data = JSON.parse(chunk)
-    t.equal(data.type, 'connection_ack')
+    t.assert.strictEqual(data.type, 'connection_ack')
   }
 
   gateway.inject({
@@ -665,19 +660,18 @@ test('gateway - onSubscriptionResolution hooks should handle errors', async t =>
   })
 
   await once(client, 'end')
-  t.equal(ws.readyState, WebSocket.CLOSED)
+  t.assert.strictEqual(ws.readyState, WebSocket.CLOSED)
 })
 
 // -----------------
 // onSubscriptionEnd
 // -----------------
 test('gateway - should call onSubscriptionEnd when subscription ends', async t => {
-  t.plan(4)
   const gateway = await createTestGatewayServer(t)
 
   gateway.graphql.addHook('onSubscriptionEnd', async context => {
-    t.type(context, 'object')
-    t.ok('onSubscriptionEnd called')
+    t.assert.strictEqual(typeof context, 'object')
+    t.assert.ok('onSubscriptionEnd called')
   })
 
   await gateway.listen({ port: assignedPort++ })
@@ -702,7 +696,7 @@ test('gateway - should call onSubscriptionEnd when subscription ends', async t =
   {
     const [chunk] = await once(client, 'data')
     const data = JSON.parse(chunk)
-    t.equal(data.type, 'connection_ack')
+    t.assert.strictEqual(data.type, 'connection_ack')
   }
 
   client.write(
@@ -718,12 +712,11 @@ test('gateway - should call onSubscriptionEnd when subscription ends', async t =
   {
     const [chunk] = await once(client, 'data')
     const data = JSON.parse(chunk)
-    t.equal(data.type, 'complete')
+    t.assert.strictEqual(data.type, 'complete')
   }
 })
 
 test('gateway - should handle onSubscriptionEnd hook errors', async t => {
-  t.plan(2)
   const gateway = await createTestGatewayServer(t)
 
   gateway.graphql.addHook('onSubscriptionEnd', async () => {
@@ -752,7 +745,7 @@ test('gateway - should handle onSubscriptionEnd hook errors', async t => {
   {
     const [chunk] = await once(client, 'data')
     const data = JSON.parse(chunk)
-    t.equal(data.type, 'connection_ack')
+    t.assert.strictEqual(data.type, 'connection_ack')
   }
 
   client.write(
@@ -763,5 +756,5 @@ test('gateway - should handle onSubscriptionEnd hook errors', async t => {
   )
 
   await once(client, 'end')
-  t.equal(ws.readyState, WebSocket.CLOSED)
+  t.assert.strictEqual(ws.readyState, WebSocket.CLOSED)
 })

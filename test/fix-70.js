@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const plugin = require('../index')
 const createTestService = require('./utils/create-test-service')
@@ -33,7 +33,7 @@ async function createTestGatewayServer (t) {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await service.close()
   })
@@ -53,7 +53,6 @@ async function createTestGatewayServer (t) {
 }
 
 test('query returns both data and errors', async (t) => {
-  t.plan(1)
   const app = await createTestGatewayServer(t)
 
   const query = 'query { me { id name secret } }'
@@ -65,7 +64,7 @@ test('query returns both data and errors', async (t) => {
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       me: {
         id: 1,

@@ -1,7 +1,6 @@
 'use strict'
 
-const { test, t } = require('tap')
-
+const { test, beforeEach, afterEach } = require('node:test')
 const FakeTimers = require('@sinonjs/fake-timers')
 
 const { once } = require('events')
@@ -14,16 +13,18 @@ const { buildFederationSchema } = require('@mercuriusjs/federation')
 const GQL = require('mercurius')
 const plugin = require('../index')
 
-t.beforeEach(({ context }) => {
-  context.clock = FakeTimers.install({
+let clock
+
+beforeEach(() => {
+  clock = FakeTimers.install({
     shouldClearNativeTimers: true,
     shouldAdvanceTime: true,
     advanceTimeDelta: 40
   })
 })
 
-t.afterEach(({ context }) => {
-  context.clock.uninstall()
+afterEach(() => {
+  clock.uninstall()
 })
 
 test('Polling schemas with disable cache', async t => {
@@ -44,7 +45,7 @@ test('Polling schemas with disable cache', async t => {
 
   const userService = Fastify()
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userService.close()
   })
@@ -98,7 +99,7 @@ test('Polling schemas with disable cache', async t => {
     })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       me: {
         id: 'u1',
@@ -126,7 +127,7 @@ test('Polling schemas', async t => {
 
   const userService = Fastify()
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userService.close()
   })
@@ -179,7 +180,7 @@ test('Polling schemas', async t => {
     })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       me: {
         id: 'u1',
@@ -207,7 +208,7 @@ test('Polling schemas', async t => {
     })
   })
 
-  t.same(JSON.parse(res2.body), {
+  t.assert.deepStrictEqual(JSON.parse(res2.body), {
     errors: [
       {
         message:
@@ -234,7 +235,7 @@ test('Polling schemas', async t => {
   userService.graphql.defineResolvers(resolvers)
 
   for (let i = 0; i < 10; i++) {
-    await t.context.clock.tickAsync(200)
+    await clock.tickAsync(200)
   }
 
   // We need the event loop to actually spin twice to
@@ -261,7 +262,7 @@ test('Polling schemas', async t => {
     })
   })
 
-  t.same(JSON.parse(res3.body), {
+  t.assert.deepStrictEqual(JSON.parse(res3.body), {
     data: {
       me: {
         id: 'u1',
@@ -292,12 +293,12 @@ test('Polling schemas (gateway.polling interval is not a number)', async t => {
   const gateway = Fastify({
     log: {
       warn () {
-        t.pass()
+        t.assert.ok(true)
       }
     }
   })
 
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userService.close()
   })
@@ -354,7 +355,7 @@ test("Polling schemas (if service is down, schema shouldn't be changed)", async 
   const userService = Fastify({ forceCloseConnections: true })
   const gateway = Fastify()
 
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userService.close()
   })
@@ -374,7 +375,7 @@ test("Polling schemas (if service is down, schema shouldn't be changed)", async 
   })
 
   await userService.listen({ port: 0 })
-  await t.context.clock.tickAsync()
+  await clock.tickAsync()
 
   const userServicePort = userService.server.address().port
 
@@ -390,7 +391,7 @@ test("Polling schemas (if service is down, schema shouldn't be changed)", async 
     }
   })
 
-  await t.context.clock.tickAsync()
+  await clock.tickAsync()
 
   {
     const { body } = await gateway.inject({
@@ -411,9 +412,9 @@ test("Polling schemas (if service is down, schema shouldn't be changed)", async 
       })
     })
 
-    await t.context.clock.tickAsync()
+    await clock.tickAsync()
 
-    t.same(JSON.parse(body), {
+    t.assert.deepStrictEqual(JSON.parse(body), {
       data: {
         me: {
           id: 'u1',
@@ -443,7 +444,7 @@ test("Polling schemas (if service is down, schema shouldn't be changed)", async 
       })
     })
 
-    t.same(JSON.parse(body), {
+    t.assert.deepStrictEqual(JSON.parse(body), {
       errors: [
         {
           message:
@@ -456,7 +457,7 @@ test("Polling schemas (if service is down, schema shouldn't be changed)", async 
   }
 
   userService.close()
-  await t.context.clock.tickAsync(500)
+  await clock.tickAsync(500)
 
   {
     const { body } = await gateway.inject({
@@ -478,7 +479,7 @@ test("Polling schemas (if service is down, schema shouldn't be changed)", async 
       })
     })
 
-    t.same(JSON.parse(body), {
+    t.assert.deepStrictEqual(JSON.parse(body), {
       errors: [
         {
           message:
@@ -509,7 +510,7 @@ test('Polling schemas (if service is mandatory, exception should be thrown)', as
 
   const userService = Fastify()
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userService.close()
   })
@@ -563,7 +564,7 @@ test('Polling schemas (if service is mandatory, exception should be thrown)', as
       })
     })
 
-    t.same(JSON.parse(body), {
+    t.assert.deepStrictEqual(JSON.parse(body), {
       data: {
         me: {
           id: 'u1',
@@ -593,7 +594,7 @@ test('Polling schemas (if service is mandatory, exception should be thrown)', as
       })
     })
 
-    t.same(JSON.parse(body), {
+    t.assert.deepStrictEqual(JSON.parse(body), {
       errors: [
         {
           message:
@@ -608,7 +609,7 @@ test('Polling schemas (if service is mandatory, exception should be thrown)', as
   gateway.graphqlGateway.close()
   await userService.close()
 
-  t.rejects(async () => {
+  await t.assert.rejects(async () => {
     await gateway.graphqlGateway.refresh()
   })
 })
@@ -622,7 +623,7 @@ test('Polling schemas (cache should be cleared)', async t => {
 
   const userService = Fastify()
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userService.close()
   })
@@ -684,7 +685,7 @@ test('Polling schemas (cache should be cleared)', async t => {
     })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       me: {
         id: 'u1',
@@ -715,7 +716,7 @@ test('Polling schemas (cache should be cleared)', async t => {
   })
 
   for (let i = 0; i < 100; i++) {
-    await t.context.clock.tickAsync(100)
+    await clock.tickAsync(100)
   }
 
   // We need the event loop to actually spin twice to
@@ -741,7 +742,7 @@ test('Polling schemas (cache should be cleared)', async t => {
     })
   })
 
-  t.same(JSON.parse(res2.body), {
+  t.assert.deepStrictEqual(JSON.parse(res2.body), {
     errors: [
       {
         message: 'Cannot query field "me" on type "Query". Did you mean "me2"?',
@@ -769,7 +770,7 @@ test('Polling schemas (cache should be cleared)', async t => {
     })
   })
 
-  t.same(JSON.parse(res3.body), {
+  t.assert.deepStrictEqual(JSON.parse(res3.body), {
     data: {
       me2: {
         id: 'u1',
@@ -845,7 +846,7 @@ test('Polling schemas (should properly regenerate the schema when a downstream s
     })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       me: {
         id: 'u1',
@@ -857,7 +858,7 @@ test('Polling schemas (should properly regenerate the schema when a downstream s
   await userService.close()
 
   const restartedUserService = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userService.close()
     await restartedUserService.close()
@@ -897,7 +898,7 @@ test('Polling schemas (should properly regenerate the schema when a downstream s
   await restartedUserService.listen({ port: userServicePort })
 
   for (let i = 0; i < 100; i++) {
-    await t.context.clock.tickAsync(100)
+    await clock.tickAsync(100)
   }
 
   // We need the event loop to actually spin twice to
@@ -923,7 +924,7 @@ test('Polling schemas (should properly regenerate the schema when a downstream s
     })
   })
 
-  t.same(JSON.parse(res2.body), {
+  t.assert.deepStrictEqual(JSON.parse(res2.body), {
     errors: [
       {
         message: 'Cannot query field "me" on type "Query". Did you mean "me2"?',
@@ -951,7 +952,7 @@ test('Polling schemas (should properly regenerate the schema when a downstream s
     })
   })
 
-  t.same(JSON.parse(res3.body), {
+  t.assert.deepStrictEqual(JSON.parse(res3.body), {
     data: {
       create: {
         id: 'u1',
@@ -962,8 +963,6 @@ test('Polling schemas (should properly regenerate the schema when a downstream s
 })
 
 test('Polling schemas (subscriptions should be handled)', async t => {
-  t.plan(12)
-
   const user = {
     id: 'u1',
     name: 'John',
@@ -1000,7 +999,7 @@ test('Polling schemas (subscriptions should be handled)', async t => {
   const userService = Fastify()
   const gateway = Fastify()
 
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userService.close()
   })
@@ -1053,13 +1052,13 @@ test('Polling schemas (subscriptions should be handled)', async t => {
     'graphql-ws'
   )
 
-  t.equal(ws.readyState, WebSocket.CONNECTING)
+  t.assert.strictEqual(ws.readyState, WebSocket.CONNECTING)
 
   const client = WebSocket.createWebSocketStream(ws, {
     encoding: 'utf8',
     objectMode: true
   })
-  t.teardown(client.destroy.bind(client))
+  t.after(client.destroy.bind(client))
   client.setEncoding('utf8')
 
   client.write(
@@ -1071,7 +1070,7 @@ test('Polling schemas (subscriptions should be handled)', async t => {
   {
     const [chunk] = await once(client, 'data')
     const data = JSON.parse(chunk)
-    t.equal(data.type, 'connection_ack')
+    t.assert.strictEqual(data.type, 'connection_ack')
 
     client.write(
       JSON.stringify({
@@ -1112,12 +1111,12 @@ test('Polling schemas (subscriptions should be handled)', async t => {
     const [chunk] = await once(client, 'data')
     const data = JSON.parse(chunk)
     client.end()
-    t.equal(data.type, 'data')
-    t.equal(data.id, 1)
+    t.assert.strictEqual(data.type, 'data')
+    t.assert.strictEqual(data.id, 1)
 
     const { payload: { data: { updatedUser = {} } = {} } = {} } = data
 
-    t.same(updatedUser, {
+    t.assert.deepStrictEqual(updatedUser, {
       id: 'u1',
       name: 'John'
     })
@@ -1147,14 +1146,14 @@ test('Polling schemas (subscriptions should be handled)', async t => {
 
   userService.graphql.defineResolvers(resolvers)
 
-  await t.context.clock.tickAsync(10000)
+  await clock.tickAsync(10000)
 
   // We need the event loop to actually spin twice to
   // be able to propagate the change
   await immediate()
   await immediate()
 
-  t.same(Object.keys(gateway.graphql.schema.getType('User').getFields()), [
+  t.assert.deepStrictEqual(Object.keys(gateway.graphql.schema.getType('User').getFields()), [
     'id',
     'name',
     'lastName'
@@ -1167,13 +1166,13 @@ test('Polling schemas (subscriptions should be handled)', async t => {
     'graphql-ws'
   )
 
-  t.equal(ws2.readyState, WebSocket.CONNECTING)
+  t.assert.strictEqual(ws2.readyState, WebSocket.CONNECTING)
 
   const client2 = WebSocket.createWebSocketStream(ws2, {
     encoding: 'utf8',
     objectMode: true
   })
-  t.teardown(client2.destroy.bind(client2))
+  t.after(client2.destroy.bind(client2))
   client2.setEncoding('utf8')
 
   client2.write(
@@ -1185,7 +1184,7 @@ test('Polling schemas (subscriptions should be handled)', async t => {
   {
     const [chunk] = await once(client2, 'data')
     const data = JSON.parse(chunk)
-    t.equal(data.type, 'connection_ack')
+    t.assert.strictEqual(data.type, 'connection_ack')
 
     client2.write(
       JSON.stringify({
@@ -1226,19 +1225,19 @@ test('Polling schemas (subscriptions should be handled)', async t => {
   {
     const [chunk] = await once(client2, 'data')
     const data = JSON.parse(chunk)
-    t.equal(data.type, 'data')
-    t.equal(data.id, 2)
+    t.assert.strictEqual(data.type, 'data')
+    t.assert.strictEqual(data.id, 2)
 
     const { payload: { data: { updatedUser = {} } = {} } = {} } = data
 
-    t.same(updatedUser, {
+    t.assert.deepStrictEqual(updatedUser, {
       id: 'u1',
       name: 'John',
       lastName: 'Doe'
     })
   }
 
-  t.equal(ws2.readyState, WebSocket.OPEN)
+  t.assert.strictEqual(ws2.readyState, WebSocket.OPEN)
   client2.end()
 
   await gateway.close()
@@ -1249,7 +1248,7 @@ test('Polling schemas (with dynamic services function, service added)', async (t
   const userService = Fastify()
   const postService = Fastify()
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userService.close()
     await postService.close()
@@ -1371,7 +1370,7 @@ test('Polling schemas (with dynamic services function, service added)', async (t
     })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       me: {
         id: 'u1',
@@ -1397,7 +1396,7 @@ test('Polling schemas (with dynamic services function, service added)', async (t
     })
   })
 
-  t.same(JSON.parse(res2.body), {
+  t.assert.deepStrictEqual(JSON.parse(res2.body), {
     errors: [
       {
         message: 'Cannot query field "topPosts" on type "Query".',
@@ -1413,7 +1412,7 @@ test('Polling schemas (with dynamic services function, service added)', async (t
   })
 
   for (let i = 0; i < 10; i++) {
-    await t.context.clock.tickAsync(200)
+    await clock.tickAsync(200)
   }
 
   let res3
@@ -1439,7 +1438,7 @@ test('Polling schemas (with dynamic services function, service added)', async (t
     })
   }
 
-  t.same(JSON.parse(res3.body), {
+  t.assert.deepStrictEqual(JSON.parse(res3.body), {
     data: {
       topPosts: [
         {
@@ -1454,7 +1453,7 @@ test('Polling schemas (with dynamic services function, service deleted)', async 
   const userService = Fastify()
   const postService = Fastify()
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userService.close()
     await postService.close()
@@ -1579,7 +1578,7 @@ test('Polling schemas (with dynamic services function, service deleted)', async 
     })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       topPosts: [
         {
@@ -1592,7 +1591,7 @@ test('Polling schemas (with dynamic services function, service deleted)', async 
   services.pop()
 
   for (let i = 0; i < 10; i++) {
-    await t.context.clock.tickAsync(200)
+    await clock.tickAsync(200)
   }
 
   let res2
@@ -1618,7 +1617,7 @@ test('Polling schemas (with dynamic services function, service deleted)', async 
     })
   }
 
-  t.same(JSON.parse(res2.body), {
+  t.assert.deepStrictEqual(JSON.parse(res2.body), {
     errors: [
       {
         message: 'Cannot query field "topPosts" on type "Query".',
@@ -1633,7 +1632,7 @@ test('should not throw when an error happens on the closing function', async (t)
   const userService = Fastify()
   const postService = Fastify()
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userService.close()
     await postService.close()
@@ -1744,12 +1743,12 @@ test('should not throw when an error happens on the closing function', async (t)
   const prevClose = gateway.graphqlGateway.serviceMap.post.close
   gateway.graphqlGateway.serviceMap.post.close = async () => {
     prevClose()
-    t.pass()
+    t.assert.ok(true)
     return Promise.reject(new Error('kaboom'))
   }
   services.pop()
 
   for (let i = 0; i < 10; i++) {
-    await t.context.clock.tickAsync(200)
+    await clock.tickAsync(200)
   }
 })

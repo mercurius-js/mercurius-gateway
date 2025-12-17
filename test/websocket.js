@@ -1,14 +1,12 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
 const { createClient } = require('graphql-ws')
 const ws = require('ws')
-const { promisify } = require('util')
 const plugin = require('../index')
 const { buildFederationSchema } = require('@mercuriusjs/federation')
-const sleep = promisify(setTimeout)
 
 async function createTestService (port, schema, resolvers = {}) {
   const service = Fastify()
@@ -52,12 +50,10 @@ const resolvers = {
 }
 
 test('gateway - send query using graphql-ws protocol', async t => {
-  t.plan(1)
-
   const service1 = await createTestService(0, schemaBody, resolvers)
   const gateway = Fastify()
 
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await service1.close()
   })
@@ -90,30 +86,30 @@ test('gateway - send query using graphql-ws protocol', async t => {
     webSocketImpl: ws
   })
 
-  client.subscribe(
-    {
-      query: '{ result(num: 5) }'
-    },
-    {
-      next: data => {
-        t.strictSame(data, { data: { result: 5 } })
+  await new Promise((resolve, reject) => {
+    client.subscribe(
+      {
+        query: '{ result(num: 5) }'
       },
-      complete: () => {
-        client.dispose()
-        t.end()
+      {
+        next: data => {
+          t.assert.deepStrictEqual(data, { data: { result: 5 } })
+        },
+        complete: () => {
+          client.dispose()
+          resolve()
+        },
+        error: reject
       }
-    }
-  )
-
-  await sleep(500)
+    )
+  })
 })
 
 test('gateway - send mutations using graphql-ws protocol', async t => {
-  t.plan(1)
   const service1 = await createTestService(0, schemaBody, resolvers)
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await service1.close()
   })
@@ -146,26 +142,27 @@ test('gateway - send mutations using graphql-ws protocol', async t => {
     webSocketImpl: ws
   })
 
-  client.subscribe(
-    {
-      query: `
+  await new Promise((resolve, reject) => {
+    client.subscribe(
+      {
+        query: `
         mutation {
           updateUser(name: "Random user") {
             name
           }
         }
       `
-    },
-    {
-      next: data => {
-        t.strictSame(data, { data: { updateUser: { name: 'Random user' } } })
       },
-      complete: () => {
-        client.dispose()
-        t.end()
+      {
+        next: data => {
+          t.assert.deepStrictEqual(data, { data: { updateUser: { name: 'Random user' } } })
+        },
+        complete: () => {
+          client.dispose()
+          resolve()
+        },
+        error: reject
       }
-    }
-  )
-
-  await sleep(500)
+    )
+  })
 })

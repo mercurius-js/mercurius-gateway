@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
 const plugin = require('../index')
@@ -59,7 +59,7 @@ async function createTestGatewayServer (t) {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userExtendService.close()
     await userService.close()
@@ -88,6 +88,6 @@ test('should contain all the fields', async t => {
 
   const serviceMap = app.graphqlGateway.serviceMap
 
-  t.deepEqual(Object.keys(serviceMap.user.schema._typeMap.User._fields), ['id', 'name', 'fullName', 'friends'])
-  t.deepEqual(Object.keys(serviceMap.userExtend.schema._typeMap.User._fields), ['id', 'name', 'numberOfPosts'])
+  t.assert.deepStrictEqual(Object.keys(serviceMap.user.schema._typeMap.User._fields), ['id', 'name', 'fullName', 'friends'])
+  t.assert.deepStrictEqual(Object.keys(serviceMap.userExtend.schema._typeMap.User._fields), ['id', 'name', 'numberOfPosts'])
 })

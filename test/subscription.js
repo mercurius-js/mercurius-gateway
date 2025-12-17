@@ -1,12 +1,22 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
+const { setTimeout } = require('node:timers/promises')
 const WebSocket = require('ws')
 const GQL = require('mercurius')
 const plugin = require('../index')
 const { buildFederationSchema } = require('@mercuriusjs/federation')
 const FakeTimers = require('@sinonjs/fake-timers')
+
+const withResolves = function () {
+  let resolve = null; let reject = null
+  const promise = new Promise((_resolve, _reject) => {
+    resolve = _resolve
+    reject = _reject
+  })
+  return { promise, resolve, reject }
+}
 
 const users = {
   u1: {
@@ -121,8 +131,7 @@ const messageResolvers = {
   }
 }
 
-test('gateway subscription handling works correctly', t => {
-  t.plan(1)
+test('gateway subscription handling works correctly', async t => {
   let userService
   let messageService
   let gateway
@@ -247,7 +256,7 @@ test('gateway subscription handling works correctly', t => {
         const data = JSON.parse(chunk)
 
         if (data.id === 1 && data.type === 'data') {
-          t.equal(
+          t.assert.strictEqual(
             chunk,
             JSON.stringify({
               type: 'data',
@@ -296,7 +305,7 @@ test('gateway subscription handling works correctly', t => {
     })
   }
 
-  t.teardown(async () => {
+  t.after(async () => {
     await Promise.all([
       client.destroy(),
       gateway.close(),
@@ -305,13 +314,12 @@ test('gateway subscription handling works correctly', t => {
     ])
   })
 
-  Promise.all([createUserService(), createMessageService()])
-    .then(() => createGatewayApp())
-    .then(() => runSubscription())
+  await Promise.all([createUserService(), createMessageService()])
+  await createGatewayApp()
+  await runSubscription()
 })
 
 test('gateway subscription properly closes service subscriptions', async t => {
-  t.plan(2)
   let testService
   let gateway
   let client
@@ -356,7 +364,7 @@ test('gateway subscription properly closes service subscriptions', async t => {
                 return pubsub.subscribe('NOTIFICATION_ADDED')
               },
               (payload, args) => {
-                t.equal(args.id, 'n2')
+                t.assert.strictEqual(args.id, 'n2')
                 return args.id === payload.notificationAdded.id
               }
             )
@@ -466,7 +474,7 @@ test('gateway subscription properly closes service subscriptions', async t => {
             }
           })
         } else if (data.type === 'data') {
-          t.equal(
+          t.assert.strictEqual(
             chunk,
             JSON.stringify({
               type: 'data',
@@ -492,7 +500,7 @@ test('gateway subscription properly closes service subscriptions', async t => {
   await createGatewayApp()
   await runSubscription()
 
-  t.teardown(async () => {
+  t.after(async () => {
     await Promise.all([
       client.destroy(),
       gateway.close(),
@@ -501,15 +509,14 @@ test('gateway subscription properly closes service subscriptions', async t => {
   })
 })
 
-test('gateway wsConnectionParams object is passed to SubscriptionClient', t => {
-  t.plan(1)
+test('gateway wsConnectionParams object is passed to SubscriptionClient', async t => {
+  const { promise: connectionAckPromise, resolve: connectionAckResolve } = withResolves()
 
-  function onConnect (data) {
-    setTimeout(() => {
-      t.same(data.payload, connectionInitPayload)
-    }, 500)
+  async function onConnect (data) {
+    await setTimeout(500)
+    t.assert.deepStrictEqual(data.payload, connectionInitPayload)
+    connectionAckResolve()
   }
-
   const connectionInitPayload = {
     hello: 'world'
   }
@@ -517,7 +524,7 @@ test('gateway wsConnectionParams object is passed to SubscriptionClient', t => {
   let testService
   let gateway
 
-  t.teardown(async () => {
+  t.after(async () => {
     await Promise.all([
       gateway.close(),
       testService.close()
@@ -558,14 +565,17 @@ test('gateway wsConnectionParams object is passed to SubscriptionClient', t => {
     })
   }
 
-  createTestService().then(() => createGatewayApp())
+  await createTestService()
+  await createGatewayApp()
+
+  await connectionAckPromise
 })
 
-// DONE
-test('gateway wsConnectionParams function is passed to SubscriptionClient', t => {
-  t.plan(2)
+test('gateway wsConnectionParams function is passed to SubscriptionClient', async t => {
+  const { promise: connectionAckPromise, resolve: connectionAckResolve } = withResolves()
   function onConnect (data) {
-    t.same(data.payload, connectionInitPayload)
+    t.assert.deepStrictEqual(data.payload, connectionInitPayload)
+    connectionAckResolve()
   }
 
   const connectionInitPayload = {
@@ -583,45 +593,43 @@ test('gateway wsConnectionParams function is passed to SubscriptionClient', t =>
     subscription: { onConnect }
   })
 
-  testService.listen({ port: 0 }, async err => {
-    t.error(err)
-    const testServicePort = testService.server.address().port
+  await testService.listen({ port: 0 })
+  const testServicePort = testService.server.address().port
 
-    const gateway = Fastify()
-    t.teardown(async () => {
-      await Promise.all([
-        gateway.close(),
-        testService.close()
-      ])
-    })
+  const gateway = Fastify()
+  t.after(() => Promise.all([
+    gateway.close(),
+    testService.close()
+  ]))
 
-    await gateway.register(plugin, {
-      gateway: {
-        services: [
-          {
-            name: 'test',
-            url: `http://localhost:${testServicePort}/graphql`,
-            wsUrl: `ws://localhost:${testServicePort}/graphql`,
-            wsConnectionParams: async function () {
-              return {
-                connectionInitPayload
-              }
+  await gateway.register(plugin, {
+    gateway: {
+      services: [
+        {
+          name: 'test',
+          url: `http://localhost:${testServicePort}/graphql`,
+          wsUrl: `ws://localhost:${testServicePort}/graphql`,
+          wsConnectionParams: async function () {
+            return {
+              connectionInitPayload
             }
           }
-        ]
-      }
-    })
+        }
+      ]
+    }
   })
+
+  await connectionAckPromise
 })
 
-// done
-test('gateway forwards the connection_init payload to the federated service on gql_start using the connectionInit extension', t => {
-  t.plan(4)
+test('gateway forwards the connection_init payload to the federated service on gql_start using the connectionInit extension', async t => {
+  const { promise: connectionAckPromise, resolve: connectionAckResolve } = withResolves()
   function onConnect (data) {
     if (data && data.payload && Object.entries(data.payload).length) {
-      t.same(data.payload, connectionInitPayload)
+      t.assert.deepStrictEqual(data.payload, connectionInitPayload)
     }
 
+    connectionAckResolve()
     return true
   }
 
@@ -652,7 +660,7 @@ test('gateway forwards the connection_init payload to the federated service on g
       Subscription: {
         notificationAdded: {
           subscribe: () => {
-            t.pass()
+            t.assert.ok(true)
           }
         }
       }
@@ -660,100 +668,107 @@ test('gateway forwards the connection_init payload to the federated service on g
     subscription: { onConnect }
   })
 
-  testService.listen({ port: 0 }, async err => {
-    t.error(err)
+  await testService.listen({ port: 0 })
 
-    const testServicePort = testService.server.address().port
+  const testServicePort = testService.server.address().port
 
-    const gateway = Fastify()
-    t.teardown(async () => {
-      await Promise.all([
-        gateway.close(),
-        testService.close()
-      ])
-    })
-
-    await gateway.register(plugin, {
-      gateway: {
-        services: [
-          {
-            name: 'test',
-            url: `http://localhost:${testServicePort}/graphql`,
-            wsUrl: `ws://localhost:${testServicePort}/graphql`
-          }
-        ]
-      },
-      subscription: true
-    })
-
-    gateway.listen({ port: 0 }, async err => {
-      t.error(err)
-      const ws = new WebSocket(
-        `ws://localhost:${gateway.server.address().port}/graphql`,
-        'graphql-ws'
-      )
-      const client = WebSocket.createWebSocketStream(ws, {
-        encoding: 'utf8',
-        objectMode: true
-      })
-      t.teardown(client.destroy.bind(client))
-      client.setEncoding('utf8')
-
-      client.write(
-        JSON.stringify({
-          type: 'connection_init',
-          payload: connectionInitPayload
-        })
-      )
-
-      client.on('data', chunk => {
-        const data = JSON.parse(chunk)
-        if (data.type === 'connection_ack') {
-          client.write(
-            JSON.stringify({
-              id: 1,
-              type: 'start',
-              payload: {
-                query: `
-                subscription {
-                  notificationAdded {
-                    id
-                    message
-                  }
-                }
-              `
-              }
-            })
-          )
-          client.destroy()
-        }
-      })
-    })
+  const gateway = Fastify()
+  t.after(async () => {
+    await Promise.all([
+      gateway.close(),
+      testService.close()
+    ])
   })
+
+  await gateway.register(plugin, {
+    gateway: {
+      services: [
+        {
+          name: 'test',
+          url: `http://localhost:${testServicePort}/graphql`,
+          wsUrl: `ws://localhost:${testServicePort}/graphql`
+        }
+      ]
+    },
+    subscription: true
+  })
+
+  await gateway.listen({ port: 0 })
+
+  await new Promise((resolve, reject) => {
+    const ws = new WebSocket(
+      `ws://localhost:${gateway.server.address().port}/graphql`,
+      'graphql-ws'
+    )
+    const client = WebSocket.createWebSocketStream(ws, {
+      encoding: 'utf8',
+      objectMode: true
+    })
+
+    client.setEncoding('utf8')
+
+    client.write(
+      JSON.stringify({
+        type: 'connection_init',
+        payload: connectionInitPayload
+      })
+    )
+
+    client.on('data', chunk => {
+      const data = JSON.parse(chunk)
+      if (data.type === 'connection_ack') {
+        client.write(
+          JSON.stringify({
+            id: 1,
+            type: 'start',
+            payload: {
+              query: `
+              subscription {
+                notificationAdded {
+                  id
+                  message
+                }
+              }
+            `
+            }
+          })
+        )
+        client.destroy()
+        resolve()
+      }
+    })
+    client.on('error', reject)
+  })
+
+  await connectionAckPromise
 })
 
-test('connection_init payload is overwritten at gateway and forwarded to the federated service', t => {
-  t.plan(7)
+test('connection_init payload is overwritten at gateway and forwarded to the federated service', async t => {
   const initialPayload = { token: 'some-token' }
   const rewritePayload = { user: { id: '1' } }
 
+  const { promise: connectionGatewayAckPromise, resolve: connectionGatewayAckResolve } = withResolves()
   function onConnectGateway (data) {
     if (data && data.payload && Object.entries(data.payload).length) {
-      t.same(data.payload, initialPayload)
+      t.assert.deepStrictEqual(data.payload, initialPayload)
+      connectionGatewayAckResolve()
     }
 
     return rewritePayload
   }
 
   function rewriteConnectionInitPayload (payload, context) {
-    t.same(payload, initialPayload)
-    t.has(context, rewritePayload)
+    t.assert.deepStrictEqual(payload, initialPayload)
+    t.assert.deepStrictEqual(context.user, rewritePayload.user)
     return { user: context.user }
   }
 
+  const { promise: connectionServiceAckPromise, resolve: connectionServiceAckResolve } = withResolves()
+
   function onConnectService (data) {
     if (data && data.payload && Object.entries(data.payload).length) {
-      t.same(data.payload, rewritePayload)
+      t.assert.deepStrictEqual(data.payload, rewritePayload)
+      connectionServiceAckResolve()
     }
 
     return true
@@ -783,7 +798,7 @@ test('connection_init payload is overwritten at gateway and forwarded to the fed
       Subscription: {
         notificationAdded: {
           subscribe: () => {
-            t.pass()
+            t.assert.ok(true)
           }
         }
       }
@@ -791,81 +806,87 @@ test('connection_init payload is overwritten at gateway and forwarded to the fed
     subscription: { onConnect: onConnectService }
   })
 
-  testService.listen({ port: 0 }, async err => {
-    t.error(err)
+  await testService.listen({ port: 0 })
 
-    const testServicePort = testService.server.address().port
+  const testServicePort = testService.server.address().port
 
-    const gateway = Fastify()
-    t.teardown(async () => {
-      if (typeof gateway.close === 'function') {
-        await gateway.close()
-      }
-      await testService.close()
-    })
-
-    await gateway.register(plugin, {
-      gateway: {
-        services: [
-          {
-            name: 'test',
-            url: `http://localhost:${testServicePort}/graphql`,
-            wsUrl: `ws://localhost:${testServicePort}/graphql`,
-            wsConnectionParams: {
-              rewriteConnectionInitPayload
-            }
-          }
-        ]
-      },
-      subscription: {
-        onConnect: onConnectGateway
-      }
-    })
-
-    gateway.listen({ port: 0 }, async err => {
-      t.error(err)
-      const ws = new WebSocket(
-        `ws://localhost:${gateway.server.address().port}/graphql`,
-        'graphql-ws'
-      )
-      const client = WebSocket.createWebSocketStream(ws, {
-        encoding: 'utf8',
-        objectMode: true
-      })
-      t.teardown(client.destroy.bind(client))
-      client.setEncoding('utf8')
-
-      client.write(
-        JSON.stringify({
-          type: 'connection_init',
-          payload: initialPayload
-        })
-      )
-
-      client.on('data', chunk => {
-        const data = JSON.parse(chunk)
-        if (data.type === 'connection_ack') {
-          client.write(
-            JSON.stringify({
-              id: 1,
-              type: 'start',
-              payload: {
-                query: `
-                subscription {
-                  notificationAdded {
-                    id
-                    message
-                  }
-                }
-              `
-              }
-            })
-          )
-          client.destroy()
-        }
-      })
-    })
+  const gateway = Fastify()
+  t.after(async () => {
+    if (typeof gateway.close === 'function') {
+      await gateway.close()
+    }
+    await testService.close()
   })
+
+  await gateway.register(plugin, {
+    gateway: {
+      services: [
+        {
+          name: 'test',
+          url: `http://localhost:${testServicePort}/graphql`,
+          wsUrl: `ws://localhost:${testServicePort}/graphql`,
+          wsConnectionParams: {
+            rewriteConnectionInitPayload
+          }
+        }
+      ]
+    },
+    subscription: {
+      onConnect: onConnectGateway
+    }
+  })
+
+  await gateway.listen({ port: 0 })
+
+  await new Promise((resolve, reject) => {
+    const ws = new WebSocket(
+      `ws://localhost:${gateway.server.address().port}/graphql`,
+      'graphql-ws'
+    )
+    const client = WebSocket.createWebSocketStream(ws, {
+      encoding: 'utf8',
+      objectMode: true
+    })
+    t.after(() => client.destroy())
+    client.setEncoding('utf8')
+
+    client.write(
+      JSON.stringify({
+        type: 'connection_init',
+        payload: initialPayload
+      })
+    )
+
+    client.on('data', chunk => {
+      const data = JSON.parse(chunk)
+      if (data.type === 'connection_ack') {
+        client.write(
+          JSON.stringify({
+            id: 1,
+            type: 'start',
+            payload: {
+              query: `
+              subscription {
+                notificationAdded {
+                  id
+                  message
+                }
+              }
+            `
+            }
+          })
+        )
+        client.destroy()
+        resolve()
+      }
+    })
+    client.on('error', reject)
+  })
+
+  await Promise.all([
+    connectionGatewayAckPromise,
+    connectionServiceAckPromise
+  ])
 })
 
 test('subscriptions work with scalars', async t => {
@@ -949,7 +970,7 @@ test('subscriptions work with scalars', async t => {
       encoding: 'utf8',
       objectMode: true
     })
-    t.teardown(async () => {
+    t.after(async () => {
       client.destroy()
       await Promise.all([
         gateway.close(),
@@ -1009,7 +1030,7 @@ test('subscriptions work with scalars', async t => {
       const data = JSON.parse(chunk)
 
       if (data.id === 1 && data.type === 'data') {
-        t.equal(
+        t.assert.strictEqual(
           chunk,
           JSON.stringify({
             type: 'data',
@@ -1137,7 +1158,7 @@ test('subscriptions work with different contexts', async t => {
       encoding: 'utf8',
       objectMode: true
     })
-    t.teardown(async () => {
+    t.after(async () => {
       client.destroy()
     })
     client.setEncoding('utf8')
@@ -1195,7 +1216,7 @@ test('subscriptions work with different contexts', async t => {
       const data = JSON.parse(chunk)
 
       if (data.id === 1 && data.type === 'data') {
-        t.equal(
+        t.assert.strictEqual(
           chunk,
           JSON.stringify({
             type: 'data',
@@ -1236,7 +1257,7 @@ test('subscriptions work with different contexts', async t => {
     .map((_, i) => runSubscription(i))
   await Promise.all(subscriptions)
 
-  t.teardown(async () => {
+  t.after(async () => {
     await Promise.all([
       gateway.close(),
       testService.close()
@@ -1395,7 +1416,7 @@ test('connection_init headers available in federation event resolver', async t =
       encoding: 'utf8',
       objectMode: true
     })
-    t.teardown(async () => {
+    t.after(async () => {
       client.destroy()
     })
     client.setEncoding('utf8')
@@ -1460,7 +1481,7 @@ test('connection_init headers available in federation event resolver', async t =
       const data = JSON.parse(chunk)
 
       if (data.id === 1 && data.type === 'data') {
-        t.equal(
+        t.assert.strictEqual(
           chunk,
           JSON.stringify({
             type: 'data',
@@ -1505,7 +1526,7 @@ test('connection_init headers available in federation event resolver', async t =
     .map((_, i) => runSubscription(i))
   await Promise.all(subscriptions)
 
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await subscriptionService.close()
     await resolverService.close()
@@ -1664,7 +1685,7 @@ test('gateway subscription handling works correctly after a schema refresh', asy
       encoding: 'utf8',
       objectMode: true
     })
-    t.teardown(async () => {
+    t.after(async () => {
       client.destroy()
     })
     client.setEncoding('utf8')
@@ -1729,7 +1750,7 @@ test('gateway subscription handling works correctly after a schema refresh', asy
       const data = JSON.parse(chunk)
 
       if (data.id === 1 && data.type === 'data') {
-        t.equal(
+        t.assert.strictEqual(
           chunk,
           JSON.stringify({
             type: 'data',
@@ -1766,7 +1787,7 @@ test('gateway subscription handling works correctly after a schema refresh', asy
     return endPromise
   }
 
-  t.context.clock = FakeTimers.install({
+  const clock = FakeTimers.install({
     shouldClearNativeTimers: true,
     shouldAdvanceTime: true,
     advanceTimeDelta: 1000
@@ -1802,13 +1823,13 @@ test('gateway subscription handling works correctly after a schema refresh', asy
   })
 
   for (let i = 0; i < 12; i++) {
-    await t.context.clock.tickAsync(100)
+    await clock.tickAsync(100)
   }
 
   await runSubscription(0)
 
-  t.teardown(async () => {
-    t.context.clock.uninstall()
+  t.after(async () => {
+    clock.uninstall()
 
     await Promise.all([
       gateway.close(),

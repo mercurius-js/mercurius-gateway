@@ -1,7 +1,7 @@
 'use strict'
 
 const { GraphQLError } = require('graphql')
-const { test } = require('tap')
+const { test } = require('node:test')
 const { FederatedError, defaultErrorFormatter } = require('../lib/errors')
 const GQL = require('mercurius')
 const Fastify = require('fastify')
@@ -9,7 +9,6 @@ const plugin = require('../index')
 const { buildFederationSchema } = require('@mercuriusjs/federation')
 
 async function createTestService (
-  t,
   schema,
   resolvers = {}
 ) {
@@ -58,13 +57,12 @@ async function createTestGatewayServer (t, errorFormatter = undefined) {
     }
   }
   const [userService, userServicePort] = await createTestService(
-    t,
     userServiceSchema,
     userServiceResolvers
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userService.close()
   })
@@ -85,12 +83,11 @@ async function createTestGatewayServer (t, errorFormatter = undefined) {
 }
 
 test('errors: FederatedError ', async t => {
-  t.plan(1)
   try {
     /* eslint-disable-next-line no-new */
     new FederatedError(new Error('test'))
   } catch (error) {
-    t.same(error.message, 'errors must be an Array')
+    t.assert.deepStrictEqual(error.message, 'errors must be an Array')
   }
 })
 
@@ -98,7 +95,7 @@ test('errors: defaultErrorFormatter with single errors', t => {
   const app = {
     log: {
       info: (obj, message) => {
-        t.same(message, 'test error')
+        t.assert.deepStrictEqual(message, 'test error')
       }
     }
   }
@@ -106,8 +103,8 @@ test('errors: defaultErrorFormatter with single errors', t => {
   const errors = [new GraphQLError('test error')]
   const res = defaultErrorFormatter({ errors }, { app })
 
-  t.same(res.statusCode, 200)
-  t.same(res.response, {
+  t.assert.deepStrictEqual(res.statusCode, 200)
+  t.assert.deepStrictEqual(res.response, {
     data: null,
     errors: [
       {
@@ -115,15 +112,13 @@ test('errors: defaultErrorFormatter with single errors', t => {
       }
     ]
   })
-
-  t.end()
 })
 
 test('errors: defaultErrorFormatter with multiple errors', t => {
   const app = {
     log: {
       info: (obj, message) => {
-        t.same(message, 'test error')
+        t.assert.deepStrictEqual(message, 'test error')
       }
     }
   }
@@ -131,8 +126,8 @@ test('errors: defaultErrorFormatter with multiple errors', t => {
   const errors = [new GraphQLError('test error'), new GraphQLError('test error')]
   const res = defaultErrorFormatter({ errors }, { app })
 
-  t.same(res.statusCode, 200)
-  t.same(res.response, {
+  t.assert.deepStrictEqual(res.statusCode, 200)
+  t.assert.deepStrictEqual(res.response, {
     data: null,
     errors: [
       {
@@ -143,15 +138,13 @@ test('errors: defaultErrorFormatter with multiple errors', t => {
       }
     ]
   })
-
-  t.end()
 })
 
 test('errors - custom error formatter that uses default error formatter', async t => {
   const app = await createTestGatewayServer(t, (err, ctx) => {
-    t.ok(ctx)
-    t.equal(ctx.app, app)
-    t.ok(ctx.reply)
+    t.assert.ok(ctx)
+    t.assert.strictEqual(ctx.app, app)
+    t.assert.ok(ctx.reply)
     const response = defaultErrorFormatter(err, ctx)
     response.statusCode = 500
     return response
@@ -175,6 +168,6 @@ test('errors - custom error formatter that uses default error formatter', async 
   await app.close()
 
   const body = JSON.parse(res.body)
-  t.equal(res.statusCode, 500)
-  t.equal(body.errors[0].message, 'Invalid User ID')
+  t.assert.strictEqual(res.statusCode, 500)
+  t.assert.strictEqual(body.errors[0].message, 'Invalid User ID')
 })

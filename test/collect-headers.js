@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const { promisify } = require('util')
 const GQL = require('mercurius')
@@ -154,7 +154,7 @@ async function createTestGatewayServer (t, opts = {}) {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userService.close()
     await postService.close()
@@ -197,12 +197,11 @@ async function createTestGatewayServer (t, opts = {}) {
 // hooks
 // -----
 test('gateway - hooks', async (t) => {
-  t.plan(2)
   const app = await createTestGatewayServer(t)
 
   app.graphql.addHook('onResolution', async function (_, context) {
     await immediate()
-    t.has(context.collectors.responseHeaders, {
+    t.assert.deepStrictEqual(context.collectors.responseHeaders, {
       topPosts: {
         service: 'post',
         data: {
@@ -216,7 +215,7 @@ test('gateway - hooks', async (t) => {
         }
       }
     })
-    t.notHas(context.collectors.responseHeaders, {
+    t.assert.notDeepEqual(context.collectors.responseHeaders, {
       lastCustomer: {
         service: 'customer',
         data: {

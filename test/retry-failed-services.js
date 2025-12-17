@@ -1,6 +1,6 @@
 'use strict'
 
-const { test, t } = require('tap')
+const { test, beforeEach, afterEach } = require('node:test')
 const Fastify = require('fastify')
 const { GraphQLSchema } = require('graphql')
 const GQL = require('mercurius')
@@ -78,20 +78,21 @@ const postService = {
   }
 }
 
-t.beforeEach(({ context }) => {
-  context.clock = FakeTimers.install({
+let clock
+
+beforeEach(() => {
+  clock = FakeTimers.install({
     shouldClearNativeTimers: true,
     shouldAdvanceTime: true,
     advanceTimeDelta: 100
   })
 })
 
-t.afterEach(({ context }) => {
-  context.clock.uninstall()
+afterEach(() => {
+  clock.uninstall()
 })
 
 test('gateway - retry mandatory failed services on startup', async t => {
-  t.plan(5)
   const service1 = await createTestService(
     0,
     userService.schema,
@@ -99,7 +100,7 @@ test('gateway - retry mandatory failed services on startup', async t => {
   )
 
   let service2 = null
-  t.context.clock.setTimeout(async () => {
+  clock.setTimeout(async () => {
     service2 = await createTestService(
       5113,
       postService.schema,
@@ -108,7 +109,7 @@ test('gateway - retry mandatory failed services on startup', async t => {
   }, 5000)
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await service1.close()
     await service2.close()
@@ -135,9 +136,9 @@ test('gateway - retry mandatory failed services on startup', async t => {
   gateway.graphqlGateway.addHook(
     'onGatewayReplaceSchema',
     async (instance, schema) => {
-      t.type(instance, 'object')
-      t.type(schema, GraphQLSchema)
-      t.ok('should be called')
+      t.assert.strictEqual(typeof instance, 'object')
+      t.assert.ok(schema instanceof GraphQLSchema)
+      t.assert.ok('should be called')
     }
   )
 
@@ -161,7 +162,7 @@ test('gateway - retry mandatory failed services on startup', async t => {
     body: JSON.stringify({ query })
   })
 
-  t.same(await res.json(), {
+  t.assert.deepStrictEqual(await res.json(), {
     errors: [
       {
         message: 'Cannot query field "posts" on type "User".',
@@ -172,7 +173,7 @@ test('gateway - retry mandatory failed services on startup', async t => {
   })
 
   for (let i = 0; i < 100; i++) {
-    await t.context.clock.tickAsync(100)
+    await clock.tickAsync(100)
   }
 
   const res1 = await gateway.inject({
@@ -182,7 +183,7 @@ test('gateway - retry mandatory failed services on startup', async t => {
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res1.body), {
+  t.assert.deepStrictEqual(JSON.parse(res1.body), {
     data: {
       user: {
         id: 'u1',
@@ -198,7 +199,6 @@ test('gateway - retry mandatory failed services on startup', async t => {
 })
 
 test('gateway - should not call onGatewayReplaceSchemaHandler if the hook is not specified', async t => {
-  t.plan(2)
   const service1 = await createTestService(
     0,
     userService.schema,
@@ -206,7 +206,7 @@ test('gateway - should not call onGatewayReplaceSchemaHandler if the hook is not
   )
 
   let service2 = null
-  t.context.clock.setTimeout(async () => {
+  clock.setTimeout(async () => {
     service2 = await createTestService(
       5111,
       postService.schema,
@@ -215,7 +215,7 @@ test('gateway - should not call onGatewayReplaceSchemaHandler if the hook is not
   }, 2000)
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await service1.close()
     await service2.close()
@@ -261,7 +261,7 @@ test('gateway - should not call onGatewayReplaceSchemaHandler if the hook is not
     body: JSON.stringify({ query })
   })
 
-  t.same(await res.json(), {
+  t.assert.deepStrictEqual(await res.json(), {
     errors: [
       {
         message: 'Cannot query field "posts" on type "User".',
@@ -272,7 +272,7 @@ test('gateway - should not call onGatewayReplaceSchemaHandler if the hook is not
   })
 
   for (let i = 0; i < 100; i++) {
-    await t.context.clock.tickAsync(100)
+    await clock.tickAsync(100)
   }
 
   const res1 = await gateway.inject({
@@ -282,7 +282,7 @@ test('gateway - should not call onGatewayReplaceSchemaHandler if the hook is not
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res1.body), {
+  t.assert.deepStrictEqual(JSON.parse(res1.body), {
     data: {
       user: {
         id: 'u1',
@@ -298,7 +298,6 @@ test('gateway - should not call onGatewayReplaceSchemaHandler if the hook is not
 })
 
 test('gateway - dont retry non-mandatory failed services on startup', async t => {
-  t.plan(2)
   const service1 = await createTestService(
     0,
     userService.schema,
@@ -306,10 +305,9 @@ test('gateway - dont retry non-mandatory failed services on startup', async t =>
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await service1.close()
-    t.context.clock.uninstall()
   })
 
   await gateway.register(plugin, {
@@ -351,7 +349,7 @@ test('gateway - dont retry non-mandatory failed services on startup', async t =>
     body: JSON.stringify({ query })
   })
 
-  t.same(await res.json(), {
+  t.assert.deepStrictEqual(await res.json(), {
     errors: [
       {
         message: 'Cannot query field "posts" on type "User".',
@@ -362,7 +360,7 @@ test('gateway - dont retry non-mandatory failed services on startup', async t =>
   })
 
   for (let i = 0; i < 100; i++) {
-    await t.context.clock.tickAsync(150)
+    await clock.tickAsync(150)
   }
 
   const res1 = await gateway.inject({
@@ -372,7 +370,7 @@ test('gateway - dont retry non-mandatory failed services on startup', async t =>
     body: JSON.stringify({ query })
   })
 
-  t.same(await res1.json(), {
+  t.assert.deepStrictEqual(await res1.json(), {
     errors: [
       {
         message: 'Cannot query field "posts" on type "User".',
@@ -384,7 +382,6 @@ test('gateway - dont retry non-mandatory failed services on startup', async t =>
 })
 
 test('gateway - should log error if retry throws', async t => {
-  t.plan(1)
   const service1 = await createTestService(
     0,
     userService.schema,
@@ -393,7 +390,7 @@ test('gateway - should log error if retry throws', async t => {
 
   let service2 = null
 
-  t.context.clock.setTimeout(async () => {
+  clock.setTimeout(async () => {
     service2 = await createTestService(
       5114,
       postService.schema,
@@ -405,11 +402,11 @@ test('gateway - should log error if retry throws', async t => {
 
   gateway.log.error = error => {
     if (error.message.includes('kaboom')) {
-      t.pass()
+      t.assert.ok(true)
     }
   }
 
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await service1.close()
     await service2.close()
@@ -442,12 +439,11 @@ test('gateway - should log error if retry throws', async t => {
   await gateway.ready()
 
   for (let i = 0; i < 200; i++) {
-    await t.context.clock.tickAsync(50)
+    await clock.tickAsync(50)
   }
 })
 
 test('gateway - stop retrying after no. of retries exceeded', async t => {
-  t.plan(1)
   const service1 = await createTestService(
     0,
     userService.schema,
@@ -460,11 +456,11 @@ test('gateway - stop retrying after no. of retries exceeded', async t => {
   gateway.log.error = error => {
     if (error.code === 'MER_ERR_GQL_GATEWAY_REFRESH' && errCount === 0) {
       errCount++
-      t.pass()
+      t.assert.ok(true)
     }
   }
 
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await service1.close()
   })
@@ -492,6 +488,6 @@ test('gateway - stop retrying after no. of retries exceeded', async t => {
   await gateway.ready()
 
   for (let i = 0; i < 100; i++) {
-    await t.context.clock.tickAsync(150)
+    await clock.tickAsync(150)
   }
 })

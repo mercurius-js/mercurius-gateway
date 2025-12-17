@@ -1,12 +1,12 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
 const plugin = require('../index')
 const { buildFederationSchema } = require('@mercuriusjs/federation')
 
-async function createService (t, schema, resolvers = {}) {
+async function createService (schema, resolvers = {}) {
   const service = Fastify()
   service.register(GQL, {
     schema: buildFederationSchema(schema),
@@ -45,7 +45,6 @@ const posts = {
 
 test('gateway handles @extends directive correctly', async t => {
   const [userService, userServicePort] = await createService(
-    t,
     `
     type Query @extends {
       me: User
@@ -71,7 +70,6 @@ test('gateway handles @extends directive correctly', async t => {
   )
 
   const [postService, postServicePort] = await createService(
-    t,
     `
     type Post @key(fields: "pid") {
       pid: ID!
@@ -117,7 +115,7 @@ test('gateway handles @extends directive correctly', async t => {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await postService.close()
     await userService.close()
@@ -159,7 +157,7 @@ test('gateway handles @extends directive correctly', async t => {
     })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       me: {
         id: 'u1',
@@ -199,7 +197,6 @@ test('gateway passes field arguments through to types labeled by @extends direct
   }
 
   const [userService, userServicePort] = await createService(
-    t,
     `
     type Query @extends {
       me: User
@@ -225,7 +222,6 @@ test('gateway passes field arguments through to types labeled by @extends direct
   )
 
   const [postService, postServicePort] = await createService(
-    t,
     `
     type Post @key(fields: "pid") {
       pid: ID!
@@ -260,7 +256,7 @@ test('gateway passes field arguments through to types labeled by @extends direct
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await postService.close()
     await userService.close()
@@ -307,7 +303,7 @@ test('gateway passes field arguments through to types labeled by @extends direct
     })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       me: {
         id: 'u1',
@@ -360,7 +356,6 @@ test('gateway distributes query correctly to services when querying with inline 
   }
 
   const [userService, userServicePort] = await createService(
-    t,
     `
     type Query @extends {
       me: UserUnion
@@ -392,7 +387,6 @@ test('gateway distributes query correctly to services when querying with inline 
   )
 
   const [postService, postServicePort] = await createService(
-    t,
     `
     type Post @key(fields: "pid") {
       pid: ID!
@@ -427,7 +421,7 @@ test('gateway distributes query correctly to services when querying with inline 
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await postService.close()
     await userService.close()
@@ -479,7 +473,7 @@ test('gateway distributes query correctly to services when querying with inline 
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       me: {
         id: 'u1',
@@ -516,7 +510,6 @@ test('gateway distributes query correctly to services when querying with inline 
 test('gateway handles missing @key', async t => {
   // This service is missing a @key
   const [userService, userServicePort] = await createService(
-    t,
     `
     type Query @extends {
       me: User
@@ -542,7 +535,6 @@ test('gateway handles missing @key', async t => {
   )
 
   const [postService, postServicePort] = await createService(
-    t,
     `
     type Post @key(fields: "pid") {
       pid: ID!
@@ -588,7 +580,7 @@ test('gateway handles missing @key', async t => {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await postService.close()
     await userService.close()
@@ -630,7 +622,7 @@ test('gateway handles missing @key', async t => {
     })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       me: {
         id: 'u1',

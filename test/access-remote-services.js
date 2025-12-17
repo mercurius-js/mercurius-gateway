@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const plugin = require('../index')
 
@@ -48,7 +48,7 @@ test(
 
     const gateway = Fastify()
 
-    t.teardown(async () => {
+    t.after(async () => {
       await gateway.close()
       await service.close()
     })
@@ -65,11 +65,10 @@ test(
         }
       })
     } catch (err) {
-      t.equal(
+      t.assert.strictEqual(
         err.message,
         'Gateway schema init issues No valid service SDLs were provided'
       )
-      t.end()
     }
   }
 )
@@ -82,7 +81,7 @@ test(
 
     const gateway = Fastify()
 
-    t.teardown(async () => {
+    t.after(async () => {
       await gateway.close()
       await service.close()
     })
@@ -99,11 +98,10 @@ test(
         }
       })
     } catch (err) {
-      t.equal(
+      t.assert.strictEqual(
         err.message,
         'Gateway schema init issues No valid service SDLs were provided'
       )
-      t.end()
     }
   }
 )
@@ -116,7 +114,7 @@ test(
 
     const gateway = Fastify()
 
-    t.teardown(async () => {
+    t.after(async () => {
       await gateway.close()
       await service.close()
     })
@@ -136,8 +134,7 @@ test(
         }
       })
     } catch (err) {
-      t.equal(err.message, 'Unknown type "World".')
-      t.end()
+      t.assert.strictEqual(err.message, 'Unknown type "World".')
     }
   }
 )
@@ -158,10 +155,10 @@ test(
     let warnCalled = 0
     gateway.log.warn = message => {
       warnCalled++
-      t.matchSnapshot(message)
+      t.assert.snapshot(message)
     }
 
-    t.teardown(async () => {
+    t.after(async () => {
       await gateway.close()
       await service.close()
       await invalidService.close()
@@ -182,9 +179,8 @@ test(
         }
       })
     } catch (err) {
-      t.error(err)
+      t.assert.ifError(err)
     }
-    t.equal(warnCalled, 2, 'Warning is called')
-    t.end()
+    t.assert.strictEqual(warnCalled, 2, 'Warning is called')
   }
 )

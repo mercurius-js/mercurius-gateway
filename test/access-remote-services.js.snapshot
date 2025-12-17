@@ -1,0 +1,7 @@
+exports[`Does not error if at least one service schema is valid 1`] = `
+"Initializing service \\"not-working\\" failed with message: \\"Unknown type \\"World\\".\\""
+`;
+
+exports[`Does not error if at least one service schema is valid 2`] = `
+"Initializing service \\"not-working\\" failed with message: \\"Unknown type \\"World\\".\\""
+`;

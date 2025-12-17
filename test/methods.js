@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
 const plugin = require('../index')
@@ -33,7 +33,7 @@ test('calling defineLoaders throws an error in gateway mode', async t => {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await service.close()
   })
@@ -58,7 +58,7 @@ test('calling defineLoaders throws an error in gateway mode', async t => {
       }
     })
   } catch (err) {
-    t.equal(
+    t.assert.strictEqual(
       err.message,
       'Gateway issues: Calling defineLoaders method when gateway plugin is running is not allowed'
     )
@@ -81,7 +81,7 @@ test('calling defineResolvers throws an error in gateway mode', async t => {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await service.close()
   })
@@ -106,7 +106,7 @@ test('calling defineResolvers throws an error in gateway mode', async t => {
       }
     })
   } catch (err) {
-    t.equal(
+    t.assert.strictEqual(
       err.message,
       'Gateway issues: Calling defineResolvers method when gateway plugin is running is not allowed'
     )
@@ -129,7 +129,7 @@ test('calling extendSchema throws an error in gateway mode', async t => {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await service.close()
   })
@@ -154,10 +154,9 @@ test('calling extendSchema throws an error in gateway mode', async t => {
       }
     `)
   } catch (err) {
-    t.equal(
+    t.assert.strictEqual(
       err.message,
       'Gateway issues: Calling extendSchema method when gateway plugin is running is not allowed'
     )
-    t.end()
   }
 })

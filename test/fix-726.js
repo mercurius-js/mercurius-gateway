@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
 const plugin = require('../index')
@@ -146,20 +146,20 @@ test('federated node should be able to return external Type directly', async t =
   const port1 = 3027
   const serviceOne = await buildService()
   await serviceOne.listen({ port: port1 })
-  t.teardown(() => {
+  t.after(() => {
     serviceOne.close()
   })
 
   const port2 = 3028
   const serviceTwo = await buildServiceExternal()
   await serviceTwo.listen({ port: port2 })
-  t.teardown(() => {
+  t.after(() => {
     serviceTwo.close()
   })
 
   const serviceProxy = await buildProxy(port1, port2)
   await serviceProxy.ready()
-  t.teardown(() => {
+  t.after(() => {
     serviceProxy.close()
   })
 
@@ -174,7 +174,7 @@ test('federated node should be able to return external Type directly', async t =
       }
     })
 
-    t.same(res.json(), {
+    t.assert.deepStrictEqual(res.json(), {
       data: {
         meDirect: {
           id: '1',
@@ -194,7 +194,7 @@ test('federated node should be able to return external Type directly', async t =
       }
     })
 
-    t.same(res.json(), {
+    t.assert.deepStrictEqual(res.json(), {
       data: {
         meDirectMissing: null
       }
@@ -213,7 +213,7 @@ test('federated node should be able to return external Type directly', async t =
       }
     })
 
-    t.same(res.json(), {
+    t.assert.deepStrictEqual(res.json(), {
       data: {
         meDirect: {
           id: '1',
@@ -238,7 +238,7 @@ test('federated node should be able to return external Type directly', async t =
       }
     })
 
-    t.same(res.json(), {
+    t.assert.deepStrictEqual(res.json(), {
       data: {
         meList: [
           {
@@ -269,7 +269,7 @@ test('federated node should be able to return external Type directly', async t =
       }
     })
 
-    t.same(res.json(), {
+    t.assert.deepStrictEqual(res.json(), {
       data: {
         meWrap: {
           users: [
@@ -300,7 +300,7 @@ test('federated node should be able to return external Type directly', async t =
       }
     })
 
-    t.same(res.json(), {
+    t.assert.deepStrictEqual(res.json(), {
       data: {
         meEmptyList: []
       }
@@ -325,7 +325,7 @@ test('federated node should be able to return external Type directly', async t =
       }
     })
 
-    t.same(res.json(), {
+    t.assert.deepStrictEqual(res.json(), {
       data: {
         meDirect: {
           id: '1',

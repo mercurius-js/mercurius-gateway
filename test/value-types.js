@@ -1,6 +1,6 @@
 'use strict'
 
-const { test, t } = require('tap')
+const { test, beforeEach, afterEach } = require('node:test')
 const Fastify = require('fastify')
 const FakeTimers = require('@sinonjs/fake-timers')
 const { promisify } = require('util')
@@ -485,16 +485,18 @@ const commentMutation = `
   }  
 `
 
-t.beforeEach(({ context }) => {
-  context.clock = FakeTimers.install({
+let clock
+
+beforeEach(() => {
+  clock = FakeTimers.install({
     shouldClearNativeTimers: true,
     shouldAdvanceTime: true,
     advanceTimeDelta: 100
   })
 })
 
-t.afterEach(({ context }) => {
-  context.clock.uninstall()
+afterEach(() => {
+  clock.uninstall()
 })
 
 test('Should be able to query with value types', async t => {
@@ -516,7 +518,7 @@ test('Should be able to query with value types', async t => {
 
   const gateway = Fastify()
 
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await postService.close()
     await userService.close()
@@ -553,7 +555,7 @@ test('Should be able to query with value types', async t => {
     })
   })
 
-  t.same(usersRes.json(), usersData)
+  t.assert.deepStrictEqual(usersRes.json(), usersData)
 
   const postsRes = await gateway.inject({
     method: 'POST',
@@ -566,7 +568,7 @@ test('Should be able to query with value types', async t => {
     })
   })
 
-  t.same(postsRes.json(), postsData)
+  t.assert.deepStrictEqual(postsRes.json(), postsData)
 
   const commentsRes = await gateway.inject({
     method: 'POST',
@@ -579,7 +581,7 @@ test('Should be able to query with value types', async t => {
     })
   })
 
-  t.same(commentsRes.json(), commentsData)
+  t.assert.deepStrictEqual(commentsRes.json(), commentsData)
 })
 
 test('Should be able to mutate with value types', async t => {
@@ -601,7 +603,7 @@ test('Should be able to mutate with value types', async t => {
 
   const gateway = Fastify()
 
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await postService.close()
     await userService.close()
@@ -638,7 +640,7 @@ test('Should be able to mutate with value types', async t => {
     })
   })
 
-  t.same(usersRes.json(), userMutationData)
+  t.assert.deepStrictEqual(usersRes.json(), userMutationData)
 
   const postsRes = await gateway.inject({
     method: 'POST',
@@ -651,7 +653,7 @@ test('Should be able to mutate with value types', async t => {
     })
   })
 
-  t.same(postsRes.json(), postMutationData)
+  t.assert.deepStrictEqual(postsRes.json(), postMutationData)
 
   const commentsRes = await gateway.inject({
     method: 'POST',
@@ -664,7 +666,7 @@ test('Should be able to mutate with value types', async t => {
     })
   })
 
-  t.same(commentsRes.json(), commentMutationData)
+  t.assert.deepStrictEqual(commentsRes.json(), commentMutationData)
 })
 
 test('Should be able to query top-level with value types', async t => {
@@ -686,7 +688,7 @@ test('Should be able to query top-level with value types', async t => {
 
   const gateway = Fastify()
 
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await postService.close()
     await userService.close()
@@ -723,7 +725,7 @@ test('Should be able to query top-level with value types', async t => {
     })
   })
 
-  t.same(usersRes.json(), {
+  t.assert.deepStrictEqual(usersRes.json(), {
     data: {
       userServiceInfo: returnTypeValue
     }
@@ -740,7 +742,7 @@ test('Should be able to query top-level with value types', async t => {
     })
   })
 
-  t.same(postsRes.json(), {
+  t.assert.deepStrictEqual(postsRes.json(), {
     data: {
       postServiceInfo: returnTypeValue
     }
@@ -757,7 +759,7 @@ test('Should be able to query top-level with value types', async t => {
     })
   })
 
-  t.same(commentsRes.json(), {
+  t.assert.deepStrictEqual(commentsRes.json(), {
     data: {
       commentServiceInfo: returnTypeValue
     }
@@ -783,7 +785,7 @@ test('Should be able to query with value types and polling', async t => {
 
   const gateway = Fastify()
 
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userService.close()
     await postService.close()
@@ -821,7 +823,7 @@ test('Should be able to query with value types and polling', async t => {
     })
   })
 
-  t.same(postsRes.json(), postsData)
+  t.assert.deepStrictEqual(postsRes.json(), postsData)
 
   const helloQuery = `
     query {
@@ -840,7 +842,7 @@ test('Should be able to query with value types and polling', async t => {
     })
   })
 
-  t.same(helloRes.json(), {
+  t.assert.deepStrictEqual(helloRes.json(), {
     errors: [
       {
         message: 'Cannot query field "hello" on type "Query".',
@@ -866,7 +868,7 @@ test('Should be able to query with value types and polling', async t => {
     }
   })
 
-  await t.context.clock.tickAsync(2000)
+  await clock.tickAsync(2000)
 
   // We need the event loop to actually spin twice to
   // be able to propagate the change
@@ -884,7 +886,7 @@ test('Should be able to query with value types and polling', async t => {
     })
   })
 
-  t.same(postsRes2.json(), {
+  t.assert.deepStrictEqual(postsRes2.json(), {
     data: {
       hello: 'world'
     }
@@ -894,13 +896,13 @@ test('Should be able to query with value types and polling', async t => {
 test('Should use last service in list for duplicate entity types', async t => {
   const [userServiceA, userServicePortA] = await createService(
     t,
-    `   
-    type User @key(fields: "id") {
-      id: ID!
-      name: String!
-    }
-  `,
-    {}
+      `   
+      type User @key(fields: "id") {
+        id: ID!
+        name: String!
+      }
+    `,
+      {}
   )
 
   const [userServiceB, userServicePortB] = await createService(
@@ -909,7 +911,7 @@ test('Should use last service in list for duplicate entity types', async t => {
     extend type Query {
         user: User!
     }
-   
+
     type User @key(fields: "id") {
       id: ID!
       name: String!
@@ -926,7 +928,7 @@ test('Should use last service in list for duplicate entity types', async t => {
 
   const gateway = Fastify()
 
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userServiceA.close()
     await userServiceB.close()
@@ -964,7 +966,7 @@ test('Should use last service in list for duplicate entity types', async t => {
     })
   })
 
-  t.same(usersRes.json(), {
+  t.assert.deepStrictEqual(usersRes.json(), {
     data: {
       user: {
         id: '1',
@@ -993,7 +995,7 @@ test('Should be able to query nested value types', async t => {
 
   const gateway = Fastify()
 
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await postService.close()
     await userService.close()
@@ -1030,7 +1032,7 @@ test('Should be able to query nested value types', async t => {
     })
   })
 
-  t.same(usersRes.json(), usersWithFilesData)
+  t.assert.deepStrictEqual(usersRes.json(), usersWithFilesData)
 
   const postsRes = await gateway.inject({
     method: 'POST',
@@ -1043,5 +1045,5 @@ test('Should be able to query nested value types', async t => {
     })
   })
 
-  t.same(postsRes.json(), postsWithFilesData)
+  t.assert.deepStrictEqual(postsRes.json(), postsWithFilesData)
 })

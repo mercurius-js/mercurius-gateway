@@ -1,4 +1,6 @@
-const { test } = require('tap')
+'use strict'
+
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const { MockAgent, setGlobalDispatcher } = require('undici')
 const plugin = require('../index')
@@ -22,7 +24,7 @@ async function createTestGatewayServer (t, userServiceUrl, agent, errorFormatter
   }`
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
   })
 
@@ -44,7 +46,6 @@ async function createTestGatewayServer (t, userServiceUrl, agent, errorFormatter
 }
 
 test('it returns result object with error for exceptions connecting to federated service', async t => {
-  t.plan(1)
   const userServiceHost = 'http://127.0.0.1:3333'
 
   // Create mock undici agent and pool
@@ -101,11 +102,10 @@ test('it returns result object with error for exceptions connecting to federated
   await gateway.close()
 
   // Verify query responds correctly with the predefined error
-  t.same(JSON.parse(result.body), expectedResult)
+  t.assert.deepStrictEqual(JSON.parse(result.body), expectedResult)
 })
 
 test('it returns result object with error for exceptions connecting to federated service with an error formatter', async t => {
-  t.plan(1)
   const userServiceHost = 'http://127.0.0.1:3333'
 
   // Create mock undici agent and pool
@@ -173,5 +173,5 @@ test('it returns result object with error for exceptions connecting to federated
   await gateway.close()
 
   // Verify query responds correctly with the predefined error
-  t.same(JSON.parse(result.body), expectedResult)
+  t.assert.deepStrictEqual(JSON.parse(result.body), expectedResult)
 })

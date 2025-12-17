@@ -1,6 +1,6 @@
 'use strict'
 
-const { test, t } = require('tap')
+const { test, beforeEach, afterEach } = require('node:test')
 const FakeTimers = require('@sinonjs/fake-timers')
 const { GraphQLSchema } = require('graphql')
 const { promisify } = require('util')
@@ -12,24 +12,24 @@ const plugin = require('../index')
 
 const immediate = promisify(setImmediate)
 
-t.beforeEach(({ context }) => {
-  context.clock = FakeTimers.install({
+let clock
+
+beforeEach(() => {
+  clock = FakeTimers.install({
     shouldClearNativeTimers: true,
     shouldAdvanceTime: true,
     advanceTimeDelta: 100
   })
 })
 
-t.afterEach(({ context }) => {
-  context.clock.uninstall()
+afterEach(() => {
+  clock.uninstall()
 })
 
 // ----------------------
 // onGatewayReplaceSchema
 // ----------------------
 test('onGatewayReplaceSchema - polling interval with a new schema should trigger onGatewayReplaceSchema hook', async t => {
-  t.plan(2)
-
   const resolvers = {
     Query: {
       me: () => user
@@ -47,7 +47,7 @@ test('onGatewayReplaceSchema - polling interval with a new schema should trigger
 
   const userService = Fastify()
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userService.close()
   })
@@ -85,8 +85,8 @@ test('onGatewayReplaceSchema - polling interval with a new schema should trigger
   gateway.graphqlGateway.addHook(
     'onGatewayReplaceSchema',
     async (instance, schema) => {
-      t.type(instance, 'object')
-      t.type(schema, GraphQLSchema)
+      t.assert.strictEqual(typeof instance, 'object')
+      t.assert.ok(schema instanceof GraphQLSchema)
     }
   )
 
@@ -106,7 +106,7 @@ test('onGatewayReplaceSchema - polling interval with a new schema should trigger
   userService.graphql.defineResolvers(resolvers)
 
   for (let i = 0; i < 10; i++) {
-    await t.context.clock.tickAsync(200)
+    await clock.tickAsync(200)
   }
 
   // We need the event loop to actually spin twice to
@@ -116,8 +116,6 @@ test('onGatewayReplaceSchema - polling interval with a new schema should trigger
 })
 
 test('onGatewayReplaceSchema - should log an error should any errors occur in the hook', async t => {
-  t.plan(2)
-
   const resolvers = {
     Query: {
       me: () => user
@@ -135,7 +133,7 @@ test('onGatewayReplaceSchema - should log an error should any errors occur in th
 
   const userService = Fastify()
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userService.close()
   })
@@ -171,17 +169,17 @@ test('onGatewayReplaceSchema - should log an error should any errors occur in th
   })
 
   gateway.graphqlGateway.addHook('onGatewayReplaceSchema', async () => {
-    t.ok('trigger error')
+    t.assert.ok('trigger error')
     throw new Error('kaboom')
   })
 
   gateway.graphqlGateway.addHook('onGatewayReplaceSchema', async () => {
-    t.fail('should not be called')
+    t.assert.fail('should not be called')
   })
 
   // Override gateway error logger
   gateway.log.error = error => {
-    t.same(error, new Error('kaboom'))
+    t.assert.deepStrictEqual(error, new Error('kaboom'))
   }
 
   userService.graphql.replaceSchema(
@@ -200,7 +198,7 @@ test('onGatewayReplaceSchema - should log an error should any errors occur in th
   userService.graphql.defineResolvers(resolvers)
 
   for (let i = 0; i < 10; i++) {
-    await t.context.clock.tickAsync(200)
+    await clock.tickAsync(200)
   }
 
   // We need the event loop to actually spin twice to

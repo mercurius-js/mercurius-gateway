@@ -8,15 +8,7 @@ const GQL = require('mercurius')
 const plugin = require('../index')
 const { buildFederationSchema } = require('@mercuriusjs/federation')
 const FakeTimers = require('@sinonjs/fake-timers')
-
-const withResolves = function () {
-  let resolve = null; let reject = null
-  const promise = new Promise((_resolve, _reject) => {
-    resolve = _resolve
-    reject = _reject
-  })
-  return { promise, resolve, reject }
-}
+const { withResolves } = require('./utils/promises')
 
 const users = {
   u1: {

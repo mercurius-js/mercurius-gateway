@@ -1,13 +1,13 @@
-const { test } = require('tap')
+const { test } = require('node:test')
 const fastify = require('fastify')
 const { sendRequest, buildRequest } = require('../lib/gateway/request')
 const { FederatedError } = require('../lib/errors')
 const zlib = require('zlib')
 
-test('sendRequest method rejects when request errs', t => {
+test('sendRequest method rejects when request errs', async t => {
   const url = new URL('http://localhost:3001')
   const { request } = buildRequest({ url })
-  t.rejects(
+  await t.assert.rejects(
     sendRequest(
       request,
       url
@@ -24,11 +24,9 @@ test('sendRequest method rejects when request errs', t => {
       })
     })
   )
-  t.end()
 })
 
 test('sendRequest method rejects when response is not valid json', async t => {
-  t.plan(3)
   const app = fastify()
   app.post('/', async () => {
     return 'response'
@@ -38,7 +36,7 @@ test('sendRequest method rejects when response is not valid json', async t => {
 
   const url = new URL(`http://localhost:${app.server.address().port}`)
   const { request, close } = buildRequest({ url })
-  t.teardown(() => {
+  t.after(() => {
     close()
     return app.close()
   })
@@ -58,18 +56,17 @@ test('sendRequest method rejects when response is not valid json', async t => {
         `
       })
     })
-    t.fail('it must throw')
+    t.assert.fail('it must throw')
   } catch (error) {
-    t.type(error, FederatedError)
-    t.type(error.extensions.errors, 'Array')
+    t.assert.ok(error instanceof FederatedError)
+    t.assert.ok(Array.isArray(error.extensions.errors))
 
     // Full string on Node 17 is "Unexpected token r in JSON at position 0"
-    t.match(error.extensions.errors[0].message, 'Unexpected token')
+    t.assert.match(error.extensions.errors[0].message, /Unexpected token/)
   }
 })
 
 test('sendRequest method rejects when response contains only errors', async t => {
-  t.plan(2)
   const app = fastify()
   app.post('/', async () => {
     return { errors: ['foo'] }
@@ -79,7 +76,7 @@ test('sendRequest method rejects when response contains only errors', async t =>
 
   const url = new URL(`http://localhost:${app.server.address().port}`)
   const { request, close } = buildRequest({ url })
-  t.teardown(() => {
+  t.after(() => {
     close()
     return app.close()
   })
@@ -100,15 +97,14 @@ test('sendRequest method rejects when response contains only errors', async t =>
       `
       })
     })
-    t.fail('it must throw')
+    t.assert.fail('it must throw')
   } catch (error) {
-    t.type(error, FederatedError)
-    t.same(error.extensions, { errors: ['foo'] })
+    t.assert.ok(error instanceof FederatedError)
+    t.assert.deepStrictEqual(error.extensions, { errors: ['foo'] })
   }
 })
 
 test('sendRequest method accepts when response contains data and errors', async t => {
-  t.plan(2)
   const app = fastify()
   app.post('/', async () => {
     return { data: {}, errors: ['foo'] }
@@ -118,7 +114,7 @@ test('sendRequest method accepts when response contains data and errors', async 
 
   const url = new URL(`http://localhost:${app.server.address().port}`)
   const { request, close } = buildRequest({ url })
-  t.teardown(() => {
+  t.after(() => {
     close()
     return app.close()
   })
@@ -139,8 +135,8 @@ test('sendRequest method accepts when response contains data and errors', async 
       `
     })
   })
-  t.same(result.json, { data: {}, errors: ['foo'] })
-  t.same(context, { errors: ['foo'] })
+  t.assert.deepStrictEqual(result.json, { data: {}, errors: ['foo'] })
+  t.assert.deepStrictEqual(context, { errors: ['foo'] })
 })
 
 test('sendRequest method should accept useSecureParse flag and parse the response securely', async t => {
@@ -153,7 +149,7 @@ test('sendRequest method should accept useSecureParse flag and parse the respons
 
   const url = new URL(`http://localhost:${app.server.address().port}`)
   const { request, close } = buildRequest({ url })
-  t.teardown(() => {
+  t.after(() => {
     close()
     return app.close()
   })
@@ -176,12 +172,10 @@ test('sendRequest method should accept useSecureParse flag and parse the respons
 
   // checking for prototype leakage: https://github.com/fastify/secure-json-parse#introduction
   // secure parsing should not allow it
-  t.ok(result.json)
-  t.notOk(result.json.foo)
+  t.assert.ok(result.json)
+  t.assert.ok(!result.json.foo)
   const testObject = Object.assign({}, result.json)
-  t.notOk(testObject.foo)
-
-  t.end()
+  t.assert.ok(!testObject.foo)
 })
 
 test('sendRequest method should run without useSecureParse flag', async t => {
@@ -194,7 +188,7 @@ test('sendRequest method should run without useSecureParse flag', async t => {
 
   const url = new URL(`http://localhost:${app.server.address().port}`)
   const { request, close } = buildRequest({ url })
-  t.teardown(() => {
+  t.after(() => {
     close()
     return app.close()
   })
@@ -215,9 +209,7 @@ test('sendRequest method should run without useSecureParse flag', async t => {
     })
   })
 
-  t.same(result.json, { foo: 'bar' })
-
-  t.end()
+  t.assert.deepStrictEqual(result.json, { foo: 'bar' })
 })
 
 test('sendRequest method should decompress gzip bodies', async t => {
@@ -235,7 +227,7 @@ test('sendRequest method should decompress gzip bodies', async t => {
 
   const url = new URL(`http://localhost:${app.server.address().port}`)
   const { request, close } = buildRequest({ url })
-  t.teardown(() => {
+  t.after(() => {
     close()
     return app.close()
   })
@@ -256,7 +248,5 @@ test('sendRequest method should decompress gzip bodies', async t => {
     })
   })
 
-  t.same(result.json, { foo: 'bar' })
-
-  t.end()
+  t.assert.deepStrictEqual(result.json, { foo: 'bar' })
 })

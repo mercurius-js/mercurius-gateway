@@ -1526,10 +1526,6 @@ test('connection_init headers available in federation event resolver', async t =
 })
 
 test('gateway subscription handling works correctly after a schema refresh', async t => {
-  let subscriptionService
-  let resolverService
-  let gateway
-
   const onConnect = data => {
     if (data.payload.gateway) {
       return { headers: {} }
@@ -1548,7 +1544,7 @@ test('gateway subscription handling works correctly after a schema refresh', asy
     }
   }
 
-  function createResolverService () {
+  async function createResolverService () {
     const schema = `
       extend type Query {
         ignoredResolver: Boolean!
@@ -1571,17 +1567,18 @@ test('gateway subscription handling works correctly after a schema refresh', asy
       }
     }
 
-    resolverService = Fastify()
+    const resolverService = Fastify()
     resolverService.register(GQL, {
       schema: buildFederationSchema(schema),
       resolvers,
       subscription: { onConnect }
     })
 
-    return resolverService.listen({ port: 0 })
+    await resolverService.listen({ port: 0 })
+    return resolverService
   }
 
-  function createSubscriptionService () {
+  async function createSubscriptionService () {
     const schema = `
       extend type Query {
         ignored: Boolean!
@@ -1628,21 +1625,22 @@ test('gateway subscription handling works correctly after a schema refresh', asy
       }
     }
 
-    subscriptionService = Fastify()
+    const subscriptionService = Fastify()
     subscriptionService.register(GQL, {
       schema: buildFederationSchema(schema),
       resolvers,
       subscription: { onConnect }
     })
 
-    return subscriptionService.listen({ port: 0 })
+    await subscriptionService.listen({ port: 0 })
+    return subscriptionService
   }
 
-  async function createGatewayApp () {
+  async function createGatewayApp (subscriptionService, resolverService) {
     const subscriptionServicePort = subscriptionService.server.address().port
     const resolverServicePort = resolverService.server.address().port
 
-    gateway = Fastify()
+    const gateway = Fastify()
 
     await gateway.register(plugin, {
       gateway: {
@@ -1665,10 +1663,11 @@ test('gateway subscription handling works correctly after a schema refresh', asy
       subscription: true
     })
 
-    return gateway.listen({ port: 0 })
+    await gateway.listen({ port: 0 })
+    return gateway
   }
 
-  function runSubscription (id) {
+  function runSubscription (gateway, id) {
     const ws = new WebSocket(
       `ws://localhost:${gateway.server.address().port}/graphql`,
       'graphql-ws'
@@ -1732,62 +1731,57 @@ test('gateway subscription handling works correctly after a schema refresh', asy
       })
     )
 
-    let end
+    return new Promise((resolve) => {
+      client.on('data', chunk => {
+        const data = JSON.parse(chunk)
 
-    const endPromise = new Promise(resolve => {
-      end = resolve
-    })
-
-    client.on('data', chunk => {
-      const data = JSON.parse(chunk)
-
-      if (data.id === 1 && data.type === 'data') {
-        t.assert.strictEqual(
-          chunk,
-          JSON.stringify({
-            type: 'data',
-            id: 1,
-            payload: {
-              data: {
-                testEvent: {
-                  id: String(id),
-                  userId: id
+        if (data.id === 1 && data.type === 'data') {
+          t.assert.strictEqual(
+            chunk,
+            JSON.stringify({
+              type: 'data',
+              id: 1,
+              payload: {
+                data: {
+                  testEvent: {
+                    id: String(id),
+                    userId: id
+                  }
                 }
               }
+            })
+          )
+
+          client.end()
+          resolve()
+        } else if (data.id === 2 && data.type === 'complete') {
+          gateway.inject({
+            method: 'POST',
+            url: '/graphql',
+            body: {
+              query: `
+                mutation AddTestEvent($value: Int!) {
+                  addTestEvent(value: $value)
+                }
+              `,
+              variables: { value: id }
             }
           })
-        )
-
-        client.end()
-        end()
-      } else if (data.id === 2 && data.type === 'complete') {
-        gateway.inject({
-          method: 'POST',
-          url: '/graphql',
-          body: {
-            query: `
-              mutation AddTestEvent($value: Int!) {
-                addTestEvent(value: $value)
-              }
-            `,
-            variables: { value: id }
-          }
-        })
-      }
+        }
+      })
     })
-
-    return endPromise
   }
+
+  const subscriptionService = await createSubscriptionService()
+  const resolverService = await createResolverService()
+  const gateway = await createGatewayApp(subscriptionService, resolverService)
 
   const clock = FakeTimers.install({
     shouldClearNativeTimers: true,
     shouldAdvanceTime: true,
-    advanceTimeDelta: 1000
+    advanceTimeDelta: 1000,
+    toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date']
   })
-
-  await createSubscriptionService()
-  await createResolverService()
-  await createGatewayApp()
 
   resolverService.graphql.replaceSchema(
     buildFederationSchema(`
@@ -1818,7 +1812,7 @@ test('gateway subscription handling works correctly after a schema refresh', asy
     await clock.tickAsync(100)
   }
 
-  await runSubscription(0)
+  await runSubscription(gateway, 0)
 
   t.after(async () => {
     clock.uninstall()

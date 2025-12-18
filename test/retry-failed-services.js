@@ -1,6 +1,6 @@
 'use strict'
 
-const { test, beforeEach, afterEach } = require('node:test')
+const { describe, test, beforeEach, afterEach } = require('node:test')
 const Fastify = require('fastify')
 const { GraphQLSchema } = require('graphql')
 const GQL = require('mercurius')
@@ -78,172 +78,74 @@ const postService = {
   }
 }
 
-let clock
+describe('retry-failed-services', () => {
+  let clock
 
-beforeEach(() => {
-  clock = FakeTimers.install({
-    shouldClearNativeTimers: true,
-    shouldAdvanceTime: true,
-    advanceTimeDelta: 100
+  beforeEach(() => {
+    clock = FakeTimers.install({
+      shouldClearNativeTimers: true,
+      shouldAdvanceTime: true,
+      advanceTimeDelta: 100
+    })
   })
-})
 
-afterEach(() => {
-  clock.uninstall()
-})
+  afterEach(() => {
+    clock.uninstall()
+  })
 
-test('gateway - retry mandatory failed services on startup', async t => {
-  const service1 = await createTestService(
-    0,
-    userService.schema,
-    userService.resolvers
-  )
-
-  let service2 = null
-  clock.setTimeout(async () => {
-    service2 = await createTestService(
-      5113,
-      postService.schema,
-      postService.resolvers
+  test('gateway - retry mandatory failed services on startup', async t => {
+    const service1 = await createTestService(
+      0,
+      userService.schema,
+      userService.resolvers
     )
-  }, 5000)
 
-  const gateway = Fastify()
-  t.after(async () => {
-    await gateway.close()
-    await service1.close()
-    await service2.close()
-  })
+    let service2 = null
+    clock.setTimeout(async () => {
+      service2 = await createTestService(
+        5113,
+        postService.schema,
+        postService.resolvers
+      )
+    }, 5000)
 
-  await gateway.register(plugin, {
-    gateway: {
-      services: [
-        {
-          name: 'user',
-          url: `http://localhost:${service1.server.address().port}/graphql`,
-          mandatory: false
-        },
-        {
-          name: 'post',
-          url: 'http://localhost:5113/graphql',
-          mandatory: true
-        }
-      ]
-    },
-    jit: 1
-  })
+    const gateway = Fastify()
+    t.after(async () => {
+      await gateway.close()
+      await service1.close()
+      await service2.close()
+    })
 
-  gateway.graphqlGateway.addHook(
-    'onGatewayReplaceSchema',
-    async (instance, schema) => {
-      t.assert.strictEqual(typeof instance, 'object')
-      t.assert.ok(schema instanceof GraphQLSchema)
-      t.assert.ok('should be called')
-    }
-  )
-
-  await gateway.ready()
-
-  const query = `
-    query {
-      user: me {
-        id
-        name
-        posts(count: 1) {
-          pid
-        }
-      }
-    }`
-
-  const res = await gateway.inject({
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    url: '/graphql',
-    body: JSON.stringify({ query })
-  })
-
-  t.assert.deepStrictEqual(await res.json(), {
-    errors: [
-      {
-        message: 'Cannot query field "posts" on type "User".',
-        locations: [{ line: 6, column: 9 }]
-      }
-    ],
-    data: null
-  })
-
-  for (let i = 0; i < 100; i++) {
-    await clock.tickAsync(100)
-  }
-
-  const res1 = await gateway.inject({
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    url: '/graphql',
-    body: JSON.stringify({ query })
-  })
-
-  t.assert.deepStrictEqual(JSON.parse(res1.body), {
-    data: {
-      user: {
-        id: 'u1',
-        name: 'John',
-        posts: [
+    await gateway.register(plugin, {
+      gateway: {
+        services: [
           {
-            pid: 'p1'
+            name: 'user',
+            url: `http://localhost:${service1.server.address().port}/graphql`,
+            mandatory: false
+          },
+          {
+            name: 'post',
+            url: 'http://localhost:5113/graphql',
+            mandatory: true
           }
         ]
+      },
+      jit: 1
+    })
+
+    gateway.graphqlGateway.addHook(
+      'onGatewayReplaceSchema',
+      async (instance, schema) => {
+        t.assert.strictEqual(typeof instance, 'object')
+        t.assert.ok(schema instanceof GraphQLSchema)
+        t.assert.ok('should be called')
       }
-    }
-  })
-})
-
-test('gateway - should not call onGatewayReplaceSchemaHandler if the hook is not specified', async t => {
-  const service1 = await createTestService(
-    0,
-    userService.schema,
-    userService.resolvers
-  )
-
-  let service2 = null
-  clock.setTimeout(async () => {
-    service2 = await createTestService(
-      5111,
-      postService.schema,
-      postService.resolvers
     )
-  }, 2000)
 
-  const gateway = Fastify()
-  t.after(async () => {
-    await gateway.close()
-    await service1.close()
-    await service2.close()
-  })
+    await gateway.ready()
 
-  await gateway.register(plugin, {
-    gateway: {
-      services: [
-        {
-          name: 'user',
-          url: `http://localhost:${service1.server.address().port}/graphql`,
-          mandatory: false
-        },
-        {
-          name: 'post',
-          url: 'http://localhost:5111/graphql',
-          mandatory: true
-        }
-      ],
-      retryServicesCount: 10,
-      retryServicesInterval: 2000
-    },
-    jit: 1
-  })
-
-  await gateway.ready()
-
-  const query = `
+    const query = `
     query {
       user: me {
         id
@@ -254,84 +156,95 @@ test('gateway - should not call onGatewayReplaceSchemaHandler if the hook is not
       }
     }`
 
-  const res = await gateway.inject({
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    url: '/graphql',
-    body: JSON.stringify({ query })
-  })
+    const res = await gateway.inject({
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      url: '/graphql',
+      body: JSON.stringify({ query })
+    })
 
-  t.assert.deepStrictEqual(await res.json(), {
-    errors: [
-      {
-        message: 'Cannot query field "posts" on type "User".',
-        locations: [{ line: 6, column: 9 }]
+    t.assert.deepStrictEqual(await res.json(), {
+      errors: [
+        {
+          message: 'Cannot query field "posts" on type "User".',
+          locations: [{ line: 6, column: 9 }]
+        }
+      ],
+      data: null
+    })
+
+    for (let i = 0; i < 100; i++) {
+      await clock.tickAsync(100)
+    }
+
+    const res1 = await gateway.inject({
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      url: '/graphql',
+      body: JSON.stringify({ query })
+    })
+
+    t.assert.deepStrictEqual(JSON.parse(res1.body), {
+      data: {
+        user: {
+          id: 'u1',
+          name: 'John',
+          posts: [
+            {
+              pid: 'p1'
+            }
+          ]
+        }
       }
-    ],
-    data: null
+    })
   })
 
-  for (let i = 0; i < 100; i++) {
-    await clock.tickAsync(100)
-  }
+  test('gateway - should not call onGatewayReplaceSchemaHandler if the hook is not specified', async t => {
+    const service1 = await createTestService(
+      0,
+      userService.schema,
+      userService.resolvers
+    )
 
-  const res1 = await gateway.inject({
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    url: '/graphql',
-    body: JSON.stringify({ query })
-  })
+    let service2 = null
+    clock.setTimeout(async () => {
+      service2 = await createTestService(
+        5111,
+        postService.schema,
+        postService.resolvers
+      )
+    }, 2000)
 
-  t.assert.deepStrictEqual(JSON.parse(res1.body), {
-    data: {
-      user: {
-        id: 'u1',
-        name: 'John',
-        posts: [
+    const gateway = Fastify()
+    t.after(async () => {
+      await gateway.close()
+      await service1.close()
+      await service2.close()
+    })
+
+    await gateway.register(plugin, {
+      gateway: {
+        services: [
           {
-            pid: 'p1'
+            name: 'user',
+            url: `http://localhost:${service1.server.address().port}/graphql`,
+            mandatory: false
+          },
+          {
+            name: 'post',
+            url: 'http://localhost:5111/graphql',
+            mandatory: true
           }
-        ]
-      }
-    }
-  })
-})
+        ],
+        retryServicesCount: 10,
+        retryServicesInterval: 2000
+      },
+      jit: 1
+    })
 
-test('gateway - dont retry non-mandatory failed services on startup', async t => {
-  const service1 = await createTestService(
-    0,
-    userService.schema,
-    userService.resolvers
-  )
+    await gateway.ready()
 
-  const gateway = Fastify()
-  t.after(async () => {
-    await gateway.close()
-    await service1.close()
-  })
-
-  await gateway.register(plugin, {
-    gateway: {
-      services: [
-        {
-          name: 'user',
-          url: `http://localhost:${service1.server.address().port}/graphql`,
-          mandatory: false
-        },
-        {
-          name: 'post',
-          url: 'http://localhost:5112/graphql',
-          mandatory: false
-        }
-      ],
-      pollingInterval: 2000
-    },
-    jit: 1
-  })
-
-  await gateway.ready()
-
-  const query = `
+    const query = `
     query {
       user: me {
         id
@@ -342,152 +255,241 @@ test('gateway - dont retry non-mandatory failed services on startup', async t =>
       }
     }`
 
-  const res = await gateway.inject({
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    url: '/graphql',
-    body: JSON.stringify({ query })
-  })
+    const res = await gateway.inject({
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      url: '/graphql',
+      body: JSON.stringify({ query })
+    })
 
-  t.assert.deepStrictEqual(await res.json(), {
-    errors: [
-      {
-        message: 'Cannot query field "posts" on type "User".',
-        locations: [{ line: 6, column: 9 }]
+    t.assert.deepStrictEqual(await res.json(), {
+      errors: [
+        {
+          message: 'Cannot query field "posts" on type "User".',
+          locations: [{ line: 6, column: 9 }]
+        }
+      ],
+      data: null
+    })
+
+    for (let i = 0; i < 100; i++) {
+      await clock.tickAsync(100)
+    }
+
+    const res1 = await gateway.inject({
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      url: '/graphql',
+      body: JSON.stringify({ query })
+    })
+
+    t.assert.deepStrictEqual(JSON.parse(res1.body), {
+      data: {
+        user: {
+          id: 'u1',
+          name: 'John',
+          posts: [
+            {
+              pid: 'p1'
+            }
+          ]
+        }
       }
-    ],
-    data: null
+    })
   })
 
-  for (let i = 0; i < 100; i++) {
-    await clock.tickAsync(150)
-  }
-
-  const res1 = await gateway.inject({
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    url: '/graphql',
-    body: JSON.stringify({ query })
-  })
-
-  t.assert.deepStrictEqual(await res1.json(), {
-    errors: [
-      {
-        message: 'Cannot query field "posts" on type "User".',
-        locations: [{ line: 6, column: 9 }]
-      }
-    ],
-    data: null
-  })
-})
-
-test('gateway - should log error if retry throws', async t => {
-  const service1 = await createTestService(
-    0,
-    userService.schema,
-    userService.resolvers
-  )
-
-  let service2 = null
-
-  clock.setTimeout(async () => {
-    service2 = await createTestService(
-      5114,
-      postService.schema,
-      postService.resolvers
+  test('gateway - dont retry non-mandatory failed services on startup', async t => {
+    const service1 = await createTestService(
+      0,
+      userService.schema,
+      userService.resolvers
     )
-  }, 500)
 
-  const gateway = Fastify()
+    const gateway = Fastify()
+    t.after(async () => {
+      await gateway.close()
+      await service1.close()
+    })
 
-  gateway.log.error = error => {
-    if (error.message.includes('kaboom')) {
-      t.assert.ok(true)
-    }
-  }
+    await gateway.register(plugin, {
+      gateway: {
+        services: [
+          {
+            name: 'user',
+            url: `http://localhost:${service1.server.address().port}/graphql`,
+            mandatory: false
+          },
+          {
+            name: 'post',
+            url: 'http://localhost:5112/graphql',
+            mandatory: false
+          }
+        ],
+        pollingInterval: 2000
+      },
+      jit: 1
+    })
 
-  t.after(async () => {
-    await gateway.close()
-    await service1.close()
-    await service2.close()
-  })
+    await gateway.ready()
 
-  await gateway.register(plugin, {
-    gateway: {
-      services: [
+    const query = `
+    query {
+      user: me {
+        id
+        name
+        posts(count: 1) {
+          pid
+        }
+      }
+    }`
+
+    const res = await gateway.inject({
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      url: '/graphql',
+      body: JSON.stringify({ query })
+    })
+
+    t.assert.deepStrictEqual(await res.json(), {
+      errors: [
         {
-          name: 'user',
-          url: `http://localhost:${service1.server.address().port}/graphql`,
-          mandatory: false
-        },
-        {
-          name: 'post',
-          url: 'http://localhost:5114/graphql',
-          mandatory: true
+          message: 'Cannot query field "posts" on type "User".',
+          locations: [{ line: 6, column: 9 }]
         }
       ],
-      retryServicesCount: 1,
-      retryServicesInterval: 3000
-    },
-    jit: 1
-  })
+      data: null
+    })
 
-  gateway.graphqlGateway.addHook('onGatewayReplaceSchema', async () => {
-    throw new Error('kaboom')
-  })
-
-  await gateway.ready()
-
-  for (let i = 0; i < 200; i++) {
-    await clock.tickAsync(50)
-  }
-})
-
-test('gateway - stop retrying after no. of retries exceeded', async t => {
-  const service1 = await createTestService(
-    0,
-    userService.schema,
-    userService.resolvers
-  )
-
-  const gateway = Fastify()
-
-  let errCount = 0
-  gateway.log.error = error => {
-    if (error.code === 'MER_ERR_GQL_GATEWAY_REFRESH' && errCount === 0) {
-      errCount++
-      t.assert.ok(true)
+    for (let i = 0; i < 100; i++) {
+      await clock.tickAsync(150)
     }
-  }
 
-  t.after(async () => {
-    await gateway.close()
-    await service1.close()
-  })
+    const res1 = await gateway.inject({
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      url: '/graphql',
+      body: JSON.stringify({ query })
+    })
 
-  await gateway.register(plugin, {
-    gateway: {
-      services: [
+    t.assert.deepStrictEqual(await res1.json(), {
+      errors: [
         {
-          name: 'user',
-          url: `http://localhost:${service1.server.address().port}/graphql`,
-          mandatory: false
-        },
-        {
-          name: 'post',
-          url: 'http://localhost:5115/graphql',
-          mandatory: true
+          message: 'Cannot query field "posts" on type "User".',
+          locations: [{ line: 6, column: 9 }]
         }
       ],
-      retryServicesCount: 1,
-      retryServicesInterval: 2000
-    },
-    jit: 1
+      data: null
+    })
   })
 
-  await gateway.ready()
+  test('gateway - should log error if retry throws', async t => {
+    const service1 = await createTestService(
+      0,
+      userService.schema,
+      userService.resolvers
+    )
 
-  for (let i = 0; i < 100; i++) {
-    await clock.tickAsync(150)
-  }
+    let service2 = null
+
+    clock.setTimeout(async () => {
+      service2 = await createTestService(
+        5114,
+        postService.schema,
+        postService.resolvers
+      )
+    }, 500)
+
+    const gateway = Fastify()
+
+    gateway.log.error = error => {
+      if (error.message.includes('kaboom')) {
+        t.assert.ok(true)
+      }
+    }
+
+    t.after(async () => {
+      await gateway.close()
+      await service1.close()
+      await service2.close()
+    })
+
+    await gateway.register(plugin, {
+      gateway: {
+        services: [
+          {
+            name: 'user',
+            url: `http://localhost:${service1.server.address().port}/graphql`,
+            mandatory: false
+          },
+          {
+            name: 'post',
+            url: 'http://localhost:5114/graphql',
+            mandatory: true
+          }
+        ],
+        retryServicesCount: 1,
+        retryServicesInterval: 3000
+      },
+      jit: 1
+    })
+
+    gateway.graphqlGateway.addHook('onGatewayReplaceSchema', async () => {
+      throw new Error('kaboom')
+    })
+
+    await gateway.ready()
+
+    for (let i = 0; i < 200; i++) {
+      await clock.tickAsync(50)
+    }
+  })
+
+  test('gateway - stop retrying after no. of retries exceeded', async t => {
+    const service1 = await createTestService(
+      0,
+      userService.schema,
+      userService.resolvers
+    )
+
+    const gateway = Fastify()
+
+    let errCount = 0
+    gateway.log.error = error => {
+      if (error.code === 'MER_ERR_GQL_GATEWAY_REFRESH' && errCount === 0) {
+        errCount++
+        t.assert.ok(true)
+      }
+    }
+
+    t.after(async () => {
+      await gateway.close()
+      await service1.close()
+    })
+
+    await gateway.register(plugin, {
+      gateway: {
+        services: [
+          {
+            name: 'user',
+            url: `http://localhost:${service1.server.address().port}/graphql`,
+            mandatory: false
+          },
+          {
+            name: 'post',
+            url: 'http://localhost:5115/graphql',
+            mandatory: true
+          }
+        ],
+        retryServicesCount: 1,
+        retryServicesInterval: 2000
+      },
+      jit: 1
+    })
+
+    await gateway.ready()
+
+    for (let i = 0; i < 100; i++) {
+      await clock.tickAsync(150)
+    }
+  })
 })

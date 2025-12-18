@@ -1,6 +1,6 @@
 'use strict'
 
-const { test, beforeEach, afterEach } = require('node:test')
+const { describe, test, beforeEach, afterEach } = require('node:test')
 const Fastify = require('fastify')
 const FakeTimers = require('@sinonjs/fake-timers')
 const { promisify } = require('util')
@@ -485,417 +485,419 @@ const commentMutation = `
   }  
 `
 
-let clock
+describe('value-types', () => {
+  let clock
 
-beforeEach(() => {
-  clock = FakeTimers.install({
-    shouldClearNativeTimers: true,
-    shouldAdvanceTime: true,
-    advanceTimeDelta: 100
-  })
-})
-
-afterEach(() => {
-  clock.uninstall()
-})
-
-test('Should be able to query with value types', async t => {
-  const [userService, userServicePort] = await createService(
-    t,
-    userSchema,
-    userResolvers
-  )
-  const [postService, postServicePort] = await createService(
-    t,
-    postSchema,
-    postResolvers
-  )
-  const [commentService, commentServicePort] = await createService(
-    t,
-    commentSchema,
-    commentResolvers
-  )
-
-  const gateway = Fastify()
-
-  t.after(async () => {
-    await gateway.close()
-    await postService.close()
-    await userService.close()
-    await commentService.close()
-  })
-
-  await gateway.register(plugin, {
-    gateway: {
-      services: [
-        {
-          name: 'user',
-          url: `http://localhost:${userServicePort}/graphql`
-        },
-        {
-          name: 'post',
-          url: `http://localhost:${postServicePort}/graphql`
-        },
-        {
-          name: 'comment',
-          url: `http://localhost:${commentServicePort}/graphql`
-        }
-      ]
-    }
-  })
-
-  const usersRes = await gateway.inject({
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json'
-    },
-    url: '/graphql',
-    body: JSON.stringify({
-      query: usersQuery
+  beforeEach(() => {
+    clock = FakeTimers.install({
+      shouldClearNativeTimers: true,
+      shouldAdvanceTime: true,
+      advanceTimeDelta: 100,
+      toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date']
     })
   })
 
-  t.assert.deepStrictEqual(usersRes.json(), usersData)
+  afterEach(() => {
+    clock.uninstall()
+  })
 
-  const postsRes = await gateway.inject({
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json'
-    },
-    url: '/graphql',
-    body: JSON.stringify({
-      query: postsQuery
+  test('Should be able to query with value types', async t => {
+    const [userService, userServicePort] = await createService(
+      t,
+      userSchema,
+      userResolvers
+    )
+    const [postService, postServicePort] = await createService(
+      t,
+      postSchema,
+      postResolvers
+    )
+    const [commentService, commentServicePort] = await createService(
+      t,
+      commentSchema,
+      commentResolvers
+    )
+
+    const gateway = Fastify()
+
+    t.after(async () => {
+      await gateway.close()
+      await postService.close()
+      await userService.close()
+      await commentService.close()
+    })
+
+    await gateway.register(plugin, {
+      gateway: {
+        services: [
+          {
+            name: 'user',
+            url: `http://localhost:${userServicePort}/graphql`
+          },
+          {
+            name: 'post',
+            url: `http://localhost:${postServicePort}/graphql`
+          },
+          {
+            name: 'comment',
+            url: `http://localhost:${commentServicePort}/graphql`
+          }
+        ]
+      }
+    })
+
+    const usersRes = await gateway.inject({
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      url: '/graphql',
+      body: JSON.stringify({
+        query: usersQuery
+      })
+    })
+
+    t.assert.deepStrictEqual(usersRes.json(), usersData)
+
+    const postsRes = await gateway.inject({
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      url: '/graphql',
+      body: JSON.stringify({
+        query: postsQuery
+      })
+    })
+
+    t.assert.deepStrictEqual(postsRes.json(), postsData)
+
+    const commentsRes = await gateway.inject({
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      url: '/graphql',
+      body: JSON.stringify({
+        query: commentsQuery
+      })
+    })
+
+    t.assert.deepStrictEqual(commentsRes.json(), commentsData)
+  })
+
+  test('Should be able to mutate with value types', async t => {
+    const [userService, userServicePort] = await createService(
+      t,
+      userSchema,
+      userResolvers
+    )
+    const [postService, postServicePort] = await createService(
+      t,
+      postSchema,
+      postResolvers
+    )
+    const [commentService, commentServicePort] = await createService(
+      t,
+      commentSchema,
+      commentResolvers
+    )
+
+    const gateway = Fastify()
+
+    t.after(async () => {
+      await gateway.close()
+      await postService.close()
+      await userService.close()
+      await commentService.close()
+    })
+
+    await gateway.register(plugin, {
+      gateway: {
+        services: [
+          {
+            name: 'user',
+            url: `http://localhost:${userServicePort}/graphql`
+          },
+          {
+            name: 'post',
+            url: `http://localhost:${postServicePort}/graphql`
+          },
+          {
+            name: 'comment',
+            url: `http://localhost:${commentServicePort}/graphql`
+          }
+        ]
+      }
+    })
+
+    const usersRes = await gateway.inject({
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      url: '/graphql',
+      body: JSON.stringify({
+        query: userMutation
+      })
+    })
+
+    t.assert.deepStrictEqual(usersRes.json(), userMutationData)
+
+    const postsRes = await gateway.inject({
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      url: '/graphql',
+      body: JSON.stringify({
+        query: postMutation
+      })
+    })
+
+    t.assert.deepStrictEqual(postsRes.json(), postMutationData)
+
+    const commentsRes = await gateway.inject({
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      url: '/graphql',
+      body: JSON.stringify({
+        query: commentMutation
+      })
+    })
+
+    t.assert.deepStrictEqual(commentsRes.json(), commentMutationData)
+  })
+
+  test('Should be able to query top-level with value types', async t => {
+    const [userService, userServicePort] = await createService(
+      t,
+      userSchema,
+      userResolvers
+    )
+    const [postService, postServicePort] = await createService(
+      t,
+      postSchema,
+      postResolvers
+    )
+    const [commentService, commentServicePort] = await createService(
+      t,
+      commentSchema,
+      commentResolvers
+    )
+
+    const gateway = Fastify()
+
+    t.after(async () => {
+      await gateway.close()
+      await postService.close()
+      await userService.close()
+      await commentService.close()
+    })
+
+    await gateway.register(plugin, {
+      gateway: {
+        services: [
+          {
+            name: 'user',
+            url: `http://localhost:${userServicePort}/graphql`
+          },
+          {
+            name: 'post',
+            url: `http://localhost:${postServicePort}/graphql`
+          },
+          {
+            name: 'comment',
+            url: `http://localhost:${commentServicePort}/graphql`
+          }
+        ]
+      }
+    })
+
+    const usersRes = await gateway.inject({
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      url: '/graphql',
+      body: JSON.stringify({
+        query: userServiceInfoQuery
+      })
+    })
+
+    t.assert.deepStrictEqual(usersRes.json(), {
+      data: {
+        userServiceInfo: returnTypeValue
+      }
+    })
+
+    const postsRes = await gateway.inject({
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      url: '/graphql',
+      body: JSON.stringify({
+        query: postServiceInfoQuery
+      })
+    })
+
+    t.assert.deepStrictEqual(postsRes.json(), {
+      data: {
+        postServiceInfo: returnTypeValue
+      }
+    })
+
+    const commentsRes = await gateway.inject({
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      url: '/graphql',
+      body: JSON.stringify({
+        query: commentServiceInfoQuery
+      })
+    })
+
+    t.assert.deepStrictEqual(commentsRes.json(), {
+      data: {
+        commentServiceInfo: returnTypeValue
+      }
     })
   })
 
-  t.assert.deepStrictEqual(postsRes.json(), postsData)
+  test('Should be able to query with value types and polling', async t => {
+    const [userService, userServicePort] = await createService(
+      t,
+      userSchema,
+      userResolvers
+    )
+    const [postService, postServicePort] = await createService(
+      t,
+      postSchema,
+      postResolvers
+    )
+    const [commentService, commentServicePort] = await createService(
+      t,
+      commentSchema,
+      commentResolvers
+    )
 
-  const commentsRes = await gateway.inject({
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json'
-    },
-    url: '/graphql',
-    body: JSON.stringify({
-      query: commentsQuery
+    const gateway = Fastify()
+
+    t.after(async () => {
+      await gateway.close()
+      await userService.close()
+      await postService.close()
+      await commentService.close()
     })
-  })
 
-  t.assert.deepStrictEqual(commentsRes.json(), commentsData)
-})
-
-test('Should be able to mutate with value types', async t => {
-  const [userService, userServicePort] = await createService(
-    t,
-    userSchema,
-    userResolvers
-  )
-  const [postService, postServicePort] = await createService(
-    t,
-    postSchema,
-    postResolvers
-  )
-  const [commentService, commentServicePort] = await createService(
-    t,
-    commentSchema,
-    commentResolvers
-  )
-
-  const gateway = Fastify()
-
-  t.after(async () => {
-    await gateway.close()
-    await postService.close()
-    await userService.close()
-    await commentService.close()
-  })
-
-  await gateway.register(plugin, {
-    gateway: {
-      services: [
-        {
-          name: 'user',
-          url: `http://localhost:${userServicePort}/graphql`
-        },
-        {
-          name: 'post',
-          url: `http://localhost:${postServicePort}/graphql`
-        },
-        {
-          name: 'comment',
-          url: `http://localhost:${commentServicePort}/graphql`
-        }
-      ]
-    }
-  })
-
-  const usersRes = await gateway.inject({
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json'
-    },
-    url: '/graphql',
-    body: JSON.stringify({
-      query: userMutation
+    await gateway.register(plugin, {
+      gateway: {
+        services: [
+          {
+            name: 'user',
+            url: `http://localhost:${userServicePort}/graphql`
+          },
+          {
+            name: 'post',
+            url: `http://localhost:${postServicePort}/graphql`
+          },
+          {
+            name: 'comment',
+            url: `http://localhost:${commentServicePort}/graphql`
+          }
+        ],
+        pollingInterval: 2000
+      }
     })
-  })
 
-  t.assert.deepStrictEqual(usersRes.json(), userMutationData)
-
-  const postsRes = await gateway.inject({
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json'
-    },
-    url: '/graphql',
-    body: JSON.stringify({
-      query: postMutation
+    const postsRes = await gateway.inject({
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      url: '/graphql',
+      body: JSON.stringify({
+        query: postsQuery
+      })
     })
-  })
 
-  t.assert.deepStrictEqual(postsRes.json(), postMutationData)
+    t.assert.deepStrictEqual(postsRes.json(), postsData)
 
-  const commentsRes = await gateway.inject({
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json'
-    },
-    url: '/graphql',
-    body: JSON.stringify({
-      query: commentMutation
-    })
-  })
-
-  t.assert.deepStrictEqual(commentsRes.json(), commentMutationData)
-})
-
-test('Should be able to query top-level with value types', async t => {
-  const [userService, userServicePort] = await createService(
-    t,
-    userSchema,
-    userResolvers
-  )
-  const [postService, postServicePort] = await createService(
-    t,
-    postSchema,
-    postResolvers
-  )
-  const [commentService, commentServicePort] = await createService(
-    t,
-    commentSchema,
-    commentResolvers
-  )
-
-  const gateway = Fastify()
-
-  t.after(async () => {
-    await gateway.close()
-    await postService.close()
-    await userService.close()
-    await commentService.close()
-  })
-
-  await gateway.register(plugin, {
-    gateway: {
-      services: [
-        {
-          name: 'user',
-          url: `http://localhost:${userServicePort}/graphql`
-        },
-        {
-          name: 'post',
-          url: `http://localhost:${postServicePort}/graphql`
-        },
-        {
-          name: 'comment',
-          url: `http://localhost:${commentServicePort}/graphql`
-        }
-      ]
-    }
-  })
-
-  const usersRes = await gateway.inject({
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json'
-    },
-    url: '/graphql',
-    body: JSON.stringify({
-      query: userServiceInfoQuery
-    })
-  })
-
-  t.assert.deepStrictEqual(usersRes.json(), {
-    data: {
-      userServiceInfo: returnTypeValue
-    }
-  })
-
-  const postsRes = await gateway.inject({
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json'
-    },
-    url: '/graphql',
-    body: JSON.stringify({
-      query: postServiceInfoQuery
-    })
-  })
-
-  t.assert.deepStrictEqual(postsRes.json(), {
-    data: {
-      postServiceInfo: returnTypeValue
-    }
-  })
-
-  const commentsRes = await gateway.inject({
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json'
-    },
-    url: '/graphql',
-    body: JSON.stringify({
-      query: commentServiceInfoQuery
-    })
-  })
-
-  t.assert.deepStrictEqual(commentsRes.json(), {
-    data: {
-      commentServiceInfo: returnTypeValue
-    }
-  })
-})
-
-test('Should be able to query with value types and polling', async t => {
-  const [userService, userServicePort] = await createService(
-    t,
-    userSchema,
-    userResolvers
-  )
-  const [postService, postServicePort] = await createService(
-    t,
-    postSchema,
-    postResolvers
-  )
-  const [commentService, commentServicePort] = await createService(
-    t,
-    commentSchema,
-    commentResolvers
-  )
-
-  const gateway = Fastify()
-
-  t.after(async () => {
-    await gateway.close()
-    await userService.close()
-    await postService.close()
-    await commentService.close()
-  })
-
-  await gateway.register(plugin, {
-    gateway: {
-      services: [
-        {
-          name: 'user',
-          url: `http://localhost:${userServicePort}/graphql`
-        },
-        {
-          name: 'post',
-          url: `http://localhost:${postServicePort}/graphql`
-        },
-        {
-          name: 'comment',
-          url: `http://localhost:${commentServicePort}/graphql`
-        }
-      ],
-      pollingInterval: 2000
-    }
-  })
-
-  const postsRes = await gateway.inject({
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json'
-    },
-    url: '/graphql',
-    body: JSON.stringify({
-      query: postsQuery
-    })
-  })
-
-  t.assert.deepStrictEqual(postsRes.json(), postsData)
-
-  const helloQuery = `
+    const helloQuery = `
     query {
       hello
     }
   `
 
-  const helloRes = await gateway.inject({
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json'
-    },
-    url: '/graphql',
-    body: JSON.stringify({
-      query: helloQuery
+    const helloRes = await gateway.inject({
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      url: '/graphql',
+      body: JSON.stringify({
+        query: helloQuery
+      })
     })
-  })
 
-  t.assert.deepStrictEqual(helloRes.json(), {
-    errors: [
-      {
-        message: 'Cannot query field "hello" on type "Query".',
-        locations: [{ line: 3, column: 7 }]
-      }
-    ],
-    data: null
-  })
+    t.assert.deepStrictEqual(helloRes.json(), {
+      errors: [
+        {
+          message: 'Cannot query field "hello" on type "Query".',
+          locations: [{ line: 3, column: 7 }]
+        }
+      ],
+      data: null
+    })
 
-  postService.graphql.replaceSchema(
-    buildFederationSchema(`
+    postService.graphql.replaceSchema(
+      buildFederationSchema(`
       ${postSchema}
       extend type Query {
         hello: String!
       }
     `)
-  )
-  postService.graphql.defineResolvers({
-    ...postResolvers,
-    Query: {
-      hello: () => 'world',
-      ...postResolvers.Query
-    }
-  })
+    )
+    postService.graphql.defineResolvers({
+      ...postResolvers,
+      Query: {
+        hello: () => 'world',
+        ...postResolvers.Query
+      }
+    })
 
-  await clock.tickAsync(2000)
+    await clock.tickAsync(2000)
 
-  // We need the event loop to actually spin twice to
-  // be able to propagate the change
-  await immediate()
-  await immediate()
+    // We need the event loop to actually spin twice to
+    // be able to propagate the change
+    await immediate()
+    await immediate()
 
-  const postsRes2 = await gateway.inject({
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json'
-    },
-    url: '/graphql',
-    body: JSON.stringify({
-      query: helloQuery
+    const postsRes2 = await gateway.inject({
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      url: '/graphql',
+      body: JSON.stringify({
+        query: helloQuery
+      })
+    })
+
+    t.assert.deepStrictEqual(postsRes2.json(), {
+      data: {
+        hello: 'world'
+      }
     })
   })
 
-  t.assert.deepStrictEqual(postsRes2.json(), {
-    data: {
-      hello: 'world'
-    }
-  })
-})
-
-test('Should use last service in list for duplicate entity types', async t => {
-  const [userServiceA, userServicePortA] = await createService(
-    t,
+  test('Should use last service in list for duplicate entity types', async t => {
+    const [userServiceA, userServicePortA] = await createService(
+      t,
       `   
       type User @key(fields: "id") {
         id: ID!
@@ -903,10 +905,10 @@ test('Should use last service in list for duplicate entity types', async t => {
       }
     `,
       {}
-  )
+    )
 
-  const [userServiceB, userServicePortB] = await createService(
-    t,
+    const [userServiceB, userServicePortB] = await createService(
+      t,
     `
     extend type Query {
         user: User!
@@ -924,126 +926,127 @@ test('Should use last service in list for duplicate entity types', async t => {
         }
       }
     }
-  )
+    )
 
-  const gateway = Fastify()
+    const gateway = Fastify()
 
-  t.after(async () => {
-    await gateway.close()
-    await userServiceA.close()
-    await userServiceB.close()
-  })
+    t.after(async () => {
+      await gateway.close()
+      await userServiceA.close()
+      await userServiceB.close()
+    })
 
-  await gateway.register(plugin, {
-    gateway: {
-      services: [
-        {
-          name: 'userB',
-          url: `http://localhost:${userServicePortA}/graphql`
-        },
-        {
-          name: 'userA',
-          url: `http://localhost:${userServicePortB}/graphql`
-        }
-      ]
-    }
-  })
+    await gateway.register(plugin, {
+      gateway: {
+        services: [
+          {
+            name: 'userB',
+            url: `http://localhost:${userServicePortA}/graphql`
+          },
+          {
+            name: 'userA',
+            url: `http://localhost:${userServicePortB}/graphql`
+          }
+        ]
+      }
+    })
 
-  const usersRes = await gateway.inject({
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json'
-    },
-    url: '/graphql',
-    body: JSON.stringify({
-      query: `
+    const usersRes = await gateway.inject({
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      url: '/graphql',
+      body: JSON.stringify({
+        query: `
         query {
           user {
             id
             name
           }
         }`
+      })
     })
-  })
 
-  t.assert.deepStrictEqual(usersRes.json(), {
-    data: {
-      user: {
-        id: '1',
-        name: 'Test'
-      }
-    }
-  })
-})
-
-test('Should be able to query nested value types', async t => {
-  const [userService, userServicePort] = await createService(
-    t,
-    userSchema,
-    userResolvers
-  )
-  const [postService, postServicePort] = await createService(
-    t,
-    postSchema,
-    postResolvers
-  )
-  const [commentService, commentServicePort] = await createService(
-    t,
-    commentSchema,
-    commentResolvers
-  )
-
-  const gateway = Fastify()
-
-  t.after(async () => {
-    await gateway.close()
-    await postService.close()
-    await userService.close()
-    await commentService.close()
-  })
-
-  await gateway.register(plugin, {
-    gateway: {
-      services: [
-        {
-          name: 'user',
-          url: `http://localhost:${userServicePort}/graphql`
-        },
-        {
-          name: 'post',
-          url: `http://localhost:${postServicePort}/graphql`
-        },
-        {
-          name: 'comment',
-          url: `http://localhost:${commentServicePort}/graphql`
+    t.assert.deepStrictEqual(usersRes.json(), {
+      data: {
+        user: {
+          id: '1',
+          name: 'Test'
         }
-      ]
-    }
-  })
-
-  const usersRes = await gateway.inject({
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json'
-    },
-    url: '/graphql',
-    body: JSON.stringify({
-      query: usersWithFilesQuery
+      }
     })
   })
 
-  t.assert.deepStrictEqual(usersRes.json(), usersWithFilesData)
+  test('Should be able to query nested value types', async t => {
+    const [userService, userServicePort] = await createService(
+      t,
+      userSchema,
+      userResolvers
+    )
+    const [postService, postServicePort] = await createService(
+      t,
+      postSchema,
+      postResolvers
+    )
+    const [commentService, commentServicePort] = await createService(
+      t,
+      commentSchema,
+      commentResolvers
+    )
 
-  const postsRes = await gateway.inject({
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json'
-    },
-    url: '/graphql',
-    body: JSON.stringify({
-      query: postsWithFilesQuery
+    const gateway = Fastify()
+
+    t.after(async () => {
+      await gateway.close()
+      await postService.close()
+      await userService.close()
+      await commentService.close()
     })
-  })
 
-  t.assert.deepStrictEqual(postsRes.json(), postsWithFilesData)
+    await gateway.register(plugin, {
+      gateway: {
+        services: [
+          {
+            name: 'user',
+            url: `http://localhost:${userServicePort}/graphql`
+          },
+          {
+            name: 'post',
+            url: `http://localhost:${postServicePort}/graphql`
+          },
+          {
+            name: 'comment',
+            url: `http://localhost:${commentServicePort}/graphql`
+          }
+        ]
+      }
+    })
+
+    const usersRes = await gateway.inject({
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      url: '/graphql',
+      body: JSON.stringify({
+        query: usersWithFilesQuery
+      })
+    })
+
+    t.assert.deepStrictEqual(usersRes.json(), usersWithFilesData)
+
+    const postsRes = await gateway.inject({
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      url: '/graphql',
+      body: JSON.stringify({
+        query: postsWithFilesQuery
+      })
+    })
+
+    t.assert.deepStrictEqual(postsRes.json(), postsWithFilesData)
+  })
 })

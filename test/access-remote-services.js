@@ -139,6 +139,12 @@ test(
   }
 )
 
+// required because in node 20 snapshot testing is not supported
+const SNAPSHOT_RESULTS = [
+  'Initializing service "not-working" failed with message: "Unknown type "World"."',
+  'Initializing service "not-working" failed with message: "Unknown type "World"."'
+]
+
 test(
   'Does not error if at least one service schema is valid',
   { timeout: 4000 },
@@ -154,8 +160,7 @@ test(
 
     let warnCalled = 0
     gateway.log.warn = message => {
-      warnCalled++
-      t.assert.snapshot(message)
+      t.assert.strictEqual(message, SNAPSHOT_RESULTS[warnCalled++])
     }
 
     t.after(async () => {

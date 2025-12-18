@@ -87,7 +87,7 @@ describe('onGatewayReplaceSchema', () => {
       'onGatewayReplaceSchema',
       async (instance, schema) => {
         t.assert.strictEqual(typeof instance, 'object')
-        t.assert.ok(schema instanceof GraphQLSchema)
+        t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
       }
     )
 

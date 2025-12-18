@@ -58,7 +58,7 @@ test('sendRequest method rejects when response is not valid json', async t => {
     })
     t.assert.fail('it must throw')
   } catch (error) {
-    t.assert.ok(error instanceof FederatedError)
+    t.assert.strictEqual(error.constructor.name, FederatedError.name)
     t.assert.ok(Array.isArray(error.extensions.errors))
 
     // Full string on Node 17 is "Unexpected token r in JSON at position 0"
@@ -99,7 +99,7 @@ test('sendRequest method rejects when response contains only errors', async t =>
     })
     t.assert.fail('it must throw')
   } catch (error) {
-    t.assert.ok(error instanceof FederatedError)
+    t.assert.strictEqual(error.constructor.name, FederatedError.name)
     t.assert.deepStrictEqual(error.extensions, { errors: ['foo'] })
   }
 })

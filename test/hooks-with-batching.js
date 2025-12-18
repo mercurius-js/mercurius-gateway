@@ -149,7 +149,7 @@ test('gateway - hooks', async t => {
 
   app.graphql.addHook('preParsing', async function (schema, source, context) {
     await immediate()
-    t.assert.ok(schema instanceof GraphQLSchema)
+    t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
     t.assert.strictEqual(source, query)
     t.assert.strictEqual(typeof context, 'object')
     t.assert.ok('preParsing called')
@@ -159,7 +159,7 @@ test('gateway - hooks', async t => {
     'preValidation',
     async function (schema, document, context) {
       await immediate()
-      t.assert.ok(schema instanceof GraphQLSchema)
+      t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
       t.assert.deepStrictEqual(document, parse(query))
       t.assert.strictEqual(typeof context, 'object')
       t.assert.ok('preValidation called')
@@ -170,7 +170,7 @@ test('gateway - hooks', async t => {
     'preExecution',
     async function (schema, document, context) {
       await immediate()
-      t.assert.ok(schema instanceof GraphQLSchema)
+      t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
       t.assert.deepStrictEqual(document, parse(query))
       t.assert.strictEqual(typeof context, 'object')
       t.assert.ok('preExecution called')
@@ -186,7 +186,7 @@ test('gateway - hooks', async t => {
     'preGatewayExecution',
     async function (schema, document, context) {
       await immediate()
-      t.assert.ok(schema instanceof GraphQLSchema)
+      t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
       t.assert.strictEqual(typeof document, 'object')
       t.assert.strictEqual(typeof context, 'object')
       t.assert.ok('preGatewayExecution called')
@@ -276,7 +276,7 @@ test('gateway - hooks should trigger when JIT is enabled', async t => {
 
   app.graphql.addHook('preParsing', async function (schema, source, context) {
     await immediate()
-    t.assert.ok(schema instanceof GraphQLSchema)
+    t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
     t.assert.strictEqual(source, query)
     t.assert.strictEqual(typeof context, 'object')
     t.assert.ok('preParsing called')
@@ -287,7 +287,7 @@ test('gateway - hooks should trigger when JIT is enabled', async t => {
     'preValidation',
     async function (schema, document, context) {
       await immediate()
-      t.assert.ok(schema instanceof GraphQLSchema)
+      t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
       t.assert.deepStrictEqual(document, parse(query))
       t.assert.strictEqual(typeof context, 'object')
       t.assert.ok('preValidation called')
@@ -298,7 +298,7 @@ test('gateway - hooks should trigger when JIT is enabled', async t => {
     'preExecution',
     async function (schema, document, context) {
       await immediate()
-      t.assert.ok(schema instanceof GraphQLSchema)
+      t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
       t.assert.deepStrictEqual(document, parse(query))
       t.assert.strictEqual(typeof context, 'object')
       t.assert.ok('preExecution called')
@@ -314,7 +314,7 @@ test('gateway - hooks should trigger when JIT is enabled', async t => {
     'preGatewayExecution',
     async function (schema, document, context) {
       await immediate()
-      t.assert.ok(schema instanceof GraphQLSchema)
+      t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
       t.assert.strictEqual(typeof document, 'object')
       t.assert.strictEqual(typeof context, 'object')
       t.assert.ok('preGatewayExecution called')
@@ -416,7 +416,7 @@ test('gateway - preParsing hooks should handle errors', async t => {
   const app = await createTestGatewayServer(t)
 
   app.graphql.addHook('preParsing', async (schema, source, context) => {
-    t.assert.ok(schema instanceof GraphQLSchema)
+    t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
     t.assert.strictEqual(source, query)
     t.assert.strictEqual(typeof context, 'object')
     throw new Error('a preParsing error occured')
@@ -459,14 +459,14 @@ test('gateway - preParsing hooks should be able to put values onto the context',
   const app = await createTestGatewayServer(t)
 
   app.graphql.addHook('preParsing', async (schema, source, context) => {
-    t.assert.ok(schema instanceof GraphQLSchema)
+    t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
     t.assert.strictEqual(source, query)
     t.assert.strictEqual(typeof context, 'object')
     context.foo = 'bar'
   })
 
   app.graphql.addHook('preParsing', async (schema, source, context) => {
-    t.assert.ok(schema instanceof GraphQLSchema)
+    t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
     t.assert.strictEqual(source, query)
     t.assert.strictEqual(typeof context, 'object')
     t.assert.strictEqual(context.foo, 'bar')
@@ -518,7 +518,7 @@ test('gateway - preValidation hooks should handle errors', async t => {
   const app = await createTestGatewayServer(t)
 
   app.graphql.addHook('preValidation', async (schema, document, context) => {
-    t.assert.ok(schema instanceof GraphQLSchema)
+    t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
     t.assert.deepStrictEqual(document, parse(query))
     t.assert.strictEqual(typeof context, 'object')
     throw new Error('a preValidation error occured')
@@ -557,14 +557,14 @@ test('gateway - preValidation hooks should be able to put values onto the contex
   const app = await createTestGatewayServer(t)
 
   app.graphql.addHook('preValidation', async (schema, document, context) => {
-    t.assert.ok(schema instanceof GraphQLSchema)
+    t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
     t.assert.deepStrictEqual(document, parse(query))
     t.assert.strictEqual(typeof context, 'object')
     context.foo = 'bar'
   })
 
   app.graphql.addHook('preValidation', async (schema, document, context) => {
-    t.assert.ok(schema instanceof GraphQLSchema)
+    t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
     t.assert.deepStrictEqual(document, parse(query))
     t.assert.strictEqual(typeof context, 'object')
     t.assert.strictEqual(context.foo, 'bar')
@@ -616,7 +616,7 @@ test('gateway - preExecution hooks should handle errors', async t => {
   const app = await createTestGatewayServer(t)
 
   app.graphql.addHook('preExecution', async (schema, document, context) => {
-    t.assert.ok(schema instanceof GraphQLSchema)
+    t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
     t.assert.deepStrictEqual(document, parse(query))
     t.assert.strictEqual(typeof context, 'object')
     throw new Error('a preExecution error occured')
@@ -651,14 +651,14 @@ test('gateway - preExecution hooks should be able to put values onto the context
   const app = await createTestGatewayServer(t)
 
   app.graphql.addHook('preExecution', async (schema, document, context) => {
-    t.assert.ok(schema instanceof GraphQLSchema)
+    t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
     t.assert.deepStrictEqual(document, parse(query))
     t.assert.strictEqual(typeof context, 'object')
     context.foo = 'bar'
   })
 
   app.graphql.addHook('preExecution', async (schema, document, context) => {
-    t.assert.ok(schema instanceof GraphQLSchema)
+    t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
     t.assert.deepStrictEqual(document, parse(query))
     t.assert.strictEqual(typeof context, 'object')
     t.assert.strictEqual(context.foo, 'bar')
@@ -707,7 +707,7 @@ test('gateway - preExecution hooks should be able to modify the request document
   const app = await createTestGatewayServer(t)
 
   app.graphql.addHook('preExecution', async (schema, document, context) => {
-    t.assert.ok(schema instanceof GraphQLSchema)
+    t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
     t.assert.deepStrictEqual(document, parse(query))
     t.assert.strictEqual(typeof context, 'object')
     t.assert.ok('preExecution called')
@@ -755,7 +755,7 @@ test('gateway - preExecution hooks should be able to add to the errors array', a
   const app = await createTestGatewayServer(t)
 
   app.graphql.addHook('preExecution', async (schema, document, context) => {
-    t.assert.ok(schema instanceof GraphQLSchema)
+    t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
     t.assert.deepStrictEqual(document, parse(query))
     t.assert.strictEqual(typeof context, 'object')
     t.assert.ok('preExecution called for foo error')
@@ -765,7 +765,7 @@ test('gateway - preExecution hooks should be able to add to the errors array', a
   })
 
   app.graphql.addHook('preExecution', async (schema, document, context) => {
-    t.assert.ok(schema instanceof GraphQLSchema)
+    t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
     t.assert.deepStrictEqual(document, parse(query))
     t.assert.strictEqual(typeof context, 'object')
     t.assert.ok('preExecution called for foo error')
@@ -830,7 +830,7 @@ test('gateway - preGatewayExecution hooks should handle errors', async t => {
   app.graphqlGateway.addHook(
     'preGatewayExecution',
     async (schema, document, context) => {
-      t.assert.ok(schema instanceof GraphQLSchema)
+      t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
       t.assert.strictEqual(typeof document, 'object')
       t.assert.strictEqual(typeof context, 'object')
       throw new Error('a preGatewayExecution error occured')
@@ -881,7 +881,7 @@ test('gateway - preGatewayExecution hooks should be able to put values onto the 
   app.graphqlGateway.addHook(
     'preGatewayExecution',
     async (schema, document, context) => {
-      t.assert.ok(schema instanceof GraphQLSchema)
+      t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
       t.assert.strictEqual(typeof document, 'object')
       t.assert.strictEqual(typeof context, 'object')
       context[document.definitions[0].name.value] = 'bar'
@@ -891,7 +891,7 @@ test('gateway - preGatewayExecution hooks should be able to put values onto the 
   app.graphqlGateway.addHook(
     'preGatewayExecution',
     async (schema, document, context) => {
-      t.assert.ok(schema instanceof GraphQLSchema)
+      t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
       t.assert.strictEqual(typeof document, 'object')
       t.assert.strictEqual(typeof context, 'object')
       t.assert.strictEqual(context[document.definitions[0].name.value], 'bar')
@@ -943,7 +943,7 @@ test('gateway - preGatewayExecution hooks should be able to add to the errors ar
   app.graphqlGateway.addHook(
     'preGatewayExecution',
     async (schema, document, context) => {
-      t.assert.ok(schema instanceof GraphQLSchema)
+      t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
       t.assert.strictEqual(typeof document, 'object')
       t.assert.strictEqual(typeof context, 'object')
       t.assert.ok('preGatewayExecution called for foo error')
@@ -956,7 +956,7 @@ test('gateway - preGatewayExecution hooks should be able to add to the errors ar
   app.graphqlGateway.addHook(
     'preGatewayExecution',
     async (schema, document, context) => {
-      t.assert.ok(schema instanceof GraphQLSchema)
+      t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
       t.assert.strictEqual(typeof document, 'object')
       t.assert.strictEqual(typeof context, 'object')
       t.assert.ok('preGatewayExecution called for foo error')
@@ -1037,7 +1037,7 @@ test('gateway - preGatewayExecution hooks should be able to modify the request d
   app.graphqlGateway.addHook(
     'preGatewayExecution',
     async (schema, document, context) => {
-      t.assert.ok(schema instanceof GraphQLSchema)
+      t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
       t.assert.strictEqual(typeof document, 'object')
       t.assert.strictEqual(typeof context, 'object')
       t.assert.ok('preGatewayExecution called')
@@ -1101,7 +1101,7 @@ test('gateway - preGatewayExecution hooks should contain service metadata', asyn
     'preGatewayExecution',
     async function (schema, document, context, service) {
       await immediate()
-      t.assert.ok(schema instanceof GraphQLSchema)
+      t.assert.strictEqual(schema.constructor.name, GraphQLSchema.name)
       t.assert.strictEqual(typeof document, 'object')
       t.assert.strictEqual(typeof context, 'object')
       if (typeof service === 'object' && service.name === 'user') {

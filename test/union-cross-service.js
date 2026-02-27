@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const plugin = require('../index')
 const createTestService = require('./utils/create-test-service')
@@ -21,8 +21,6 @@ const users = {
 }
 
 test('gateway resolves union type with entity members defined on separate services', async t => {
-  t.plan(2)
-
   // Article service - owns the Article entity
   const [articleService, articleServicePort] = await createTestService(
     t,
@@ -136,7 +134,7 @@ test('gateway resolves union type with entity members defined on separate servic
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await articleService.close()
     await reviewService.close()
@@ -252,7 +250,7 @@ test('gateway resolves union type with entity members defined on separate servic
       body: JSON.stringify({ query })
     })
 
-    t.same(JSON.parse(res.body), expected)
+    t.assert.deepStrictEqual(JSON.parse(res.body), expected)
   }
 
   // Cached
@@ -266,13 +264,11 @@ test('gateway resolves union type with entity members defined on separate servic
       body: JSON.stringify({ query })
     })
 
-    t.same(JSON.parse(res.body), expected)
+    t.assert.deepStrictEqual(JSON.parse(res.body), expected)
   }
 })
 
 test('gateway resolves union type using inline fragments', async t => {
-  t.plan(1)
-
   const [articleService, articleServicePort] = await createTestService(
     t,
     `
@@ -343,7 +339,7 @@ test('gateway resolves union type using inline fragments', async t => {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await articleService.close()
     await reviewService.close()
@@ -395,7 +391,7 @@ test('gateway resolves union type using inline fragments', async t => {
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       search: [
         {
@@ -415,8 +411,6 @@ test('gateway resolves union type using inline fragments', async t => {
 })
 
 test('gateway resolves nested union array fields from different services', async t => {
-  t.plan(2)
-
   const products = {
     p1: { id: 'p1', name: 'Widget', price: 9.99 },
     p2: { id: 'p2', name: 'Gadget', price: 24.99 }
@@ -506,7 +500,7 @@ test('gateway resolves nested union array fields from different services', async
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await productService.close()
     await digitalService.close()
@@ -590,7 +584,7 @@ test('gateway resolves nested union array fields from different services', async
       body: JSON.stringify({ query })
     })
 
-    t.same(JSON.parse(res.body), expected)
+    t.assert.deepStrictEqual(JSON.parse(res.body), expected)
   }
 
   // Cached
@@ -604,13 +598,11 @@ test('gateway resolves nested union array fields from different services', async
       body: JSON.stringify({ query })
     })
 
-    t.same(JSON.parse(res.body), expected)
+    t.assert.deepStrictEqual(JSON.parse(res.body), expected)
   }
 })
 
 test('gateway resolves nested union fields inside inline fragments', async t => {
-  t.plan(1)
-
   const products = {
     p1: { id: 'p1', name: 'Widget', price: 9.99 }
   }
@@ -706,7 +698,7 @@ test('gateway resolves nested union fields inside inline fragments', async t => 
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await productService.close()
     await digitalService.close()
@@ -767,7 +759,7 @@ test('gateway resolves nested union fields inside inline fragments', async t => 
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       catalog: [
         {
@@ -796,8 +788,6 @@ test('gateway resolves nested union fields inside inline fragments', async t => 
 })
 
 test('gateway skips entity resolution for nested union when all fields already present', async t => {
-  t.plan(1)
-
   const [productService, productServicePort] = await createTestService(
     t,
     `
@@ -875,7 +865,7 @@ test('gateway skips entity resolution for nested union when all fields already p
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await productService.close()
     await digitalService.close()
@@ -927,7 +917,7 @@ test('gateway skips entity resolution for nested union when all fields already p
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       orders: [
         {
@@ -943,8 +933,6 @@ test('gateway skips entity resolution for nested union when all fields already p
 })
 
 test('gateway handles null items in nested union arrays', async t => {
-  t.plan(1)
-
   const products = {
     p1: { id: 'p1', name: 'Widget', price: 9.99 }
   }
@@ -1029,7 +1017,7 @@ test('gateway handles null items in nested union arrays', async t => {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await productService.close()
     await digitalService.close()
@@ -1084,7 +1072,7 @@ test('gateway handles null items in nested union arrays', async t => {
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       orders: [
         {
@@ -1109,8 +1097,6 @@ test('gateway handles null items in nested union arrays', async t => {
 })
 
 test('gateway handles null entity from resolver in top-level union', async t => {
-  t.plan(1)
-
   const [articleService, articleServicePort] = await createTestService(
     t,
     `
@@ -1183,7 +1169,7 @@ test('gateway handles null entity from resolver in top-level union', async t => 
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await articleService.close()
     await reviewService.close()
@@ -1235,7 +1221,7 @@ test('gateway handles null entity from resolver in top-level union', async t => 
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       search: [
         {
@@ -1256,8 +1242,6 @@ test('gateway handles null entity from resolver in top-level union', async t => 
 })
 
 test('gateway handles null entity from resolver in nested union', async t => {
-  t.plan(1)
-
   const products = {
     p1: { id: 'p1', name: 'Widget', price: 9.99 }
   }
@@ -1342,7 +1326,7 @@ test('gateway handles null entity from resolver in nested union', async t => {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await productService.close()
     await digitalService.close()
@@ -1397,7 +1381,7 @@ test('gateway handles null entity from resolver in nested union', async t => {
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       orders: [
         {
@@ -1417,8 +1401,6 @@ test('gateway handles null entity from resolver in nested union', async t => {
 })
 
 test('gateway resolves nested union inside inline fragments with non-matching fragment first', async t => {
-  t.plan(1)
-
   const products = {
     p1: { id: 'p1', name: 'Widget', price: 9.99 }
   }
@@ -1515,7 +1497,7 @@ test('gateway resolves nested union inside inline fragments with non-matching fr
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await productService.close()
     await digitalService.close()
@@ -1579,7 +1561,7 @@ test('gateway resolves nested union inside inline fragments with non-matching fr
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       catalog: [
         {
@@ -1612,8 +1594,6 @@ test('gateway resolves nested union inside inline fragments with non-matching fr
 })
 
 test('gateway propagates null for singular top-level union when entity resolver returns null', async t => {
-  t.plan(1)
-
   const [articleService, articleServicePort] = await createTestService(
     t,
     `
@@ -1659,7 +1639,7 @@ test('gateway propagates null for singular top-level union when entity resolver 
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await articleService.close()
     await searchService.close()
@@ -1700,7 +1680,7 @@ test('gateway propagates null for singular top-level union when entity resolver 
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       topResult: null
     }
@@ -1708,8 +1688,6 @@ test('gateway propagates null for singular top-level union when entity resolver 
 })
 
 test('gateway propagates null for singular nested union field when entity resolver returns null', async t => {
-  t.plan(1)
-
   const [productService, productServicePort] = await createTestService(
     t,
     `
@@ -1762,7 +1740,7 @@ test('gateway propagates null for singular nested union field when entity resolv
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await productService.close()
     await storeService.close()
@@ -1807,7 +1785,7 @@ test('gateway propagates null for singular nested union field when entity resolv
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       order: {
         id: '1',
@@ -1818,8 +1796,6 @@ test('gateway propagates null for singular nested union field when entity resolv
 })
 
 test('gateway resolves nested union fields inside named fragments', async t => {
-  t.plan(1)
-
   const products = {
     p1: { id: 'p1', name: 'Widget', price: 9.99 }
   }
@@ -1907,7 +1883,7 @@ test('gateway resolves nested union fields inside named fragments', async t => {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await productService.close()
     await digitalService.close()
@@ -1966,7 +1942,7 @@ test('gateway resolves nested union fields inside named fragments', async t => {
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       orders: [
         {
@@ -1990,8 +1966,6 @@ test('gateway resolves nested union fields inside named fragments', async t => {
 })
 
 test('gateway forwards query variables to cross-service union entity queries', async t => {
-  t.plan(2)
-
   const [articleService, articleServicePort] = await createTestService(
     t,
     `
@@ -2062,7 +2036,7 @@ test('gateway forwards query variables to cross-service union entity queries', a
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await articleService.close()
     await reviewService.close()
@@ -2116,7 +2090,7 @@ test('gateway forwards query variables to cross-service union entity queries', a
     })
   })
 
-  t.same(JSON.parse(res1.body), {
+  t.assert.deepStrictEqual(JSON.parse(res1.body), {
     data: {
       search: [
         { id: 'a1', title: 'GraphQL Federation Guide' },
@@ -2139,7 +2113,7 @@ test('gateway forwards query variables to cross-service union entity queries', a
     })
   })
 
-  t.same(JSON.parse(res2.body), {
+  t.assert.deepStrictEqual(JSON.parse(res2.body), {
     data: {
       search: [
         { id: 'a1' },
@@ -2152,8 +2126,6 @@ test('gateway forwards query variables to cross-service union entity queries', a
 })
 
 test('gateway forwards query variables to nested cross-service union entity queries', async t => {
-  t.plan(2)
-
   const products = {
     p1: { id: 'p1', name: 'Widget', price: 9.99 }
   }
@@ -2241,7 +2213,7 @@ test('gateway forwards query variables to nested cross-service union entity quer
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await productService.close()
     await digitalService.close()
@@ -2299,7 +2271,7 @@ test('gateway forwards query variables to nested cross-service union entity quer
     })
   })
 
-  t.same(JSON.parse(res1.body), {
+  t.assert.deepStrictEqual(JSON.parse(res1.body), {
     data: {
       orders: [
         {
@@ -2325,7 +2297,7 @@ test('gateway forwards query variables to nested cross-service union entity quer
     })
   })
 
-  t.same(JSON.parse(res2.body), {
+  t.assert.deepStrictEqual(JSON.parse(res2.body), {
     data: {
       orders: [
         {

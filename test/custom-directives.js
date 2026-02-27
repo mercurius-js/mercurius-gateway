@@ -1,13 +1,13 @@
 'use strict'
 
-const t = require('tap')
+const { describe, test } = require('node:test')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
 const plugin = require('../index')
 const { buildFederationSchema } = require('@mercuriusjs/federation')
 const { users, posts } = require('./utils/mocks')
 
-async function createTestService (t, schema, resolvers = {}) {
+async function createTestService (schema, resolvers = {}) {
   const service = Fastify()
   service.register(GQL, {
     schema: buildFederationSchema(schema),
@@ -59,7 +59,7 @@ async function createUserService (directiveDefinition) {
       }
     }
   }
-  return createTestService(t, userServiceSchema, userServiceResolvers)
+  return createTestService(userServiceSchema, userServiceResolvers)
 }
 
 async function createPostService (directiveDefinition) {
@@ -102,18 +102,14 @@ async function createPostService (directiveDefinition) {
       topPosts: (root, { count = 2 }) => Object.values(posts).slice(0, count)
     }
   }
-  return createTestService(t, postServiceSchema, postServiceResolvers)
+  return createTestService(postServiceSchema, postServiceResolvers)
 }
 
 // -----------------------------------
 // Gateway - custom directive support
 // -----------------------------------
-t.test('gateway', t => {
-  t.plan(2)
-
-  t.test('should de-duplicate custom directives on the gateway', async t => {
-    t.plan(4)
-
+describe('gateway', () => {
+  test('should de-duplicate custom directives on the gateway', async (t) => {
     const [userService, userServicePort] = await createUserService(
       'directive @custom(input: ID) on OBJECT | FIELD_DEFINITION'
     )
@@ -121,7 +117,7 @@ t.test('gateway', t => {
       'directive @custom(input: ID) on OBJECT | FIELD_DEFINITION'
     )
     const gateway = Fastify()
-    t.teardown(async () => {
+    t.after(async () => {
       await gateway.close()
       await userService.close()
       await postService.close()
@@ -147,7 +143,7 @@ t.test('gateway', t => {
     const userDirectiveNames = userService.graphql.schema
       .getDirectives()
       .map(directive => directive.name)
-    t.same(userDirectiveNames, [
+    t.assert.deepStrictEqual(userDirectiveNames, [
       'include',
       'skip',
       'deprecated',
@@ -164,7 +160,7 @@ t.test('gateway', t => {
     const postDirectiveNames = userService.graphql.schema
       .getDirectives()
       .map(directive => directive.name)
-    t.same(postDirectiveNames, [
+    t.assert.deepStrictEqual(postDirectiveNames, [
       'include',
       'skip',
       'deprecated',
@@ -181,7 +177,7 @@ t.test('gateway', t => {
     const gatewayDirectiveNames = gateway.graphql.schema
       .getDirectives()
       .map(directive => directive.name)
-    t.same(gatewayDirectiveNames, [
+    t.assert.deepStrictEqual(gatewayDirectiveNames, [
       'include',
       'skip',
       'deprecated',
@@ -198,7 +194,7 @@ t.test('gateway', t => {
       body: JSON.stringify({ query })
     })
 
-    t.same(JSON.parse(res.body), {
+    t.assert.deepStrictEqual(JSON.parse(res.body), {
       data: {
         me: {
           id: 'u1',
@@ -230,51 +226,46 @@ t.test('gateway', t => {
     })
   })
 
-  t.test(
-    'should error on startup when different definitions of custom directives with the same name are present in federated services',
-    async t => {
-      t.plan(1)
-
-      const [userService, userServicePort] = await createUserService(
-        'directive @custom(input: ID) on OBJECT | FIELD_DEFINITION'
-      )
-      const [postService, postServicePort] = await createPostService(
-        'directive @custom(input: String) on OBJECT | FIELD_DEFINITION'
-      )
-      const serviceOpts = {
-        keepAliveTimeout: 10, // milliseconds
-        keepAliveMaxTimeout: 10 // milliseconds
-      }
-
-      const gateway = Fastify()
-      t.teardown(async () => {
-        await userService.close()
-        await postService.close()
-      })
-
-      try {
-        await gateway.register(plugin, {
-          gateway: {
-            services: [
-              {
-                ...serviceOpts,
-                name: 'user',
-                url: `http://localhost:${userServicePort}/graphql`
-              },
-              {
-                ...serviceOpts,
-                name: 'post',
-                url: `http://localhost:${postServicePort}/graphql`
-              }
-            ]
-          }
-        })
-      } catch (error) {
-        t.same(
-          error.message,
-          'Directive with a different definition but the same name "custom" already exists in the gateway schema'
-        )
-      }
+  test('should error on startup when different definitions of custom directives with the same name are present in federated services', async (t) => {
+    const [userService, userServicePort] = await createUserService(
+      'directive @custom(input: ID) on OBJECT | FIELD_DEFINITION'
+    )
+    const [postService, postServicePort] = await createPostService(
+      'directive @custom(input: String) on OBJECT | FIELD_DEFINITION'
+    )
+    const serviceOpts = {
+      keepAliveTimeout: 10, // milliseconds
+      keepAliveMaxTimeout: 10 // milliseconds
     }
-  )
+
+    const gateway = Fastify()
+    t.after(async () => {
+      await userService.close()
+      await postService.close()
+    })
+
+    try {
+      await gateway.register(plugin, {
+        gateway: {
+          services: [
+            {
+              ...serviceOpts,
+              name: 'user',
+              url: `http://localhost:${userServicePort}/graphql`
+            },
+            {
+              ...serviceOpts,
+              name: 'post',
+              url: `http://localhost:${postServicePort}/graphql`
+            }
+          ]
+        }
+      })
+    } catch (error) {
+      t.assert.strictEqual(
+        error.message,
+        'Directive with a different definition but the same name "custom" already exists in the gateway schema'
+      )
+    }
+  })
 })

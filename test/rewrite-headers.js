@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
 const plugin = require('../index')
@@ -45,23 +45,21 @@ async function createUserService ({ hooks } = {}) {
 }
 
 test('gateway - service rewriteHeaders', async t => {
-  t.test('rewriteHeaders is called as expected', async t => {
-    t.plan(5)
-
+  await t.test('rewriteHeaders is called as expected', async t => {
     const [users, usersPort] = await createUserService()
 
     const gateway = Fastify()
-    t.teardown(async () => {
+    t.after(async () => {
       await gateway.close()
       await users.close()
     })
 
     const rewriteHeaders = (headers, context = 'not-passed') => {
-      t.ok(headers != null, 'Headers is never undefined/null')
+      t.assert.ok(headers != null, 'Headers is never undefined/null')
 
       // `context` isn't available from `getRemoteSchemaDefinition`
       // as such assert it's 'not-passed' OR includes `app` exact instance
-      t.ok(context === 'not-passed' || context.app === gateway)
+      t.assert.ok(context === 'not-passed' || context.app === gateway)
     }
 
     const url = `http://localhost:${usersPort}/graphql`
@@ -77,21 +75,19 @@ test('gateway - service rewriteHeaders', async t => {
     })
 
     const expected = { data: { user: { id: 'u1', name: 'John' } } }
-    t.same(expected, JSON.parse(res.body))
+    t.assert.deepStrictEqual(JSON.parse(res.body), expected)
   })
 
-  t.test('returned headers are sent to graphql service', async t => {
-    t.plan(3)
-
+  await t.test('returned headers are sent to graphql service', async t => {
     const custom = `Testing-${Math.trunc(Math.random() * 100)}`
     const onRequest = async req => {
-      t.ok(req.headers['x-custom'] === custom)
+      t.assert.ok(req.headers['x-custom'] === custom)
     }
 
     const [users, usersPort] = await createUserService({ hooks: { onRequest } })
 
     const gateway = Fastify()
-    t.teardown(async () => {
+    t.after(async () => {
       await gateway.close()
       await users.close()
     })
@@ -111,6 +107,6 @@ test('gateway - service rewriteHeaders', async t => {
     })
 
     const expected = { data: { user: { id: 'u1', name: 'John' } } }
-    t.same(expected, JSON.parse(res.body))
+    t.assert.deepStrictEqual(JSON.parse(res.body), expected)
   })
 })

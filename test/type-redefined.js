@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
 const plugin = require('../index')
@@ -127,23 +127,23 @@ async function buildProxy (port1, port2) {
 }
 
 test('federated node should be able to redefine type', async t => {
-  const port1 = 3027
   const serviceOne = await buildService()
-  await serviceOne.listen({ port: port1 })
-  t.teardown(() => {
+  await serviceOne.listen({ port: 0 })
+  const port1 = serviceOne.server.address().port
+  t.after(() => {
     serviceOne.close()
   })
 
-  const port2 = 3028
   const serviceTwo = await buildServiceExternal()
-  await serviceTwo.listen({ port: port2 })
-  t.teardown(() => {
+  await serviceTwo.listen({ port: 0 })
+  const port2 = serviceTwo.server.address().port
+  t.after(() => {
     serviceTwo.close()
   })
 
   const serviceProxy = await buildProxy(port1, port2)
   await serviceProxy.ready()
-  t.teardown(() => {
+  t.after(() => {
     serviceProxy.close()
   })
 
@@ -158,7 +158,7 @@ test('federated node should be able to redefine type', async t => {
       }
     })
 
-    t.same(res.json(), { data: { meWrap: { edges: [{ name: 'John' }] } } })
+    t.assert.deepStrictEqual(res.json(), { data: { meWrap: { edges: [{ name: 'John' }] } } })
   }
 
   {
@@ -172,7 +172,7 @@ test('federated node should be able to redefine type', async t => {
       }
     })
 
-    t.same(res.json(), {
+    t.assert.deepStrictEqual(res.json(), {
       data: { meWrapDifferentName: { edges: [{ name: 'John' }] } }
     })
   }

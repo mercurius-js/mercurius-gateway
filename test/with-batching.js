@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
 const plugin = require('../index')
@@ -94,7 +94,7 @@ async function createTestGatewayServer (t, allowBatchedQueries = false) {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userService.close()
     await postService.close()
@@ -121,7 +121,6 @@ async function createTestGatewayServer (t, allowBatchedQueries = false) {
 }
 
 test('it returns the same data if batching is enabled', async t => {
-  t.plan(1)
   const app1 = await createTestGatewayServer(t)
   const app2 = await createTestGatewayServer(t, true)
 
@@ -170,5 +169,5 @@ test('it returns the same data if batching is enabled', async t => {
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res1.body), JSON.parse(res2.body))
+  t.assert.deepStrictEqual(JSON.parse(res1.body), JSON.parse(res2.body))
 })

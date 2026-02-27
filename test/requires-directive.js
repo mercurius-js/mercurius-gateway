@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
 const plugin = require('../index')
@@ -149,7 +149,7 @@ test('gateway handles @requires directive correctly', async t => {
     biographyService,
     userService
   )
-  t.teardown(teardown)
+  t.after(teardown)
 
   const query = `
     query {
@@ -163,7 +163,7 @@ test('gateway handles @requires directive correctly', async t => {
   `
   const res = await gatewayRequest(gateway, query)
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       me: {
         friends: [
@@ -279,11 +279,9 @@ test('gateway handles @requires directive correctly from different services', as
     hostService,
     dictService
   )
-  t.teardown(teardown)
+  t.after(teardown)
 
-  t.plan(2)
-
-  t.test(
+  await t.test(
     'should retrieve @requires fields from different services',
     async t => {
       const query = `
@@ -296,7 +294,7 @@ test('gateway handles @requires directive correctly from different services', as
       }
     }`
       const res = await gatewayRequest(gateway, query)
-      t.same(JSON.parse(res.body), {
+      t.assert.deepStrictEqual(JSON.parse(res.body), {
         data: {
           hosts: [
             {
@@ -317,7 +315,7 @@ test('gateway handles @requires directive correctly from different services', as
     }
   )
 
-  t.test(
+  await t.test(
     'should retrieve multiple @requires fields from different services',
     async t => {
       const query = `
@@ -333,7 +331,7 @@ test('gateway handles @requires directive correctly from different services', as
       }
     }`
       const res = await gatewayRequest(gateway, query)
-      t.same(JSON.parse(res.body), {
+      t.assert.deepStrictEqual(JSON.parse(res.body), {
         data: {
           hosts: [
             {
@@ -471,7 +469,7 @@ test('gateway handles @requires directive correctly apart of other directives', 
     hostService,
     dictService
   )
-  t.teardown(teardown)
+  t.after(teardown)
 
   const query = `
     query {
@@ -486,7 +484,7 @@ test('gateway handles @requires directive correctly apart of other directives', 
       }
     }`
   const res = await gatewayRequest(gateway, query)
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       hosts: [
         {
@@ -566,7 +564,7 @@ test('gateway exposes @requires directive in list of directives', async t => {
     biographyService,
     userService
   )
-  t.teardown(teardown)
+  t.after(teardown)
 
   const query = `
     query IntrospectionQuery {
@@ -579,7 +577,7 @@ test('gateway exposes @requires directive in list of directives', async t => {
   `
   const res = await gatewayRequest(gateway, query)
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       __schema: {
         directives: [

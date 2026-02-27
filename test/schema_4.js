@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
 const plugin = require('../index')
@@ -152,7 +152,7 @@ test('Uses the supplied schema for federation rather than fetching it remotely',
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await postService.close()
     await userService.close()
@@ -234,7 +234,7 @@ test('Uses the supplied schema for federation rather than fetching it remotely',
     })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       me: {
         id: 'u1',
@@ -358,7 +358,7 @@ test('Non mandatory gateway failure wont stop gateway creation', async t => {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await brokenService.close()
     await workingService.close()
@@ -392,7 +392,7 @@ test('Non mandatory gateway failure wont stop gateway creation', async t => {
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       hello: 'world'
     }
@@ -421,7 +421,7 @@ test('Update the schema', async t => {
   })
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await service.close()
   })
@@ -452,7 +452,7 @@ test('Update the schema', async t => {
     body: JSON.stringify({ query })
   })
 
-  t.same(
+  t.assert.strictEqual(
     JSON.parse(res.body).errors[0].message,
     'Cannot query field "world" on type "Query".'
   )
@@ -471,7 +471,7 @@ test('Update the schema', async t => {
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res2.body), {
+  t.assert.deepStrictEqual(JSON.parse(res2.body), {
     data: {
       hello: 'world',
       world: 'hello'
@@ -493,7 +493,7 @@ test('Update the schema without any changes', async t => {
   })
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await service.close()
   })
@@ -523,7 +523,7 @@ test('Update the schema without any changes', async t => {
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       hello: 'world'
     }
@@ -532,7 +532,7 @@ test('Update the schema without any changes', async t => {
   gateway.graphqlGateway.serviceMap.working.setSchema(schemaNode)
   const newSchema = await gateway.graphqlGateway.refresh()
 
-  t.equal(newSchema, null)
+  t.assert.strictEqual(newSchema, null)
 })
 
 test('It builds the gateway schema correctly with two services query extension having the _service fields', async t => {
@@ -676,7 +676,7 @@ test('It builds the gateway schema correctly with two services query extension h
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await postService.close()
     await userService.close()
@@ -765,7 +765,7 @@ test('It builds the gateway schema correctly with two services query extension h
     })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       me: {
         id: 'u1',
@@ -872,7 +872,7 @@ test('Should merge schemas correctly', async (t) => {
 
   const gateway = Fastify()
 
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await helloService.close()
     await worldService.close()
@@ -908,7 +908,7 @@ test('Should merge schemas correctly', async (t) => {
     })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       hello: 'World',
       world: 'Hello'

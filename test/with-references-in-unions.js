@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
 const plugin = require('../index')
@@ -45,8 +45,6 @@ const messages = {
 }
 
 test('gateway handles reference types in unions at the same schema paths correctly', async t => {
-  t.plan(2)
-
   const [messageService, messageServicePort] = await createService(
     `
     type Query @extends {
@@ -122,7 +120,7 @@ test('gateway handles reference types in unions at the same schema paths correct
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await messageService.close()
     await userService.close()
@@ -182,7 +180,7 @@ test('gateway handles reference types in unions at the same schema paths correct
       })
     })
 
-    t.same(JSON.parse(res.body), {
+    t.assert.deepStrictEqual(JSON.parse(res.body), {
       data: {
         getMessages: [
           {
@@ -226,7 +224,7 @@ test('gateway handles reference types in unions at the same schema paths correct
       })
     })
 
-    t.same(JSON.parse(res.body), {
+    t.assert.deepStrictEqual(JSON.parse(res.body), {
       data: {
         getMessages: [
           {

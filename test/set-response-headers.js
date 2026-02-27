@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
 const plugin = require('../index')
@@ -45,13 +45,11 @@ async function createUserService ({ hooks } = {}) {
 }
 
 test('gateway - service setResponseHeaders', async t => {
-  t.test('setResponseHeaders is called as expected', async t => {
-    t.plan(2)
-
+  await t.test('setResponseHeaders is called as expected', async t => {
     const [users, usersPort] = await createUserService()
 
     const gateway = Fastify()
-    t.teardown(async () => {
+    t.after(async () => {
       await gateway.close()
       await users.close()
     })
@@ -74,7 +72,7 @@ test('gateway - service setResponseHeaders', async t => {
     })
 
     const expected = { data: { user: { id: 'u1', name: 'John' } } }
-    t.has(res.headers, { abc: 'abc' })
-    t.same(expected, JSON.parse(res.body))
+    t.assert.strictEqual(res.headers.abc, 'abc')
+    t.assert.deepStrictEqual(expected, JSON.parse(res.body))
   })
 })

@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const plugin = require('../index')
 const createTestService = require('./utils/create-test-service')
@@ -19,7 +19,7 @@ async function createTestGatewayServer (t) {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await firstService.close()
     await secondService.close()
@@ -44,7 +44,6 @@ async function createTestGatewayServer (t) {
 }
 
 test('query returns a scalar type', async t => {
-  t.plan(1)
   const app = await createTestGatewayServer(t)
 
   const query = 'query { countMe noCountMe }'
@@ -56,7 +55,7 @@ test('query returns a scalar type', async t => {
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       countMe: 42,
       noCountMe: 13

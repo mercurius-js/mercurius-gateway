@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
 const plugin = require('../index')
@@ -98,7 +98,7 @@ test('load balances two peers', async t => {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userService1.close()
     await userService2.close()
@@ -151,7 +151,7 @@ test('load balances two peers', async t => {
       body: JSON.stringify({ query, variables })
     })
 
-    t.same(JSON.parse(res.body), {
+    t.assert.deepStrictEqual(JSON.parse(res.body), {
       data: {
         me: {
           id: 'u1',
@@ -169,7 +169,7 @@ test('load balances two peers', async t => {
       body: JSON.stringify({ query, variables })
     })
 
-    t.same(JSON.parse(res.body), {
+    t.assert.deepStrictEqual(JSON.parse(res.body), {
       data: {
         me: {
           id: 'u1',
@@ -180,8 +180,8 @@ test('load balances two peers', async t => {
   }
 
   // Called two times, one to get the schema and one for the query
-  t.equal(user1called, 2)
+  t.assert.strictEqual(user1called, 2)
 
   // Called one time, one one for the query
-  t.equal(user2called, 1)
+  t.assert.strictEqual(user2called, 1)
 })

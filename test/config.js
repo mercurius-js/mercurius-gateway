@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const plugin = require('../index')
 
@@ -14,7 +14,7 @@ test('Throws an Error if the service list is empty', async t => {
       }
     })
   } catch (err) {
-    t.equal(
+    t.assert.strictEqual(
       err.message,
       'Gateway schema init issues No valid service SDLs were provided'
     )
@@ -29,7 +29,7 @@ test('Throws an Error if the service list is empty', async t => {
       gateway: {}
     })
   } catch (err) {
-    t.equal(
+    t.assert.strictEqual(
       err.message,
       'Gateway schema init issues The "services" attribute cannot be undefined'
     )
@@ -44,7 +44,7 @@ test('Each "gateway" option "services" must be an object', async t => {
       gateway: { services: ['foo'] }
     })
   } catch (err) {
-    t.equal(
+    t.assert.strictEqual(
       err.message,
       'Invalid options: gateway: all "services" must be objects'
     )
@@ -59,7 +59,7 @@ test('Each "gateway" option "services" must have a "name"', async t => {
       gateway: { services: [{}] }
     })
   } catch (err) {
-    t.equal(
+    t.assert.strictEqual(
       err.message,
       'Invalid options: gateway: all "services" must have a "name" String property'
     )
@@ -74,7 +74,7 @@ test('Each "gateway" option "services" must have a "name" that is a String', asy
       gateway: { services: [{ name: 42 }] }
     })
   } catch (err) {
-    t.equal(
+    t.assert.strictEqual(
       err.message,
       'Invalid options: gateway: all "services" must have a "name" String property'
     )
@@ -91,7 +91,7 @@ test('Each "gateway" option "services" must have a "name" that is unique', async
       }
     })
   } catch (err) {
-    t.equal(
+    t.assert.strictEqual(
       err.message,
       'Invalid options: gateway: all "services" must have a unique "name": "foo" is already used'
     )
@@ -108,7 +108,7 @@ test('Each "gateway" option "services" must have an "url"', async t => {
       }
     })
   } catch (err) {
-    t.equal(
+    t.assert.strictEqual(
       err.message,
       'Invalid options: gateway: all "services" must have an "url" String, or a non-empty Array of String, property'
     )
@@ -125,7 +125,7 @@ test('Each "gateway" option "services" must have an "url" that is a String or an
       }
     })
   } catch (err) {
-    t.equal(
+    t.assert.strictEqual(
       err.message,
       'Invalid options: gateway: all "services" must have an "url" String, or a non-empty Array of String, property'
     )
@@ -142,7 +142,7 @@ test('Each "gateway" option "services" must have an "url" that, if it is an Arra
       }
     })
   } catch (err) {
-    t.equal(
+    t.assert.strictEqual(
       err.message,
       'Invalid options: gateway: all "services" must have an "url" String, or a non-empty Array of String, property'
     )
@@ -159,7 +159,7 @@ test('Each "gateway" option "services" must have an "url" that, if it is a non-e
       }
     })
   } catch (err) {
-    t.equal(
+    t.assert.strictEqual(
       err.message,
       'Invalid options: gateway: all "services" must have an "url" String, or a non-empty Array of String, property'
     )

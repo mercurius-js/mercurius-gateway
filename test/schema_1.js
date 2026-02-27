@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
 const plugin = require('../index')
@@ -148,7 +148,7 @@ test('It builds the gateway schema correctly', async t => {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await postService.close()
     await userService.close()
@@ -237,7 +237,7 @@ test('It builds the gateway schema correctly', async t => {
     })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       me: {
         id: 'u1',
@@ -377,7 +377,7 @@ test('It support variable inside nested arguments', async t => {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userService.close()
   })
@@ -432,7 +432,7 @@ test('It support variable inside nested arguments', async t => {
     })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       me: user
     }
@@ -515,7 +515,7 @@ test('Should not throw on nullable reference', async t => {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await postService.close()
     await userService.close()
@@ -558,21 +558,21 @@ test('Should not throw on nullable reference', async t => {
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       topPosts: [
         {
-          id: 1,
+          id: '1',
           title: 'test',
           content: 'test',
           author: null
         },
         {
-          id: 2,
+          id: '2',
           title: 'test2',
           content: 'test2',
           author: {
-            id: 1,
+            id: '1',
             name: 'toto'
           }
         }
@@ -631,7 +631,7 @@ test('Should handle InlineFragment', async t => {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await productService.close()
   })
@@ -667,16 +667,16 @@ test('Should handle InlineFragment', async t => {
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       products: [
         {
-          id: 1,
+          id: '1',
           type: 'Book',
           name: 'book1'
         },
         {
-          id: 2,
+          id: '2',
           type: 'Book',
           name: 'book2'
         }

@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
 const plugin = require('../index')
@@ -73,7 +73,7 @@ async function createTestGatewayServer (t) {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userService.close()
     await postService.close()
@@ -100,7 +100,6 @@ async function createTestGatewayServer (t) {
 }
 
 test('gateway: resolverKey should support digits', async t => {
-  t.plan(7)
   const app = await createTestGatewayServer(t)
 
   const res = await app.inject({
@@ -153,13 +152,13 @@ test('gateway: resolverKey should support digits', async t => {
   const resParsed = JSON.parse(res.body).data
 
   // Verify user1 res
-  t.same(resParsed.user1.somePostsOne, resParsed.user1.somePosts1)
-  t.same(resParsed.user1.somePostsTwo, resParsed.user1.somePosts2)
-  t.notSame(resParsed.user1.somePosts2, resParsed.user1.some3Posts)
+  t.assert.deepStrictEqual(resParsed.user1.somePostsOne, resParsed.user1.somePosts1)
+  t.assert.deepStrictEqual(resParsed.user1.somePostsTwo, resParsed.user1.somePosts2)
+  t.assert.notDeepStrictEqual(resParsed.user1.somePosts2, resParsed.user1.some3Posts)
   // Verify user2 res
-  t.same(resParsed.user2.somePostsOne, resParsed.user2.somePosts1)
-  t.same(resParsed.user2.somePostsTwo, resParsed.user2.somePosts2)
-  t.notSame(resParsed.user2.somePosts2, resParsed.user2.some3Posts)
+  t.assert.deepStrictEqual(resParsed.user2.somePostsOne, resParsed.user2.somePosts1)
+  t.assert.deepStrictEqual(resParsed.user2.somePostsTwo, resParsed.user2.somePosts2)
+  t.assert.notDeepStrictEqual(resParsed.user2.somePosts2, resParsed.user2.some3Posts)
   // Verify user1 vs user2 res
-  t.notSame(resParsed.user1, resParsed.user2)
+  t.assert.notDeepStrictEqual(resParsed.user1, resParsed.user2)
 })

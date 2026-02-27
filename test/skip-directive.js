@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
 const plugin = require('../index')
@@ -79,7 +79,7 @@ async function createTestGatewayServer (t) {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userService.close()
     await postService.close()
@@ -104,7 +104,6 @@ async function createTestGatewayServer (t) {
 }
 
 test('gateway - should support truthy skip directive', async t => {
-  t.plan(1)
   const app = await createTestGatewayServer(t)
 
   const variables = {
@@ -132,7 +131,7 @@ test('gateway - should support truthy skip directive', async t => {
     body: JSON.stringify({ query, variables })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       me: {
         id: 'u1',
@@ -143,7 +142,6 @@ test('gateway - should support truthy skip directive', async t => {
 })
 
 test('gateway - should support falsy skip directive', async t => {
-  t.plan(1)
   const app = await createTestGatewayServer(t)
 
   const variables = {
@@ -171,7 +169,7 @@ test('gateway - should support falsy skip directive', async t => {
     body: JSON.stringify({ query, variables })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       me: {
         id: 'u1',

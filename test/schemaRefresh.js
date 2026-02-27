@@ -1,7 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
-
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const { buildFederationSchema } = require('@mercuriusjs/federation')
 const GQL = require('mercurius')
@@ -25,7 +24,7 @@ test('Refreshing gateway schema', async (t) => {
 
   const userService = Fastify()
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await userService.close()
   })
@@ -79,7 +78,7 @@ test('Refreshing gateway schema', async (t) => {
     })
   })
 
-  t.same(res.json(), {
+  t.assert.deepStrictEqual(res.json(), {
     data: {
       __type: {
         fields: [
@@ -132,7 +131,7 @@ test('Refreshing gateway schema', async (t) => {
     })
   })
 
-  t.same(updatedRes.json(), {
+  t.assert.deepStrictEqual(updatedRes.json(), {
     data: {
       __type: {
         fields: [

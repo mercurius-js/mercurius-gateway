@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const Fastify = require('fastify')
 const GQL = require('mercurius')
 const plugin = require('../index')
@@ -102,7 +102,7 @@ test('Should support array references with _entities query', async t => {
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await postService.close()
     await userService.close()
@@ -145,31 +145,31 @@ test('Should support array references with _entities query', async t => {
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       topPosts: [
         {
-          id: 1,
+          id: '1',
           title: 'test',
           content: 'test',
           authors: [
             {
-              id: 1,
+              id: '1',
               name: 'toto'
             },
             {
-              id: 2,
+              id: '2',
               name: 'titi'
             }
           ]
         },
         {
-          id: 2,
+          id: '2',
           title: 'test2',
           content: 'test2',
           authors: [
             {
-              id: 3,
+              id: '3',
               name: 'tata'
             }
           ]
@@ -203,7 +203,7 @@ test('Should support multiple `extends` of the same type in the service SDL', as
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await productService.close()
   })
@@ -230,7 +230,7 @@ test('Should support multiple `extends` of the same type in the service SDL', as
     })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       ping: 1
     }
@@ -247,7 +247,7 @@ test('Should support multiple `extends` of the same type in the service SDL', as
     })
   })
 
-  t.same(JSON.parse(res2.body), {
+  t.assert.deepStrictEqual(JSON.parse(res2.body), {
     data: {
       pong: 2
     }
@@ -339,7 +339,7 @@ test('Should support array references with _entities query and empty response', 
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await postService.close()
     await userService.close()
@@ -382,17 +382,17 @@ test('Should support array references with _entities query and empty response', 
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       topPosts: [
         {
-          id: 1,
+          id: '1',
           title: 'test',
           content: 'test',
           authors: []
         },
         {
-          id: 2,
+          id: '2',
           title: 'test2',
           content: 'test2',
           authors: []
@@ -487,7 +487,7 @@ test('Should support array references with _entities query and empty response an
   )
 
   const gateway = Fastify()
-  t.teardown(async () => {
+  t.after(async () => {
     await gateway.close()
     await postService.close()
     await userService.close()
@@ -530,17 +530,17 @@ test('Should support array references with _entities query and empty response an
     body: JSON.stringify({ query })
   })
 
-  t.same(JSON.parse(res.body), {
+  t.assert.deepStrictEqual(JSON.parse(res.body), {
     data: {
       topPosts: [
         {
-          id: 1,
+          id: '1',
           title: 'test',
           content: 'test',
           authors: null
         },
         {
-          id: 2,
+          id: '2',
           title: 'test2',
           content: 'test2',
           authors: null

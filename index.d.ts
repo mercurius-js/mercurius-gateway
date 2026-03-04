@@ -7,6 +7,7 @@ import {
   GraphQLSchema,
   ExecutionResult,
 } from "graphql";
+import { Dispatcher } from "undici";
 
 interface ServiceConfig {
   setSchema: (schema: string) => ServiceConfig;
@@ -99,6 +100,7 @@ export interface MercuriusGatewayService {
   schema?: string;
   wsUrl?: string;
   mandatory?: boolean;
+  agent?: Dispatcher;
   initHeaders?:
     | (() => OutgoingHttpHeaders | Promise<OutgoingHttpHeaders>)
     | OutgoingHttpHeaders;

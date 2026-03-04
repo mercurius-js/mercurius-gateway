@@ -4,6 +4,7 @@ import { MercuriusContext } from 'mercurius'
 
 import mercuriusGatewayPlugin, { MercuriusServiceMetadata } from '../../index'
 import { DocumentNode, GraphQLSchema } from 'graphql'
+import { Agent } from 'undici'
 
 const app = Fastify()
 
@@ -17,6 +18,7 @@ app.register(mercuriusGatewayPlugin, {
       {
         name: 'user',
         url: 'http://localhost:4001/graphql',
+        agent: new Agent(),
         schema: `
         type Query {
           dogs: [Dog]

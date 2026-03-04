@@ -1,5 +1,6 @@
 const { test } = require('node:test')
 const fastify = require('fastify')
+const { MockAgent } = require('undici')
 const { sendRequest, buildRequest } = require('../lib/gateway/request')
 const { FederatedError } = require('../lib/errors')
 const zlib = require('zlib')
@@ -210,6 +211,90 @@ test('sendRequest method should run without useSecureParse flag', async t => {
   })
 
   t.assert.deepStrictEqual(result.json, { foo: 'bar' })
+})
+
+test('buildRequest with single url sets origin correctly', async t => {
+  const app = fastify()
+  app.post('/graphql', async () => {
+    return { data: { hello: 'world' } }
+  })
+
+  await app.listen({ port: 0 })
+
+  const url = `http://localhost:${app.server.address().port}/graphql`
+  const { request, close } = buildRequest({ url })
+  t.after(() => {
+    close()
+    return app.close()
+  })
+
+  const result = await sendRequest(
+    request,
+    new URL(url)
+  )({
+    method: 'POST',
+    body: JSON.stringify({ query: '{ hello }' })
+  })
+
+  t.assert.deepStrictEqual(result.json, { data: { hello: 'world' } })
+})
+
+test('buildRequest with array of urls sets origin to undefined and uses BalancedPool', async t => {
+  const app = fastify()
+  app.post('/graphql', async () => {
+    return { data: { hello: 'balanced' } }
+  })
+
+  await app.listen({ port: 0 })
+
+  const port = app.server.address().port
+  const urls = [
+    `http://localhost:${port}/graphql`,
+    `http://localhost:${port}/graphql`
+  ]
+  const { request, close } = buildRequest({ url: urls })
+  t.after(() => {
+    close()
+    return app.close()
+  })
+
+  const result = await sendRequest(
+    request,
+    new URL(urls[0])
+  )({
+    method: 'POST',
+    body: JSON.stringify({ query: '{ hello }' })
+  })
+
+  t.assert.deepStrictEqual(result.json, { data: { hello: 'balanced' } })
+})
+
+test('buildRequest with custom agent uses MockAgent interceptor', async t => {
+  const mockAgent = new MockAgent()
+  const mockPool = mockAgent.get('http://test.local')
+
+  mockPool.intercept({
+    path: '/graphql',
+    method: 'POST'
+  }).reply(200, JSON.stringify({ data: { hello: 'mock' } }), {
+    headers: { 'content-type': 'application/json' }
+  })
+
+  const url = 'http://test.local/graphql'
+  const { request, close } = buildRequest({ url, agent: mockAgent })
+  t.after(async () => {
+    await close()
+  })
+
+  const result = await sendRequest(
+    request,
+    new URL(url)
+  )({
+    method: 'POST',
+    body: JSON.stringify({ query: '{ hello }' })
+  })
+
+  t.assert.deepStrictEqual(result.json, { data: { hello: 'mock' } })
 })
 
 test('sendRequest method should decompress gzip bodies', async t => {

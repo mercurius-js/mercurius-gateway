@@ -71,7 +71,7 @@
     "p-map": "^7.0.4",
     "single-user-cache": "^2.1.0",
     "tiny-lru": "^13.0.0",
-    "undici": "^7.16.0",
+    "undici": "^8.0.2",
     "use-strict": "1.0.1",
     "ws": "^8.18.3"
   }

@@ -19,7 +19,7 @@
     "test": "npm run lint && npm run test:types && npm run test:unit ",
     "test:unit": "node --test --test-timeout=120000 test/*.js",
     "test:cov": "c8 node --test --test-timeout=120000 test/*.js",
-    "test:types": "tsd",
+    "test:types": "tstyche",
     "prepare": "husky"
   },
   "repository": {
@@ -52,11 +52,8 @@
     "sinon": "^21.0.0",
     "snazzy": "^9.0.0",
     "standard": "^17.1.2",
-    "tsd": "^0.33.0",
+    "tstyche": "^3.3.0",
     "wait-on": "^9.0.3"
-  },
-  "tsd": {
-    "directory": "test/types"
   },
   "lint-staged": {
     "*.{js,jsx}": "standard --cache --fix"

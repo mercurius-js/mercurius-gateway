@@ -52,7 +52,7 @@
     "sinon": "^21.0.0",
     "snazzy": "^9.0.0",
     "standard": "^17.1.2",
-    "tstyche": "^3.3.0",
+    "tstyche": "^7.1.0",
     "wait-on": "^9.0.3"
   },
   "lint-staged": {

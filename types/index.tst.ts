@@ -8,9 +8,7 @@ import { Agent } from 'undici'
 
 const app = Fastify()
 
-expect(() => {
-  app.register(mercuriusGatewayPlugin, {})
-}).type.toRaiseError()
+expect(app.register).type.not.toBeCallableWith(mercuriusGatewayPlugin, {})
 
 app.register(mercuriusGatewayPlugin, {
   gateway: {
@@ -207,7 +205,7 @@ app.register(mercuriusGatewayPlugin, {
   }
 })
 
-expect(() => app.register(mercuriusGatewayPlugin, {
+expect(app.register).type.not.toBeCallableWith(mercuriusGatewayPlugin, {
   gateway: {
     services: [
       {
@@ -221,9 +219,9 @@ expect(() => app.register(mercuriusGatewayPlugin, {
       }
     ]
   }
-})).type.toRaiseError()
+})
 
-expect(() => app.register(mercuriusGatewayPlugin, {
+expect(app.register).type.not.toBeCallableWith(mercuriusGatewayPlugin, {
   gateway: {
     services: [
       {
@@ -237,9 +235,9 @@ expect(() => app.register(mercuriusGatewayPlugin, {
       }
     ]
   }
-})).type.toRaiseError()
+})
 
-expect(() => app.register(mercuriusGatewayPlugin, {
+expect(app.register).type.not.toBeCallableWith(mercuriusGatewayPlugin, {
   gateway: {
     services: [
       {
@@ -253,7 +251,7 @@ expect(() => app.register(mercuriusGatewayPlugin, {
       }
     ]
   }
-})).type.toRaiseError()
+})
 
 // Gateway mode with load balanced services
 app.register(mercuriusGatewayPlugin, {
@@ -285,7 +283,7 @@ app.register(mercuriusGatewayPlugin, {
   }
 })
 
-expect(() => app.register(mercuriusGatewayPlugin, {
+expect(app.register).type.not.toBeCallableWith(mercuriusGatewayPlugin, {
   gateway: {
     services: [
       {
@@ -296,12 +294,12 @@ expect(() => app.register(mercuriusGatewayPlugin, {
     retryServicesCount: '30',
     retryServicesInterval: '5000'
   }
-})).type.toRaiseError()
+})
 
 app.graphqlGateway.addHook('preGatewayExecution', async function (schema, document, context) {
-  expect(schema).type.toBeAssignableTo<GraphQLSchema>()
-  expect(document).type.toBeAssignableTo<DocumentNode>()
-  expect(context).type.toBeAssignableTo<MercuriusContext>()
+  expect(schema).type.toBe<GraphQLSchema>()
+  expect(document).type.toBe<DocumentNode>()
+  expect(context).type.toBe<MercuriusContext>()
   return {
     document,
     errors: [
@@ -311,9 +309,9 @@ app.graphqlGateway.addHook('preGatewayExecution', async function (schema, docume
 })
 
 app.graphqlGateway.addHook('preGatewayExecution', function (schema, document, context) {
-  expect(schema).type.toBeAssignableTo<GraphQLSchema>()
-  expect(document).type.toBeAssignableTo<DocumentNode>()
-  expect(context).type.toBeAssignableTo<MercuriusContext>()
+  expect(schema).type.toBe<GraphQLSchema>()
+  expect(document).type.toBe<DocumentNode>()
+  expect(context).type.toBe<MercuriusContext>()
   return {
     document,
     errors: [
@@ -323,45 +321,45 @@ app.graphqlGateway.addHook('preGatewayExecution', function (schema, document, co
 })
 
 app.graphqlGateway.addHook('preGatewayExecution', function (schema, document, context) {
-  expect(schema).type.toBeAssignableTo<GraphQLSchema>()
-  expect(document).type.toBeAssignableTo<DocumentNode>()
-  expect(context).type.toBeAssignableTo<MercuriusContext>()
+  expect(schema).type.toBe<GraphQLSchema>()
+  expect(document).type.toBe<DocumentNode>()
+  expect(context).type.toBe<MercuriusContext>()
 })
 
 app.graphqlGateway.addHook('preGatewaySubscriptionExecution', async function (schema, document, context) {
-  expect(schema).type.toBeAssignableTo<GraphQLSchema>()
-  expect(document).type.toBeAssignableTo<DocumentNode>()
-  expect(context).type.toBeAssignableTo<MercuriusContext>()
+  expect(schema).type.toBe<GraphQLSchema>()
+  expect(document).type.toBe<DocumentNode>()
+  expect(context).type.toBe<MercuriusContext>()
 })
 
 app.graphqlGateway.addHook('preGatewaySubscriptionExecution', function (schema, document, context) {
-  expect(schema).type.toBeAssignableTo<GraphQLSchema>()
-  expect(document).type.toBeAssignableTo<DocumentNode>()
-  expect(context).type.toBeAssignableTo<MercuriusContext>()
+  expect(schema).type.toBe<GraphQLSchema>()
+  expect(document).type.toBe<DocumentNode>()
+  expect(context).type.toBe<MercuriusContext>()
 })
 
 // Hooks containing service metadata
 app.graphqlGateway.addHook('preGatewayExecution', async function (schema, document, context, service) {
-  expect(schema).type.toBeAssignableTo<GraphQLSchema>()
-  expect(document).type.toBeAssignableTo<DocumentNode>()
-  expect(context).type.toBeAssignableTo<MercuriusContext>()
-  expect(service).type.toBeAssignableTo<MercuriusServiceMetadata>()
+  expect(schema).type.toBe<GraphQLSchema>()
+  expect(document).type.toBe<DocumentNode>()
+  expect(context).type.toBe<MercuriusContext>()
+  expect(service).type.toBe<MercuriusServiceMetadata>()
 })
 
 app.graphqlGateway.addHook('preGatewaySubscriptionExecution', async function (schema, document, context, service) {
-  expect(schema).type.toBeAssignableTo<GraphQLSchema>()
-  expect(document).type.toBeAssignableTo<DocumentNode>()
-  expect(context).type.toBeAssignableTo<MercuriusContext>()
-  expect(service).type.toBeAssignableTo<MercuriusServiceMetadata>()
+  expect(schema).type.toBe<GraphQLSchema>()
+  expect(document).type.toBe<DocumentNode>()
+  expect(context).type.toBe<MercuriusContext>()
+  expect(service).type.toBe<MercuriusServiceMetadata>()
 })
 
 // GraphQL Application lifecycle hooks
 app.graphqlGateway.addHook('onGatewayReplaceSchema', async function (instance, schema) {
-  expect(instance).type.toBeAssignableTo<FastifyInstance>()
-  expect(schema).type.toBeAssignableTo<GraphQLSchema>()
+  expect(instance).type.toBe<FastifyInstance>()
+  expect(schema).type.toBe<GraphQLSchema>()
 })
 
 app.graphqlGateway.addHook('onGatewayReplaceSchema', function (instance, schema) {
-  expect(instance).type.toBeAssignableTo<FastifyInstance>()
-  expect(schema).type.toBeAssignableTo<GraphQLSchema>()
+  expect(instance).type.toBe<FastifyInstance>()
+  expect(schema).type.toBe<GraphQLSchema>()
 })

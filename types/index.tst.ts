@@ -2,7 +2,7 @@ import { expect } from 'tstyche'
 import Fastify, { FastifyInstance } from 'fastify'
 import { MercuriusContext } from 'mercurius'
 
-import mercuriusGatewayPlugin, { MercuriusServiceMetadata } from '../../index'
+import mercuriusGatewayPlugin, { MercuriusServiceMetadata } from './index'
 import { DocumentNode, GraphQLSchema } from 'graphql'
 import { Agent } from 'undici'
 

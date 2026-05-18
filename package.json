@@ -6,7 +6,7 @@
   "types": "types/index.d.ts",
   "files": [
     "index.js",
-    "index.d.ts",
+    "types/index.d.ts",
     "lib"
   ],
   "scripts": {

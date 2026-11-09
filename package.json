@@ -65,7 +65,7 @@
     "@mercuriusjs/federation": "^5.0.0",
     "@mercuriusjs/subscription-client": "^2.0.0",
     "fastify-plugin": "^6.0.1",
-    "graphql": "^16.12.0",
+    "graphql": "^17.1.0",
     "graphql-ws": "^6.0.6",
     "mercurius": "^16.6.0",
     "p-map": "^7.0.4",

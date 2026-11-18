@@ -897,15 +897,23 @@ describe('pollingInterval', () => {
       }
     })
 
+    // The schema refresh is a real HTTP request to the restarted service,
+    // so ticking the fake clock alone does not guarantee it has completed.
+    // Wait for the gateway to actually replace its schema instead.
+    const schemaReplaced = new Promise(resolve => {
+      gateway.graphqlGateway.addHook('onGatewayReplaceSchema', async () => {
+        resolve()
+      })
+    })
+
     await restartedUserService.listen({ port: userServicePort })
 
     for (let i = 0; i < 100; i++) {
       await clock.tickAsync(100)
     }
 
-    // We need the event loop to actually spin twice to
-    // be able to propagate the change
-    await immediate()
+    await schemaReplaced
+    // replaceSchema runs right after the hook resolves
     await immediate()
 
     const res2 = await gateway.inject({

@@ -1047,7 +1047,7 @@ test('gateway - preGatewayExecution hooks should be able to modify the request d
             .selections[1].selectionSet.selections[0].arguments[0]
         ) {
           const documentClone = JSON.parse(JSON.stringify(document))
-          documentClone.definitions[0].selectionSet.selections[0].selectionSet.selections[1].selectionSet.selections[0].arguments[0].value.value = 1
+          documentClone.definitions[0].selectionSet.selections[0].selectionSet.selections[1].selectionSet.selections[0].arguments[0].value.value = '1'
           return {
             document: documentClone
           }
